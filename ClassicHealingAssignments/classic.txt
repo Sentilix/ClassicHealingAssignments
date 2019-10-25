@@ -1,0 +1,66 @@
+﻿--- FIXED:
+
+
+
+--- WORKAROUND:
+Message: ...Ons\ClassicHealingAssignments\HealingAssignments.lua:14: Attempt to register unknown event "CHAT_MSG_COMBAT_FRIENDLY_DEATH"
+Time: Wed Oct 23 21:37:56 2019
+Count: 1
+Stack: ...Ons\ClassicHealingAssignments\HealingAssignments.lua:14: Attempt to register unknown event "CHAT_MSG_COMBAT_FRIENDLY_DEATH"
+[C]: in function `RegisterEvent'
+...Ons\ClassicHealingAssignments\HealingAssignments.lua:14: in main chunk
+
+Locals: (*temporary) = <unnamed> {
+ 0 = <userdata>
+ Syncframe = <unnamed> {
+ }
+ Mainframe = CHAMainFrame {
+ }
+ Minimap = <unnamed> {
+ }
+}
+(*temporary) = "CHAT_MSG_COMBAT_FRIENDLY_DEATH"
+
+
+
+
+--- FAILING:
+Message: Error loading Interface\AddOns\ClassicHealingAssignments\Modules\Database.lua
+Time: Wed Oct 23 21:38:00 2019
+Count: 3
+Stack: Error loading Interface\AddOns\ClassicHealingAssignments\Modules\Database.lua
+
+Locals: <none>
+
+
+
+
+Message: Error loading Interface\AddOns\ClassicHealingAssignments\Modules\Posting.lua
+Time: Wed Oct 23 21:38:00 2019
+Count: 2
+Stack: Error loading Interface\AddOns\ClassicHealingAssignments\Modules\Posting.lua
+
+Locals: <none>
+
+
+
+
+Message: Error loading Interface\AddOns\ClassicHealingAssignments\Modules\Sync.lua
+Time: Wed Oct 23 21:38:00 2019
+Count: 2
+Stack: Error loading Interface\AddOns\ClassicHealingAssignments\Modules\Sync.lua
+
+Locals: <none>
+
+
+
+Message: ...Ons\ClassicHealingAssignments\HealingAssignments.lua:18: attempt to index field 'Foreground' (a nil value)
+Time: Wed Oct 23 21:43:01 2019
+Count: 65
+Stack: ...Ons\ClassicHealingAssignments\HealingAssignments.lua:18: attempt to index field 'Foreground' (a nil value)
+
+Locals: 
+
+
+
+
