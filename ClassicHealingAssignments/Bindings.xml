@@ -8,10 +8,6 @@
 				HealingAsssignments.Mainframe:Show() 
 			end
 	</Binding>
-	<!--<Binding name="enable/disable colored Postings"> 
-			if HealingAsssignments.Mainframe.ColoredPostingsCheckbox:GetChecked() == nil then HealingAsssignments.Mainframe.ColoredPostingsCheckbox:SetChecked(1); DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00CHA|r: colored postings enabled",1,1,1)
-			else HealingAsssignments.Mainframe.ColoredPostingsCheckbox:SetChecked(nil) DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00CHA|r: colored postings disabled",1,1,1) end
-	</Binding>-->
 	<Binding name="hide/show Minimap Icon"> 
 			if HealingAsssignments.Minimap:IsVisible() then 
 				HealingAsssignments.Minimap:Hide()

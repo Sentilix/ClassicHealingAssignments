@@ -36,18 +36,20 @@ function HealingAsssignments.Syncframe:SelectProfile(profileNum)
 		end
 	end
 	HealingAsssignments.Mainframe.Foreground.Profile[1].Template[16].Assigments:Hide()
-	
-		for i=1,15 do
-			if HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[i] then
-				local TemplateNumber = i;
-				HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[TemplateNumber].Menu:Show()
-			end
-	end
-	
-	--getglobal(HealingAsssignments.Mainframe.ProfileDropdown:GetName().."Text"):SetText(HealingAssignmentsTemplates.Profile[profileNum].Name)
-	_G[HealingAsssignments.Mainframe.ProfileDropdown:GetName().."Text"]:SetText(HealingAssignmentsTemplates.Profile[profileNum].Name);
 
-	HealingAsssignments.Mainframe:SelectActiveTemplate(HealingAsssignments.Mainframe.ActiveFrameBuffer)
+	local profile = HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile];
+	if profile then
+		for i=1,15 do
+			if profile.Template[i] then
+				local TemplateNumber = i;
+				profile.Template[TemplateNumber].Menu:Show()
+			end
+		end
+	
+		_G[HealingAsssignments.Mainframe.ProfileDropdown:GetName().."Text"]:SetText(HealingAssignmentsTemplates.Profile[profileNum].Name);
+
+		HealingAsssignments.Mainframe:SelectActiveTemplate(HealingAsssignments.Mainframe.ActiveFrameBuffer)
+	end;
 end
 
 
@@ -402,9 +404,9 @@ function HealingAsssignments.Syncframe:Receive(ProfileName,TemplateNum,TemplateN
 end
 
 function HealingAsssignments.Syncframe:DeleteProfile()
-	--local ProfileNum = HealingAsssignments.Syncframe:GetProfileNumNonSave(UIDropDownMenu_GetText(getglobal(HealingAsssignments.Mainframe.ProfileDropdown:GetName())))
 	local ProfileNum = HealingAsssignments.Syncframe:GetProfileNumNonSave(UIDropDownMenu_GetText(_G[HealingAsssignments.Mainframe.ProfileDropdown:GetName()]));
-	if ProfileNum >= 2 and ProfileNum <= 11 then
+
+	if ProfileNum and ProfileNum >= 2 and ProfileNum <= 11 then
 		for i=1,getn(HealingAsssignments.Mainframe.Foreground.Profile[ProfileNum].Template) do
 			HealingAsssignments.Mainframe.Foreground.Profile[ProfileNum].Template[i].Menu.ScriptButton:Hide()
 			HealingAsssignments.Mainframe.Foreground.Profile[ProfileNum].Template[i].Menu.ScriptButton:SetParent(nil)

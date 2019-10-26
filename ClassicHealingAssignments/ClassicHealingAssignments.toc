@@ -2,7 +2,7 @@
 ## Title: Classic Healing Assignments
 ## Author: Mimma @ <EU-Pyrewood Village>
 ## X-Originally By: Renew @ vanillagaming.org for the 1.12 client.
-## Version: 0.1.0
+## Version: 0.1.1
 ## Notes: Addon for Healing Assignments
 ## DefaultState: Enabled
 ## LoadOnDemand: 0

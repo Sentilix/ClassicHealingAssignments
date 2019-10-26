@@ -28,23 +28,18 @@ local function echo(msg)
 	end
 end
 
+function CHA_GetPlayerName(nameAndRealm)
+	local _, _, name = string.find(nameAndRealm, "([^-]*)-%s*");
+	if not name then
+		name = nameAndRealm;
+	end;
+
+	return name;
+end;
+
 
 function HealingAsssignments:OnUpdate()
-	if HealingAsssignments.Mainframe.Foreground.Profile[1].Template[16].Assigments.Content.SlowPostCheckbox:GetChecked() == 1 then
-		if HealingAsssignments.LastAddonMessageTime + (HealingAssignmentsTemplates.Options.Delay/1000) <= GetTime() -- if time is more then last time
-		then
-			if HealingAsssignments:TableLength(HealingAsssignments.MessageBuffer) > 0 -- if buffer not empty
-			then -- remove entry and post
-				local data = table.remove(HealingAsssignments.MessageBuffer, 1);
-				local messageID = data["messageID"];
-				local message = data["message"];
-				local channel = data["channel"];
-				local extra = data["extra"];
-				HealingAsssignments.LastAddonMessageTime = GetTime();
-				SendChatMessage(messageID, message, extra, channel);
-			end;
-		end
-	end
+
 end
 
 
@@ -72,11 +67,13 @@ function HealingAsssignments:OnEvent(event, ...)
 		
 	elseif event == "CHAT_MSG_WHISPER" then
 		local arg1, arg2 = ...;
+		local sender = CHA_GetPlayerName(arg2);
+
 		if arg1 == "!repost" or arg1 == "repost" then
-			HealingAsssignments:RepostAssignments(arg2)
+			HealingAsssignments:RepostAssignments(sender)
 		end
 		if arg1 == "!heal" or arg1 == "heal" then
-			HealingAsssignments:AnswerAssignments(arg2)
+			HealingAsssignments:AnswerAssignments(sender)
 		end
 
 	elseif event == "ADDON_LOADED" then
@@ -569,10 +566,14 @@ function HealingAsssignments.Mainframe:ConfigureFrame()
 	self.OpenOptionsButton:SetWidth(79)
 	self.OpenOptionsButton:SetHeight(18)
 	self.OpenOptionsButton:SetText("Options")
-	self.OpenOptionsButton:SetScript("OnClick", function() PlaySound(882, "Master"); 
-	if 	self.ActiveFrame ~= 16 then HealingAsssignments.Mainframe:SelectActiveTemplate(16,1)	
-	elseif self.ActiveFrame == 16 then HealingAsssignments.Mainframe:SelectActiveTemplate(HealingAsssignments.Mainframe.ActiveFrameBuffer) end
-	end)
+	self.OpenOptionsButton:SetScript("OnClick", function() 
+		PlaySound(882, "Master"); 
+		if self.ActiveFrame ~= 16 then 
+			HealingAsssignments.Mainframe:SelectActiveTemplate(16,1)	
+		elseif self.ActiveFrame == 16 then 
+			HealingAsssignments.Mainframe:SelectActiveTemplate(HealingAsssignments.Mainframe.ActiveFrameBuffer) 
+		end
+	end);
 	self.OpenOptionsButton:SetScript("OnEnter", function() 
 		GameTooltip:SetOwner(HealingAsssignments.Mainframe, "ANCHOR_TOPLEFT");
 		GameTooltip:SetText("Open Options Frame.", 1, 1, 1, 1, 1);
@@ -619,14 +620,6 @@ function HealingAsssignments.Mainframe:ConfigureFrame()
 	HealerChannelFontString:SetJustifyH("RIGHT")
     HealerChannelFontString:SetText("Healer Channel: ")
 	
-	-- Colored Postings String
-	--local ColoredPostingsFontString = self.Background.Topleft:CreateFontString(nil, "OVERLAY")
- --   ColoredPostingsFontString:SetPoint("TOPLEFT", self, "TOPLEFT", 160, -80)
- --   ColoredPostingsFontString:SetFont("Fonts\\FRIZQT__.TTF", 11)
-	--ColoredPostingsFontString:SetWidth(100)
-	--ColoredPostingsFontString:SetJustifyH("RIGHT")
- --   ColoredPostingsFontString:SetText("Colored Postings: ")
-
 	-- Sync Data String
 	local SyncDataFontString = self.Background.Topleft:CreateFontString(nil, "OVERLAY")
     SyncDataFontString:SetPoint("TOPLEFT", self, "TOPLEFT", 290, -50)
@@ -691,20 +684,6 @@ function HealingAsssignments.Mainframe:ConfigureFrame()
 	self.SyncCheckbox:SetChecked(HealingAssignmentsTemplates.Options.SyncData)
 	if HealingAssignmentsTemplates.Options.SyncData == nil then HealingAsssignments.Mainframe.SyncButton:Disable() end
 	
-	-- Colored Postings Checkbox
-	--self.ColoredPostingsCheckbox = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate")
-	--self.ColoredPostingsCheckbox:SetPoint("TOPLEFT",260,-72)
-	--self.ColoredPostingsCheckbox:SetFrameStrata("LOW")
-	--self.ColoredPostingsCheckbox:SetScript("OnEnter", function() 
-	--	GameTooltip:SetOwner(HealingAsssignments.Mainframe, "ANCHOR_CURSOR");
-	--	GameTooltip:SetText("Warning: Colored Text is against server rules! Dont post in public channels :)", 1, 0, 0, 1, 1);
-	--	GameTooltip:Show()
-	--end)
-	--self.ColoredPostingsCheckbox:SetScript("OnLeave", function() GameTooltip:Hide() end)
-	--self.ColoredPostingsCheckbox:SetScript("OnClick", function() PlaySound(882, "Master");
-	--	local Checked = HealingAsssignments.Mainframe.ColoredPostingsCheckbox:GetChecked();
-	--	HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrameNum].Assigments.Content.ColoredPostingsCheckbox:SetChecked(Checked);
-	--end)
 	
 	-- create Editbox
 	-- Healer Channel EditBox
@@ -726,15 +705,10 @@ function HealingAsssignments.Mainframe:ConfigureFrame()
 	self.ProfileDropdown = CreateFrame("Button","HAProfileDropdown", self, "UIDropDownMenuTemplate")
 	self.ProfileDropdown:SetPoint("TOPLEFT",670,-56)
 	self.ProfileDropdown:SetScale(0.8)
-
-	--getglobal(HealingAsssignments.Mainframe.ProfileDropdown:GetName().."Text"):SetText(UnitName("player"))
 	_G[HealingAsssignments.Mainframe.ProfileDropdown:GetName().."Text"]:SetText(UnitName("player"));
-
-	--getglobal(HealingAsssignments.Mainframe.ProfileDropdown:GetName().."Button"):SetScript("OnClick", function() 
 	_G[HealingAsssignments.Mainframe.ProfileDropdown:GetName().."Button"]:SetScript("OnClick", function(self, ...) 
 		HealingAsssignments.Syncframe:UpdateDropdown(...)
 		PlaySound(882, "Master");
---ToggleDropDownMenu(level, value, dropDownFrame, anchorName, xOffset, yOffset, menuList, button, autoHideDelay)
 		ToggleDropDownMenu(1, nil, HealingAsssignments.Mainframe.ProfileDropdown, self:GetName(), 0, 0);
 	end);
 	
@@ -757,7 +731,7 @@ function HealingAsssignments.Mainframe:ConfigureFrame()
 	-- Create Minimap Icon
 	HealingAsssignments.Minimap:CreateMinimapIcon()
 	
-	-- dyncmic creation --
+	-- dynamic creation --
 	----------------------
 	-- create Templates
 	HealingAsssignments.Mainframe:LoadTemplates() -- load old templates
@@ -1102,49 +1076,6 @@ function HealingAsssignments.Mainframe:CreateOptions(TemplateNumber)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.ColoredPostingChannelText:SetJustifyH("LEFT")
     self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.ColoredPostingChannelText:SetText("TEST")
 	
-	-- slowmode options		
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostCheckbox = CreateFrame("CheckButton", nil, self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content, "UICheckButtonTemplate")
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostCheckbox:SetPoint("TOPLEFT",450,-190)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostCheckbox:SetFrameStrata("LOW")
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostCheckbox:SetScript("OnEnter", function() 
-		GameTooltip:SetOwner(HealingAsssignments.Mainframe, "ANCHOR_TOPLEFT");
-		GameTooltip:SetText("Slow Posting Mode for handling Spam Filter", 1,1,1);
-		GameTooltip:AddLine("Tweak Value for Better Outcome",1,1,1);
-		GameTooltip:Show()
-	end)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostCheckbox:SetScript("OnLeave", function() GameTooltip:Hide() end)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostCheckbox:SetScript("OnClick", function () PlaySound(882, "Master") 
-	if HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostCheckbox:GetChecked() == nil then HealingAssignmentsTemplates.Options.SlowPost = nil
-	elseif HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostCheckbox:GetChecked() == 1 then HealingAssignmentsTemplates.Options.SlowPost = 1 end
-	end)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostCheckbox:SetChecked(HealingAssignmentsTemplates.Options.SlowPost)
-	local SlowPostText = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
-    SlowPostText:SetPoint("TOPLEFT", 240, -200)
-    SlowPostText:SetFont("Fonts\\FRIZQT__.TTF", 11)
-	SlowPostText:SetWidth(200)
-	SlowPostText:SetJustifyH("RIGHT")
-    SlowPostText:SetText("Slow Post Mode")
-	
-	local SlowPostText = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
-    SlowPostText:SetPoint("TOPLEFT", 240, -230)
-    SlowPostText:SetFont("Fonts\\FRIZQT__.TTF", 11)
-	SlowPostText:SetWidth(200)
-	SlowPostText:SetJustifyH("RIGHT")
-    SlowPostText:SetText("Delay in ms :")
-	
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostTextbox = CreateFrame("EditBox", "SlowPostTextboxTextbox", self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content,"InputBoxTemplate")
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostTextbox:SetPoint("TOPLEFT",460,-220)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostTextbox:SetWidth(35)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostTextbox:SetHeight(30)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostTextbox:SetAutoFocus(0)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostTextbox:SetFrameStrata("LOW")
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostTextbox:SetMaxLetters(4)
-	
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostTextbox:SetText(HealingAssignmentsTemplates.Options.Delay)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostTextbox:SetNumeric()
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostTextbox:SetScript("OnTextChanged", function() 
-		HealingAssignmentsTemplates.Options.Delay = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.SlowPostTextbox:GetNumber()
-	end)
 		
 	-- whisper configs
 	local WhisperConfigText = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
@@ -1177,10 +1108,14 @@ function HealingAsssignments.Mainframe:CreateOptions(TemplateNumber)
 		GameTooltip:Show()
 	end)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperRepostCheckbox:SetScript("OnLeave", function() GameTooltip:Hide() end)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperRepostCheckbox:SetScript("OnClick", function () PlaySound(882, "Master") 
-												if HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperRepostCheckbox:GetChecked() == nil then HealingAssignmentsTemplates.Options.WhisperRepost = nil
-												elseif HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperRepostCheckbox:GetChecked() == 1 then HealingAssignmentsTemplates.Options.WhisperRepost = 1 end
-																														end)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperRepostCheckbox:SetScript("OnClick", function (self) 
+		PlaySound(882, "Master");
+		if HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperRepostCheckbox:GetChecked() then
+			HealingAssignmentsTemplates.Options.WhisperRepost = nil
+		else
+			HealingAssignmentsTemplates.Options.WhisperRepost = 1 
+		end;
+	end);
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperRepostCheckbox:SetChecked(HealingAssignmentsTemplates.Options.WhisperRepost)
 	
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperHealCheckbox = CreateFrame("CheckButton", nil, self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content, "UICheckButtonTemplate")
@@ -1192,10 +1127,15 @@ function HealingAsssignments.Mainframe:CreateOptions(TemplateNumber)
 		GameTooltip:Show()
 	end)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperHealCheckbox:SetScript("OnLeave", function() GameTooltip:Hide() end)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperHealCheckbox:SetScript("OnClick", function () PlaySound(882, "Master") 
-												if HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperHealCheckbox:GetChecked() == nil then HealingAssignmentsTemplates.Options.WhisperHeal = nil
-												elseif HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperHealCheckbox:GetChecked() == 1 then HealingAssignmentsTemplates.Options.WhisperHeal = 1 end
-																														end)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperHealCheckbox:SetScript("OnClick", function (self) 
+		PlaySound(882, "Master");
+
+		if HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperHealCheckbox:GetChecked() then
+			HealingAssignmentsTemplates.Options.WhisperHeal = 1 
+		else
+			HealingAssignmentsTemplates.Options.WhisperHeal = nil
+		end;
+	end)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperHealCheckbox:SetChecked(HealingAssignmentsTemplates.Options.WhisperHeal)
 	
 	-- additional healers
