@@ -4,6 +4,7 @@ local COLOUR_BEGINMARK						= "|c80"
 local COLOUR_CHAT							= COLOUR_BEGINMARK.."40A0F8"
 local COLOUR_INTRO							= COLOUR_BEGINMARK.."B040F0"
 
+local CHA_MESSAGE_PREFIX					= "CHA";
 
 HealingAsssignments = CreateFrame("Frame"); -- Event Frame
 HealingAsssignments.Minimap = CreateFrame("Frame",nil,Minimap) -- Minimap Frame
@@ -17,6 +18,17 @@ HealingAsssignments:RegisterEvent("RAID_ROSTER_UPDATE")
 HealingAsssignments:RegisterEvent("CHAT_MSG_WHISPER")
 --HealingAsssignments:RegisterEvent("CHAT_MSG_COMBAT_FRIENDLY_DEATH")
 HealingAsssignments:RegisterEvent("CHAT_MSG_ADDON")
+
+
+C_ChatInfo.RegisterAddonMessagePrefix(CHA_MESSAGE_PREFIX);
+
+
+
+
+
+function HealingAsssignments:GetMessagePrefix()
+	return CHA_MESSAGE_PREFIX;
+end;
 
 
 --[[
@@ -44,16 +56,38 @@ end
 
 
 function HealingAsssignments:OnEvent(event, ...)
-	if event == "CHAT_MSG_ADDON" then
-		local arg1, arg2, _, arg4 = ...;
 
-		if HealingAsssignments.Mainframe.SyncCheckbox:GetChecked() == 1 and string.sub(arg1, 1, 3) == "CHA" and arg4 ~= UnitName("player") then
-			local TemplateNum = tonumber(string.sub(arg1, 5,6))
-			local TemplateName = string.sub(arg1, 8)
-			local NameArray = CHAstrsplit(arg2,"#")
-			HealingAsssignments.Syncframe:Receive(arg4,TemplateNum,TemplateName,NameArray)
-		elseif HealingAsssignments.Mainframe.SyncCheckbox:GetChecked() == 1 and arg1 == "CHTrigger" and arg2 == "trigger" then HealingAsssignments.Syncframe:Send()
+	if event == "CHAT_MSG_ADDON" then
+		local prefix, msg, channel, sender = ...;
+		if prefix ~= HealingAsssignments:GetMessagePrefix() then	
+			return;
+		end;
+
+		local _, _, cmd, message, recipient = string.find(msg, "([^#]*)#([^#]*)#([^#]*)");	
+		
+		if not (recipient == "") then
+			if not (recipient == CHA_GetPlayerName(UnitName("player"))) then
+				return
+			end
 		end
+
+		sender = CHA_GetPlayerName(sender);
+
+		if cmd == "TX_VERSION" then
+			HealingAsssignments:HandleTXVersion(message,sender);
+		elseif cmd == "RX_VERSION" then
+			HealingAsssignments:HandleRXVersion(message,sender);
+		end;
+			
+		--local arg1, arg2, _, arg4 = ...;
+		--if HealingAsssignments.Mainframe.SyncCheckbox:GetChecked() == 1 and string.sub(arg1, 1, 3) == prefix and arg4 ~= UnitName("player") then
+		--	local TemplateNum = tonumber(string.sub(arg1, 5,6))
+		--	local TemplateName = string.sub(arg1, 8)
+		--	local NameArray = CHAstrsplit(arg2,"#")
+		--	HealingAsssignments.Syncframe:Receive(arg4,TemplateNum,TemplateName,NameArray)
+		--elseif HealingAsssignments.Mainframe.SyncCheckbox:GetChecked() == 1 and arg1 == "CHTrigger" and arg2 == "trigger" then 
+		--	HealingAsssignments.Syncframe:Send()
+		--end
 	
 	elseif event == "RAID_ROSTER_UPDATE" then
 		HealingAsssignments:SetNumberOfHealers()
@@ -84,10 +118,24 @@ function HealingAsssignments:OnEvent(event, ...)
 			HealingAsssignments.Mainframe:ConfigureFrame()
 			HealingAsssignments.MessageBuffer = {}
 			HealingAsssignments.LastAddonMessageTime = 0;
-			if ChaFu then HealingAsssignments.Minimap:Hide() end
+			if ChaFu then 
+				HealingAsssignments.Minimap:Hide();
+			end
 		end;
 	end
 end
+
+function HealingAsssignments:HandleTXVersion(message, sender)
+	local version = GetAddOnMetadata("ClassicHealingAssignments", "Version")	
+	C_ChatInfo.SendAddonMessage(HealingAsssignments:GetMessagePrefix(), "RX_VERSION#"..version.."#"..sender, "RAID");
+end;
+
+function HealingAsssignments:HandleRXVersion(message, sender)
+	echo(string.format("%s is using Classic Healing Assignments version %s", sender, message))
+end;
+
+
+
 
 HealingAsssignments:SetScript("OnEvent", HealingAsssignments.OnEvent)
 HealingAsssignments:SetScript("OnUpdate", HealingAsssignments.OnUpdate)
@@ -1407,7 +1455,7 @@ function HealingAsssignments.Mainframe:AddAssignmentFrame(ProfileNum,TemplateNum
 		self.Foreground.Profile[ProfileNum].Template[TemplateNum].Assigments:SetPoint("TOPLEFT", self, "TOPLEFT", 237, -130)
 		self.Foreground.Profile[ProfileNum].Template[TemplateNum].Assigments:SetScale(0.8)
 		self.Foreground.Profile[ProfileNum].Template[TemplateNum].Assigments:EnableMouseWheel(1)
-		self.Foreground.Profile[ProfileNum].Template[TemplateNum].Assigments:SetScript("OnMouseWheel", function(...)
+		self.Foreground.Profile[ProfileNum].Template[TemplateNum].Assigments:SetScript("OnMouseWheel", function(event, ...)
 			local arg1 = ...;
 			local value = self.Foreground.Profile[ProfileNum].Template[TemplateNum].Assigments.Scrollbar:GetValue()
 			self.Foreground.Profile[ProfileNum].Template[TemplateNum].Assigments.Scrollbar:SetValue(value-(arg1*10))

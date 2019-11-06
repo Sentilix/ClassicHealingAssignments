@@ -300,6 +300,19 @@ function HealingAsssignments:GetColoredString(NameString,Deathwarn)
 --	end
 end
 
+function HealingAsssignments:CheckProgramVersion()
+	if IsInRaid() then
+		HealingAsssignments:CheckProgramVersionPublic();
+	else
+		echo(string.format("%s is using Classic Healing Assignments version %s", UnitName("player"), GetAddOnMetadata("ClassicHealingAssignments", "Version")));
+	end
+end;
+
+function HealingAsssignments:CheckProgramVersionPublic()
+	C_ChatInfo.SendAddonMessage(HealingAsssignments:GetMessagePrefix(), "TX_VERSION##", "RAID");
+end;
+
+
 function HealingAsssignmentsTextMenu(arg)
 	if arg == nil or arg == "" then
 		DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00 Classic Healing Assignments:|r This is help topic for |cFFFFFF00 /cha|r",1,1,1);
@@ -311,7 +324,9 @@ function HealingAsssignmentsTextMenu(arg)
 		DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00 CHA:|r |cFFFFFF00 /cha warnings|r - enable/disable Death warnings.",1,1,1);
 		DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00 CHA:|r |cFFFFFF00 /cha delete|r - delete Database |cFFFF0000 (use only if error - it deletes everything! - instantly relog after!)|r.",1,1,1);
 	else
-		if arg == "post" then
+		if arg == "version" then
+			HealingAsssignments:CheckProgramVersion()
+		elseif arg == "post" then
 			HealingAsssignments:PostAssignments()
 		elseif arg == "menu" then
 			if HealingAsssignments.Mainframe:IsVisible() then HealingAsssignments.Mainframe:Hide()
@@ -333,6 +348,7 @@ function HealingAsssignmentsTextMenu(arg)
 		end
 	end
 end
+
 
 -- binding list
 BINDING_HEADER_HEAD = "Classic Healing Assignments"

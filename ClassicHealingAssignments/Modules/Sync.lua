@@ -335,7 +335,8 @@ function HealingAsssignments.Syncframe:Send()
 		if TankNum == nil or TankNum == 0 then 
 			if n<10 then TemplateNumberString = "0"..n else TemplateNumberString = n end
 			SendString = " "
-			SendAddonMessage("CHA$"..TemplateNumberString.."$"..TemplateName ,SendString, "RAID")	
+			--SendAddonMessage("CHA$"..TemplateNumberString.."$"..TemplateName ,SendString, "RAID")	
+			C_ChatInfo.SendAddonMessage("CHA$"..TemplateNumberString.."$"..TemplateName, SendString, "RAID");
 		end
 		for i=1,TankNum do
 			SendString = " "
