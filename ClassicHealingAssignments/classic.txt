@@ -1,4 +1,7 @@
 ﻿--- FIXED:
+- LUA bug when scrolling on option page
+- Warlock checkbox working.
+- Left / Right side working.
 
 
 

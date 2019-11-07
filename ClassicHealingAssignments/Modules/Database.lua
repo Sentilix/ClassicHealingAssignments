@@ -3,14 +3,94 @@ local GlobalHealerDropDownID -- use global variable to get ID into populate func
 local GlobalTankDropDownID -- use global variable to get ID into populate function
 HealingAsssignments.Raiddatabase = {} -- Database of raidmembers -> all 40
 
+
+local CHA_LEFT_DBOX = "<< Left side";
+local CHA_RIGHT_DBOX = "Right side >>";
+
+local CHA_SKULL_ICON = "{Skull}";
+local CHA_SKULL_DBOX = "SKULL";
+local CHA_CROSS_ICON = "{Cross}";
+local CHA_CROSS_DBOX = "CROSS";
+local CHA_CIRCLE_ICON = "{Circle}";
+local CHA_CIRCLE_DBOX = "CIRCLE";
+local CHA_STAR_ICON = "{Star}";
+local CHA_STAR_DBOX = "STAR";
+local CHA_SQUARE_ICON = "{Square}";
+local CHA_SQUARE_DBOX = "SQUARE";
+local CHA_TRIANGLE_ICON = "{Triangle}";
+local CHA_TRIANGLE_DBOX = "TRIANGLE";
+local CHA_DIAMOND_ICON = "{Diamond}";
+local CHA_DIAMOND_DBOX = "DIAMOND";
+local CHA_MOON_ICON = "{Moon}";
+local CHA_MOON_DBOX = "MOON";
+
+
+
+function HealingAsssignments:GetDropdownString(name)
+	if name == CHA_SKULL_ICON then 
+		name = CHA_SKULL_DBOX
+	elseif name == CHA_CROSS_ICON then 
+		name = CHA_CROSS_DBOX
+	elseif name == CHA_CIRCLE_ICON then 
+		name = CHA_CIRCLE_DBOX
+	elseif name == CHA_STAR_ICON then 
+		name = CHA_STAR_DBOX
+	elseif name == CHA_SQUARE_ICON then 
+		name = CHA_SQUARE_DBOX
+	elseif name == CHA_TRIANGLE_ICON then 
+		name = CHA_TRIANGLE_DBOX
+	elseif name == CHA_DIAMOND_ICON then 
+		name = CHA_DIAMOND_DBOX
+	elseif name == CHA_MOON_ICON then 
+		name = CHA_MOON_DBOX
+	end;
+
+	return name;
+end
+
+function HealingAsssignments:GetIconString(name)
+	if name == CHA_SKULL_DBOX then 
+		name = CHA_SKULL_ICON
+	elseif name == CHA_CROSS_DBOX then 
+		name = CHA_CROSS_ICON
+	elseif name == CHA_CIRCLE_DBOX then 
+		name = CHA_CIRCLE_ICON
+	elseif name == CHA_STAR_DBOX then 
+		name = CHA_STAR_ICON
+	elseif name == CHA_SQUARE_DBOX then 
+		name = CHA_SQUARE_ICON
+	elseif name == CHA_TRIANGLE_DBOX then 
+		name = CHA_TRIANGLE_ICON
+	elseif name == CHA_DIAMOND_DBOX then 
+		name = CHA_DIAMOND_ICON
+	elseif name == CHA_MOON_DBOX then 
+		name = CHA_MOON_ICON
+	end;
+
+	return name;
+end
+
+function HealingAsssignments:GetTextUIString(name)
+	local newName = HealingAsssignments:GetIconString(name);
+
+	if(name == newName) then
+		newName = "["..name.."]";
+	end;
+
+	return newName;
+end;
+
+
+
 -- populate a specific tank dropdown
 function HealingAsssignments.Mainframe:PopulateTankDropdown()
 
 	local OptionsFrame = 16
-	local LeftsideCheck = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.LeftsideCheckbox:GetChecked()
+	local LeftsideCheck = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.LeftsideCheckbox:GetChecked();
 	local RightsideCheck = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.RightsideCheckbox:GetChecked()
 	local CustomCheckbox = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.CustomCheckbox:GetChecked()
 	
+
 	local info = {};
 	for i=1,table.getn(HealingAsssignments.Raiddatabase) do
 		
@@ -36,7 +116,7 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 			elseif HealingAsssignments.Raiddatabase[i].Class == "PALADIN" then info.textR = 0.96; info.textG = 0.55; info.textB = 0.73;
 			end	
 			info.checked = false
-			--info.notCheckable = true
+			info.notCheckable = true
 			info.func = function(self)
 				--UIDropDownMenu_SetSelectedID(GlobalTankDropDownID, self:GetID(), 0);
 				UIDropDownMenu_SetText(GlobalTankDropDownID, self:GetText())
@@ -46,48 +126,54 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 			UIDropDownMenu_AddButton(info);
 		end
 	end
-	if LeftsideCheck == 1 then 
+
+	if LeftsideCheck then 
 		-- create emtpy field to deleting
-		info.text = "Left Side"
+		info.text = CHA_LEFT_DBOX;
 		info.textR = 1; info.textG = 0; info.textB = 0;
 		info.checked = false
-		info.func = function()
-		UIDropDownMenu_SetSelectedID(GlobalTankDropDownID, self:GetID(), 0);
+		info.notCheckable = true
+		info.func = function(self)
+			--UIDropDownMenu_SetSelectedID(GlobalTankDropDownID, self:GetID(), 0);
+			UIDropDownMenu_SetText(GlobalTankDropDownID, self:GetText())
 			HealingAsssignments:UpdateRaidDataBase()
 		end
 		UIDropDownMenu_AddButton(info);
 	end
 	
-	if RightsideCheck == 1 then 
+	if RightsideCheck then 
 		-- create emtpy field to deleting
-		info.text = "Right Side"
+		info.text = CHA_RIGHT_DBOX;
 		info.textR = 0; info.textG = 0; info.textB = 1;
 		info.checked = false
-		info.func = function()
-		UIDropDownMenu_SetSelectedID(GlobalTankDropDownID, self:GetID(), 0);
+		info.notCheckable = true
+		info.func = function(self)
+			--UIDropDownMenu_SetSelectedID(GlobalTankDropDownID, self:GetID(), 0);
+			UIDropDownMenu_SetText(GlobalTankDropDownID, self:GetText())
 			HealingAsssignments:UpdateRaidDataBase()
 		end
 		UIDropDownMenu_AddButton(info);
 	end
 	
-	if CustomCheckbox == 1 then 
+	if CustomCheckbox then 
 		-- create emtpy field to deleting
 		info.text = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.CustomCheckboxText:GetText()
 		info.textR = 0; info.textG = 1; info.textB = 0;
 		info.checked = false
-		info.func = function()
-		UIDropDownMenu_SetSelectedID(GlobalTankDropDownID, self:GetID(), 0);
+		info.notCheckable = true
+		info.func = function(self)
+			--UIDropDownMenu_SetSelectedID(GlobalTankDropDownID, self:GetID(), 0);
+			UIDropDownMenu_SetText(GlobalTankDropDownID, self:GetText())
 			HealingAsssignments:UpdateRaidDataBase()
 		end
 		UIDropDownMenu_AddButton(info);
-	end
-	
+	end	
 
 	-- Raid Marks for Tanks:
 	if HealingAsssignments.Mainframe.Foreground.Profile[1].Template[16].Assigments.Content.TankRaidMarkCheckbox:GetChecked() then 
 		-- {Skull}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = "{Skull}"
+		info.text = CHA_SKULL_DBOX;
 		info.textR = 1; 
 		info.textG = 1; 
 		info.textB = 1;
@@ -101,7 +187,7 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		
 		-- {Cross}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = "{Cross}"
+		info.text = CHA_CROSS_DBOX;
 		info.textR = 1; 
 		info.textG = 0; 
 		info.textB = 0;
@@ -115,7 +201,7 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		
 		-- {Circle}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = "{Circle}"
+		info.text = CHA_CIRCLE_DBOX;
 		info.textR = 1; 
 		info.textG = 0.647; 
 		info.textB = 0;
@@ -129,7 +215,7 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		
 		-- {Star}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = "{Star}"
+		info.text = CHA_STAR_DBOX;
 		info.textR = 1; 
 		info.textG = 1; 
 		info.textB = 0;
@@ -143,7 +229,7 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		
 		-- 	{Square}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = "{Square}"
+		info.text = CHA_SQUARE_DBOX;
 		info.textR = 0.255; 
 		info.textG = 0.412; 
 		info.textB = 0.882;
@@ -157,7 +243,7 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		
 		-- {Triangle}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = "{Triangle}"
+		info.text = CHA_TRIANGLE_DBOX;
 		info.textR = 0; 
 		info.textG = 1; 
 		info.textB = 0;
@@ -171,7 +257,7 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		
 		--{Diamond}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = "{Diamond}"
+		info.text = CHA_DIAMOND_DBOX;
 		info.textR = 1; 
 		info.textG = 0; 
 		info.textB = 1;
@@ -185,7 +271,7 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		
 		-- {Moon}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = "{Moon}"
+		info.text = CHA_MOON_DBOX;
 		info.textR = 0.878; 
 		info.textG = 1; 
 		info.textB = 1;
@@ -248,8 +334,6 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 			info.checked = false;
 			info.notCheckable = true;
 			info.func = function(self)
---				DEFAULT_CHAT_FRAME:AddMessage("Clicked: "..self:GetName()..", value: "..self:GetText()..", id: "..self:GetID());
---				DEFAULT_CHAT_FRAME:AddMessage("Frame: "..GlobalHealerDropDownID:GetName());
 				--UIDropDownMenu_SetSelectedID(GlobalHealerDropDownID, self:GetID(), 0);
 				UIDropDownMenu_SetText(GlobalHealerDropDownID, self:GetText())
 
@@ -266,7 +350,7 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 
 		-- {Skull}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = "{Skull}"
+		info.text = CHA_SKULL_DBOX;
 		info.textR = 1; 
 		info.textG = 1; 
 		info.textB = 1;
@@ -281,7 +365,7 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 		
 		-- {Cross}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = "{Cross}"
+		info.text = CHA_CROSS_DBOX;
 		info.textR = 1; 
 		info.textG = 0; 
 		info.textB = 0;
@@ -296,7 +380,7 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 		
 		-- {Circle}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = "{Circle}"
+		info.text = CHA_CIRCLE_DBOX;
 		info.textR = 1; 
 		info.textG = 0.647; 
 		info.textB = 0;
@@ -311,7 +395,7 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 		
 		-- {Star}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = "{Star}"
+		info.text = CHA_STAR_DBOX;
 		info.textR = 1; 
 		info.textG = 1; 
 		info.textB = 0;
@@ -326,7 +410,7 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 		
 		-- 	{Square}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = "{Square}"
+		info.text = CHA_SQUARE_DBOX;
 		info.textR = 0.255; 
 		info.textG = 0.412; 
 		info.textB = 0.882;
@@ -341,7 +425,7 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 		
 		-- {Triangle}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = "{Triangle}"
+		info.text = CHA_TRIANGLE_DBOX;
 		info.textR = 0; 
 		info.textG = 1; 
 		info.textB = 0;
@@ -356,7 +440,7 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 		
 		--{Diamond}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = "{Diamond}"
+		info.text = CHA_DIAMOND_DBOX;
 		info.textR = 1; 
 		info.textG = 0; 
 		info.textB = 1;
@@ -371,7 +455,7 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 		
 		-- {Moon}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = "{Moon}"
+		info.text = CHA_MOON_DBOX;
 		info.textR = 0.878; 
 		info.textG = 1; 
 		info.textB = 1;
@@ -465,15 +549,13 @@ function HealingAsssignments:UpdateRaidDataBase()
 				end	
 			end
 			-- check for additional tanks
-			if TankName == "Left Side" then 
+			if TankName == CHA_LEFT_DBOX then 
 				--getglobal(HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"):SetTextColor(1,0,0,1) 
 				_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:SetTextColor(1,0,0,1);
-			end
-			if TankName == "Right Side" then 
+			elseif TankName == CHA_RIGHT_DBOX then 
 				--getglobal(HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"):SetTextColor(0,0,1,1)
 				_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:SetTextColor(0,0,1,1);
-			end
-			if foundName == 0 and TankName ~= "Right Side" and TankName ~= "Left Side" then 
+			elseif foundName == 0 then 
 				--getglobal(HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"):SetTextColor(0,1,0,1) 
 				_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:SetTextColor(0,1,0,1);
 			end
@@ -496,12 +578,7 @@ function HealingAsssignments:UpdateRaidDataBase()
 				if HealerName == nil then 
 					HealerName = " " 
 				end
-				-- TIV: HealerName er "custom" ?!?!
-				--DEFAULT_CHAT_FRAME:AddMessage("HealerName: "..HealerName..", num:"..j)
 				local frame = HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j];
---				DEFAULT_CHAT_FRAME:AddMessage("Frame: "..frame:GetName())
---				DEFAULT_CHAT_FRAME:AddMessage("Name: "..UIDropDownMenu_GetText(frame))
-
 
 				HealingAssignmentsTemplates.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Tankhealernames[i].Healer[j] = HealerName
 				
@@ -521,29 +598,29 @@ function HealingAsssignments:UpdateRaidDataBase()
 						_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"]:SetTextColor(color[2],color[3],color[4],1);
 					end
 				end
-				
-				if HealerName == "{Skull}" then 
+								
+				if HealerName == CHA_SKULL_DBOX then 
 					--getglobal(HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"):SetTextColor(1,1,1,1)
 					_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"]:SetTextColor(1,1,1,1);
-				elseif HealerName == "{Cross}" then 
+				elseif HealerName == CHA_CROSS_DBOX then 
 					--getglobal(HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"):SetTextColor(1,0,0,1)
 					_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"]:SetTextColor(1,0,0,1);
-				elseif HealerName == "{Circle}" then 
+				elseif HealerName == CHA_CIRCLE_DBOX then 
 					--getglobal(HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"):SetTextColor(1,0.647,0,1)
 					_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"]:SetTextColor(1,0.647,0,1);
-				elseif HealerName == "{Star}" then 
+				elseif HealerName == CHA_STAR_DBOX then 
 					--getglobal(HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"):SetTextColor(1,1,0,1)
 					_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"]:SetTextColor(1,1,0,1);
-				elseif HealerName == "{Square}" then 
+				elseif HealerName == CHA_SQUARE_DBOX then 
 					--getglobal(HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"):SetTextColor(0.255,0.412,0.882,1)
 					_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"]:SetTextColor(0.255,0.412,0.882,1);
-				elseif HealerName == "{Triangle}" then 
+				elseif HealerName == CHA_TRIANGLE_DBOX then 
 					--getglobal(HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"):SetTextColor(0,1,0,1)
 					_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"]:SetTextColor(0,1,0,1);
-				elseif HealerName == "{Diamond}" then 
+				elseif HealerName == CHA_DIAMOND_DBOX then 
 					--getglobal(HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"):SetTextColor(1,0,1,1)
 					_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"]:SetTextColor(1,0,1,1);
-				elseif HealerName == "{Moon}" then 
+				elseif HealerName == CHA_MOON_DBOX then 
 					--getglobal(HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"):SetTextColor(1,1,1,1)
 					_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"]:SetTextColor(1,1,1,1);
 				end

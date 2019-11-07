@@ -50,11 +50,12 @@ function HealingAsssignments:PostAssignments()
 				SendChatMessage("° ° ° Healing Assignments ° ° °",chan,nil,chanNum) 
 				-- here you find the action!
 				for v=1,table.getn(TankName) do
-					TankName[v] = HealingAsssignments:GetColoredString(TankName[v])
+					--TankName[v] = HealingAsssignments:GetColoredString(TankName[v])
+					TankName[v] = HealingAsssignments:GetTextUIString(TankName[v])
 					PostString = ""
 					PostString = PostString..TankName[v]..": --> "
 					for w=1,table.getn(HealerName[v]) do
-						PostString = PostString..HealerName[v][w]
+						PostString = PostString..HealingAsssignments:GetTextUIString(HealerName[v][w]);
 
 						if w~= table.getn(HealerName[v]) then 
 							PostString = PostString..", "
@@ -104,7 +105,6 @@ function HealingAsssignments:AnswerAssignments(PlayerName)
 
 	local ActiveFrame = HealingAsssignments.Mainframe.ActiveFrame;
 	if ActiveFrame ~= nil and ActiveFrame ~= 16 and found == 1 then
-		echo("AnswerAssignments - Found player="..PlayerName);
 		local WhisperString = "You are not assigned."
 		local TankNameTemp
 		local HealerNameTemp
@@ -187,9 +187,10 @@ function HealingAsssignments:PostDeathWarning(PlayerName)
 				for j=1,HealerNum do
 					HealerNameTemp = _G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"]:GetText(" ");
 					if HealerNameTemp == PlayerName then 
-						HealerNameTemp = HealingAsssignments:GetColoredString(HealerNameTemp,1)
-						TankNameTemp = HealingAsssignments:GetColoredString(TankNameTemp,1)
-
+						--HealerNameTemp = HealingAsssignments:GetColoredString(HealerNameTemp,1)
+						--TankNameTemp = HealingAsssignments:GetColoredString(TankNameTemp,1)
+						HealerNameTemp = HealingAsssignments:GetTextUIString(HealerNameTemp,1)
+						TankNameTemp = HealingAsssignments:GetTextUIString(TankNameTemp,1)
 						SendChatMessage(HealerNameTemp.." died - Tank was "..TankNameTemp..".",chan,nil,chanNum) 
 						break; 
 					end
@@ -237,68 +238,6 @@ function HealingAsssignments:GetSendChannel(chanName)
 	end
 end
 
-function HealingAsssignments:GetColoredString(NameString,Deathwarn)
-
-	if NameString == "Left Side" then 
-		NameString = "<< Left Side"
-	elseif NameString == "Right Side" then 
-		NameString = "Right Side >>"
-	end;
-
-	return "["..NameString.."]";
-
---	local Checked = nil;
-
---	if Deathwarn == 1 then 
---		Checked = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[16].Assigments.Content.ColoredPostingsCheckbox:GetChecked()
---	else 
---		Checked = HealingAsssignments.Mainframe.ColoredPostingsCheckbox:GetChecked() 
---	end
-
---	if Checked == nil then 
---		return "["..NameString.."]";
---	else
---		local ColoredNameString
---		local Class
---		local Color
---		local spot
-		
---		for i=1,GetNumGroupMembers() do
---			spot = i
---			if UnitName("raid"..i) == NameString then 
---				_,Class = UnitClass("raid"..i) 
---				break; 
---			end
---		end
-		
---		if UnitIsConnected("raid"..spot) == nil then Color = "a8a8a8"
---		elseif Class == "WARRIOR" then Color = "C79C6E"
---		elseif Class == "HUNTER" then Color = "ABD473"
---		elseif Class == "MAGE" then Color = "69CCF0"
---		elseif Class == "ROGUE" then Color = "FFF569"
---		elseif Class == "WARLOCK" then Color = "9482C9"
---		elseif Class == "DRUID" then Color = "FF7D0A"
---		elseif Class == "SHAMAN" then Color = "F58CBA"
---		elseif Class == "PRIEST" then Color = "FFFFFF"
---		elseif Class == "PALADIN" then Color = "F58CBA"
---		else Color = "00FF00" end
-		
---		if NameString == "Left Side" then Color = "c30000"
---		elseif NameString == "Right Side" then Color = "00ADEF"
---		elseif NameString == "{Skull}" then Color = "FFFFFF"
---		elseif NameString == "{Cross}" then Color = "FF0000"
---		elseif NameString == "{Circle}" then Color = "FFA500"
---		elseif NameString == "{Star}" then Color = "FFFF00"
---		elseif NameString == "{Square}" then Color = "4169E1"
---		elseif NameString == "{Triangle}" then Color = "00FF00"
---		elseif NameString == "{Diamond}" then Color = "FF00FF"
---		elseif NameString == "{Moon}" then Color = "E0FFFF"
---		end
-
---		ColoredNameString = "\124cff"..Color.."\124Hitem:1\124h"..NameString.."\124h\124r"
---		return ColoredNameString
---	end
-end
 
 function HealingAsssignments:CheckProgramVersion()
 	if IsInRaid() then

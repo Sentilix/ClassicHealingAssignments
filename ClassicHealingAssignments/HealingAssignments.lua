@@ -824,11 +824,20 @@ function HealingAsssignments.Mainframe:CreateOptions(TemplateNumber)
 	String2:SetWidth(200)
 	String2:SetJustifyH("RIGHT")
     String2:SetText("additional Tanks:")
-	
+
+	-- Warlock:
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WarlockCheckbox = CreateFrame("CheckButton", nil, self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content, "UICheckButtonTemplate")
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WarlockCheckbox:SetPoint("TOPLEFT",150,-40)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WarlockCheckbox:SetFrameStrata("LOW")
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WarlockCheckbox:SetScript("OnClick", function () PlaySound(882, "Master") end)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WarlockCheckbox:SetScript("OnClick", function () 
+		PlaySound(882, "Master");
+		if(HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WarlockCheckbox:GetChecked()) then
+			HealingAssignmentsTemplates.Options.TankAsWarlock = 1 
+		else
+			HealingAssignmentsTemplates.Options.TankAsWarlock = nil;
+		end;
+	end);
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WarlockCheckbox:SetChecked(HealingAssignmentsTemplates.Options.TankAsWarlock)
 	
 	local Warlock = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
     Warlock:SetPoint("TOPLEFT", 190, -50)
