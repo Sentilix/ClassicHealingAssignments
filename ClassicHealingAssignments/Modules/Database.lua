@@ -4,6 +4,52 @@ local GlobalTankDropDownID -- use global variable to get ID into populate functi
 HealingAsssignments.Raiddatabase = {} -- Database of raidmembers -> all 40
 
 
+local CHA_NAME_LEFTSIDE	= "LEFT";
+local CHA_NAME_RIGHTSIDE= "RIGHT";
+local CHA_NAME_CUSTOM	= "CUSTOM";
+local CHA_NAME_SKULL	= "SKULL";
+local CHA_NAME_CROSS	= "CROSS";
+local CHA_NAME_CIRCLE	= "CIRCLE";
+local CHA_NAME_STAR		= "STAR";
+local CHA_NAME_SQUARE	= "SQUARE";
+local CHA_NAME_TRIANGLE	= "TRIANGLE";
+local CHA_NAME_DIAMOND	= "DIAMOND";
+local CHA_NAME_MOON		= "MOON";
+local CHA_NAME_DRUID	= "DRUID";
+local CHA_NAME_HUNTER	= "HUNTER";
+local CHA_NAME_MAGE		= "MAGE";
+local CHA_NAME_PALADIN	= "PALADIN";
+local CHA_NAME_PRIEST	= "PRIEST";
+local CHA_NAME_ROGUE	= "ROGUE";
+local CHA_NAME_SHAMAN	= "SHAMAN";
+local CHA_NAME_WARLOCK	= "WARLOCK";
+local CHA_NAME_WARRIOR	= "WARRIOR";
+
+-- { Normal, DropDown, UI form, Color }
+local CHA_Names = {
+	{ CHA_NAME_LEFTSIDE,	"<< Left side",		"<< Left side",		"FF0000" },
+	{ CHA_NAME_RIGHTSIDE,	"Right side >>",	"Right side >>",	"00FF00" },
+	{ CHA_NAME_CUSTOM,		CHA_NAME_CUSTOM,	CHA_NAME_CUSTOM,	"00FFC0" },
+	{ CHA_NAME_SKULL,		"Skull",			"{skull}",			"FFFFFF" },
+	{ CHA_NAME_CROSS,		"Cross",			"{cross}",			"FF0000" },
+	{ CHA_NAME_CIRCLE,		"Circle",			"{circle}",			"A07000" },
+	{ CHA_NAME_STAR,		"Star",				"{star}",			"FFFF00" },
+	{ CHA_NAME_SQUARE,		"Square",			"{square}",			"0080FF" },
+	{ CHA_NAME_TRIANGLE,	"Triangle",			"{triangle}",		"00FF00" },
+	{ CHA_NAME_DIAMOND,		"Diamond",			"{diamond}",		"FF00FF" },
+	{ CHA_NAME_MOON,		"Moon",				"{moon}",			"A0A0A0" },
+	{ CHA_NAME_DRUID,		CHA_NAME_DRUID,		CHA_NAME_DRUID,		"FF7D04" },
+	{ CHA_NAME_HUNTER,		CHA_NAME_HUNTER,	CHA_NAME_HUNTER,	"ABD473" },
+	{ CHA_NAME_MAGE,		CHA_NAME_MAGE,		CHA_NAME_MAGE,		"68CCF0" },
+	{ CHA_NAME_PALADIN,		CHA_NAME_PALADIN,	CHA_NAME_PALADIN,	"F58CBA" },
+	{ CHA_NAME_PRIEST,		CHA_NAME_PRIEST,	CHA_NAME_PRIEST,	"FFFFFF" },
+	{ CHA_NAME_ROGUE,		CHA_NAME_ROGUE,		CHA_NAME_ROGUE,		"FFF568" },
+	{ CHA_NAME_SHAMAN,		CHA_NAME_SHAMAN,	CHA_NAME_SHAMAN,	"F58CBA" },
+	{ CHA_NAME_WARLOCK,		CHA_NAME_WARLOCK,	CHA_NAME_WARLOCK,	"9482CA" },
+	{ CHA_NAME_WARRIOR,		CHA_NAME_WARRIOR,	CHA_NAME_WARRIOR,	"C79C6E" },
+};
+
+
 local CHA_LEFT_DBOX = "<< Left side";
 local CHA_RIGHT_DBOX = "Right side >>";
 
@@ -25,7 +71,17 @@ local CHA_MOON_ICON = "{Moon}";
 local CHA_MOON_DBOX = "MOON";
 
 
+function CHA_GetNames(nameString)
+	for n=1, table.getn(CHA_Names) do
+		if CHA_Names[n][1] == nameString then
+			return CHA_Names[n];
+		end;
+	end;
+	return nil;
+end;
 
+
+--[[
 function HealingAsssignments:GetDropdownString(name)
 	if name == CHA_SKULL_ICON then 
 		name = CHA_SKULL_DBOX
@@ -47,37 +103,47 @@ function HealingAsssignments:GetDropdownString(name)
 
 	return name;
 end
+--]]
 
-function HealingAsssignments:GetIconString(name)
-	if name == CHA_SKULL_DBOX then 
-		name = CHA_SKULL_ICON
-	elseif name == CHA_CROSS_DBOX then 
-		name = CHA_CROSS_ICON
-	elseif name == CHA_CIRCLE_DBOX then 
-		name = CHA_CIRCLE_ICON
-	elseif name == CHA_STAR_DBOX then 
-		name = CHA_STAR_ICON
-	elseif name == CHA_SQUARE_DBOX then 
-		name = CHA_SQUARE_ICON
-	elseif name == CHA_TRIANGLE_DBOX then 
-		name = CHA_TRIANGLE_ICON
-	elseif name == CHA_DIAMOND_DBOX then 
-		name = CHA_DIAMOND_ICON
-	elseif name == CHA_MOON_DBOX then 
-		name = CHA_MOON_ICON
+---- Deprecated!
+--function HealingAsssignments:GetIconString(name)
+--	if name == CHA_SKULL_DBOX then 
+--		name = CHA_SKULL_ICON
+--	elseif name == CHA_CROSS_DBOX then 
+--		name = CHA_CROSS_ICON
+--	elseif name == CHA_CIRCLE_DBOX then 
+--		name = CHA_CIRCLE_ICON
+--	elseif name == CHA_STAR_DBOX then 
+--		name = CHA_STAR_ICON
+--	elseif name == CHA_SQUARE_DBOX then 
+--		name = CHA_SQUARE_ICON
+--	elseif name == CHA_TRIANGLE_DBOX then 
+--		name = CHA_TRIANGLE_ICON
+--	elseif name == CHA_DIAMOND_DBOX then 
+--		name = CHA_DIAMOND_ICON
+--	elseif name == CHA_MOON_DBOX then 
+--		name = CHA_MOON_ICON
+--	end;
+
+--	return name;
+--end
+
+-- Called when writing a string to the console:
+function HealingAsssignments:GetTextUIString(name)
+	if string.sub(name, 1, 1) == "|" then
+		-- Player-by-name; remove color info:
+		-- 10 chars: "|c00FFFFFF" + 2 chars: "|r"
+		local nameStr = string.sub(name, 11);
+		name = string.sub(nameStr, 1, string.len(nameStr) - 2);
+		name = "["..name.."]";
+	else
+		local names = CHA_GetNames(name);
+		if names then
+			name = names[3];
+		end;
 	end;
 
 	return name;
-end
-
-function HealingAsssignments:GetTextUIString(name)
-	local newName = HealingAsssignments:GetIconString(name);
-
-	if(name == newName) then
-		newName = "["..name.."]";
-	end;
-
-	return newName;
 end;
 
 
@@ -85,6 +151,7 @@ end;
 -- populate a specific tank dropdown
 function HealingAsssignments.Mainframe:PopulateTankDropdown()
 
+	local names;
 	local OptionsFrame = 16
 	local LeftsideCheck = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.LeftsideCheckbox:GetChecked();
 	local RightsideCheck = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.RightsideCheckbox:GetChecked()
@@ -104,21 +171,12 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		(HealingAsssignments.Raiddatabase[i].Class == "PRIEST" and HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.PriestCheckbox:GetChecked()) or
 		(HealingAsssignments.Raiddatabase[i].Class == "PALADIN" and HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.PaladinCheckbox:GetChecked())
 		then
+			names = CHA_GetNames(HealingAsssignments.Raiddatabase[i].Class);
 			info.text = HealingAsssignments.Raiddatabase[i].Name
-			if HealingAsssignments.Raiddatabase[i].Class == "WARRIOR" then info.textR = 0.78; info.textG = 0.61; info.textB = 0.43;
-			elseif HealingAsssignments.Raiddatabase[i].Class == "DRUID" then info.textR = 1.00; info.textG = 0.49; info.textB = 0.04;
-			elseif HealingAsssignments.Raiddatabase[i].Class == "HUNTER" then info.textR = 0.67; info.textG = 0.83; info.textB = 0.45;
-			elseif HealingAsssignments.Raiddatabase[i].Class == "MAGE" then info.textR = 0.41; info.textG = 0.80; info.textB = 0.94;
-			elseif HealingAsssignments.Raiddatabase[i].Class == "ROGUE" then info.textR = 1.00; info.textG = 0.96; info.textB = 0.41;
-			elseif HealingAsssignments.Raiddatabase[i].Class == "WARLOCK" then info.textR = 0.58; info.textG = 0.51; info.textB = 0.79;
-			elseif HealingAsssignments.Raiddatabase[i].Class == "SHAMAN" then info.textR = 0.96; info.textG = 0.55; info.textB = 0.73;
-			elseif HealingAsssignments.Raiddatabase[i].Class == "PRIEST" then info.textR = 1.00; info.textG = 1.00; info.textB = 1.00;
-			elseif HealingAsssignments.Raiddatabase[i].Class == "PALADIN" then info.textR = 0.96; info.textG = 0.55; info.textB = 0.73;
-			end	
+			info.colorCode = "|c00".. names[4];
 			info.checked = false
 			info.notCheckable = true
 			info.func = function(self)
-				--UIDropDownMenu_SetSelectedID(GlobalTankDropDownID, self:GetID(), 0);
 				UIDropDownMenu_SetText(GlobalTankDropDownID, self:GetText())
 
 				HealingAsssignments:UpdateRaidDataBase()
@@ -127,14 +185,14 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		end
 	end
 
+	local names;
 	if LeftsideCheck then 
-		-- create emtpy field to deleting
-		info.text = CHA_LEFT_DBOX;
-		info.textR = 1; info.textG = 0; info.textB = 0;
+		names = CHA_GetNames(CHA_NAME_LEFTSIDE);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info.checked = false
 		info.notCheckable = true
 		info.func = function(self)
-			--UIDropDownMenu_SetSelectedID(GlobalTankDropDownID, self:GetID(), 0);
 			UIDropDownMenu_SetText(GlobalTankDropDownID, self:GetText())
 			HealingAsssignments:UpdateRaidDataBase()
 		end
@@ -142,13 +200,12 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 	end
 	
 	if RightsideCheck then 
-		-- create emtpy field to deleting
-		info.text = CHA_RIGHT_DBOX;
-		info.textR = 0; info.textG = 0; info.textB = 1;
+		names = CHA_GetNames(CHA_NAME_RIGHTSIDE);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info.checked = false
 		info.notCheckable = true
 		info.func = function(self)
-			--UIDropDownMenu_SetSelectedID(GlobalTankDropDownID, self:GetID(), 0);
 			UIDropDownMenu_SetText(GlobalTankDropDownID, self:GetText())
 			HealingAsssignments:UpdateRaidDataBase()
 		end
@@ -156,13 +213,12 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 	end
 	
 	if CustomCheckbox then 
-		-- create emtpy field to deleting
+		names = CHA_GetNames(CHA_NAME_CUSTOM);
 		info.text = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.CustomCheckboxText:GetText()
-		info.textR = 0; info.textG = 1; info.textB = 0;
+		info.colorCode = "|c00".. names[4];
 		info.checked = false
 		info.notCheckable = true
 		info.func = function(self)
-			--UIDropDownMenu_SetSelectedID(GlobalTankDropDownID, self:GetID(), 0);
 			UIDropDownMenu_SetText(GlobalTankDropDownID, self:GetText())
 			HealingAsssignments:UpdateRaidDataBase()
 		end
@@ -171,12 +227,10 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 
 	-- Raid Marks for Tanks:
 	if HealingAsssignments.Mainframe.Foreground.Profile[1].Template[16].Assigments.Content.TankRaidMarkCheckbox:GetChecked() then 
-		-- {Skull}
+		names = CHA_GetNames(CHA_NAME_SKULL);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info = UIDropDownMenu_CreateInfo();
-		info.text = CHA_SKULL_DBOX;
-		info.textR = 1; 
-		info.textG = 1; 
-		info.textB = 1;
 		info.checked = false;
 		info.notCheckable = true;
 		info.func = function(self)
@@ -187,10 +241,9 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		
 		-- {Cross}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = CHA_CROSS_DBOX;
-		info.textR = 1; 
-		info.textG = 0; 
-		info.textB = 0;
+		names = CHA_GetNames(CHA_NAME_CROSS);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info.checked = false
 		info.notCheckable = true;
 		info.func = function(self)
@@ -201,10 +254,9 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		
 		-- {Circle}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = CHA_CIRCLE_DBOX;
-		info.textR = 1; 
-		info.textG = 0.647; 
-		info.textB = 0;
+		names = CHA_GetNames(CHA_NAME_CIRCLE);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info.checked = false
 		info.notCheckable = true;
 		info.func = function(self)
@@ -215,10 +267,9 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		
 		-- {Star}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = CHA_STAR_DBOX;
-		info.textR = 1; 
-		info.textG = 1; 
-		info.textB = 0;
+		names = CHA_GetNames(CHA_NAME_STAR);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info.checked = false
 		info.notCheckable = true;
 		info.func = function(self)
@@ -229,10 +280,9 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		
 		-- 	{Square}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = CHA_SQUARE_DBOX;
-		info.textR = 0.255; 
-		info.textG = 0.412; 
-		info.textB = 0.882;
+		names = CHA_GetNames(CHA_NAME_SQUARE);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info.checked = false
 		info.notCheckable = true;
 		info.func = function(self)
@@ -243,10 +293,9 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		
 		-- {Triangle}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = CHA_TRIANGLE_DBOX;
-		info.textR = 0; 
-		info.textG = 1; 
-		info.textB = 0;
+		names = CHA_GetNames(CHA_NAME_TRIANGLE);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info.checked = false
 		info.notCheckable = true;
 		info.func = function(self)
@@ -257,10 +306,9 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		
 		--{Diamond}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = CHA_DIAMOND_DBOX;
-		info.textR = 1; 
-		info.textG = 0; 
-		info.textB = 1;
+		names = CHA_GetNames(CHA_NAME_DIAMOND);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info.checked = false
 		info.notCheckable = true;
 		info.func = function(self)
@@ -271,10 +319,9 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		
 		-- {Moon}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = CHA_MOON_DBOX;
-		info.textR = 0.878; 
-		info.textG = 1; 
-		info.textB = 1;
+		names = CHA_GetNames(CHA_NAME_MOON);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info.checked = false
 		info.notCheckable = true;
 		info.func = function(self)
@@ -291,7 +338,6 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 	info.text = " "
 	info.checked = false
 	info.func = function(self)
-		--UIDropDownMenu_SetSelectedID(GlobalTankDropDownID, self:GetID(), 0);
 		UIDropDownMenu_SetText(GlobalTankDropDownID, self:GetText())
 		HealingAsssignments:UpdateRaidDataBase()
 	end
@@ -301,6 +347,7 @@ end
 -- populate a specific healer dropdown
 function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 	local info;
+	local names;
 
 	for i=1,table.getn(HealingAsssignments.Raiddatabase) do
 
@@ -311,26 +358,30 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 
 			info = UIDropDownMenu_CreateInfo();
 
+			names = CHA_GetNames(HealingAsssignments.Raiddatabase[i].Class);
+			info.colorCode = "|c00".. names[4];
 			info.text = HealingAsssignments.Raiddatabase[i].Name
-			if HealingAsssignments.Raiddatabase[i].Class == "WARRIOR" then 
-				info.textR = 0.78; info.textG = 0.61; info.textB = 0.43;
-			elseif HealingAsssignments.Raiddatabase[i].Class == "DRUID" then 
-				info.textR = 1.00; info.textG = 0.49; info.textB = 0.04;
-			elseif HealingAsssignments.Raiddatabase[i].Class == "HUNTER" then 
-				info.textR = 0.67; info.textG = 0.83; info.textB = 0.45;
-			elseif HealingAsssignments.Raiddatabase[i].Class == "MAGE" then 
-				info.textR = 0.41; info.textG = 0.80; info.textB = 0.94;
-			elseif HealingAsssignments.Raiddatabase[i].Class == "ROGUE" then 
-				info.textR = 1.00; info.textG = 0.96; info.textB = 0.41;
-			elseif HealingAsssignments.Raiddatabase[i].Class == "WARLOCK" then 
-				info.textR = 0.58; info.textG = 0.51; info.textB = 0.79;
-			elseif HealingAsssignments.Raiddatabase[i].Class == "SHAMAN" then 
-				info.textR = 0.96; info.textG = 0.55; info.textB = 0.73;
-			elseif HealingAsssignments.Raiddatabase[i].Class == "PRIEST" then 
-				info.textR = 1.00; info.textG = 1.00; info.textB = 1.00;
-			elseif HealingAsssignments.Raiddatabase[i].Class == "PALADIN" then 
-				info.textR = 0.96; info.textG = 0.55; info.textB = 0.73;
-			end	
+
+			--if HealingAsssignments.Raiddatabase[i].Class == "WARRIOR" then 
+			--	info.textR = 0.78; info.textG = 0.61; info.textB = 0.43;
+			--elseif HealingAsssignments.Raiddatabase[i].Class == "DRUID" then 
+			--	info.textR = 1.00; info.textG = 0.49; info.textB = 0.04;
+			--elseif HealingAsssignments.Raiddatabase[i].Class == "HUNTER" then 
+			--	info.textR = 0.67; info.textG = 0.83; info.textB = 0.45;
+			--elseif HealingAsssignments.Raiddatabase[i].Class == "MAGE" then 
+			--	info.textR = 0.41; info.textG = 0.80; info.textB = 0.94;
+			--elseif HealingAsssignments.Raiddatabase[i].Class == "ROGUE" then 
+			--	info.textR = 1.00; info.textG = 0.96; info.textB = 0.41;
+			--elseif HealingAsssignments.Raiddatabase[i].Class == "WARLOCK" then 
+			--	info.textR = 0.58; info.textG = 0.51; info.textB = 0.79;
+			--elseif HealingAsssignments.Raiddatabase[i].Class == "SHAMAN" then 
+			--	info.textR = 0.96; info.textG = 0.55; info.textB = 0.73;
+			--elseif HealingAsssignments.Raiddatabase[i].Class == "PRIEST" then 
+			--	info.textR = 1.00; info.textG = 1.00; info.textB = 1.00;
+			--elseif HealingAsssignments.Raiddatabase[i].Class == "PALADIN" then 
+			--	info.textR = 0.96; info.textG = 0.55; info.textB = 0.73;
+			--end	
+
 			info.checked = false;
 			info.notCheckable = true;
 			info.func = function(self)
@@ -350,10 +401,10 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 
 		-- {Skull}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = CHA_SKULL_DBOX;
-		info.textR = 1; 
-		info.textG = 1; 
-		info.textB = 1;
+		info = UIDropDownMenu_CreateInfo();
+		names = CHA_GetNames(CHA_NAME_SKULL);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info.checked = false;
 		info.notCheckable = true;
 		info.func = function(self)
@@ -365,10 +416,9 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 		
 		-- {Cross}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = CHA_CROSS_DBOX;
-		info.textR = 1; 
-		info.textG = 0; 
-		info.textB = 0;
+		names = CHA_GetNames(CHA_NAME_CROSS);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info.checked = false
 		info.notCheckable = true;
 		info.func = function(self)
@@ -380,10 +430,9 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 		
 		-- {Circle}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = CHA_CIRCLE_DBOX;
-		info.textR = 1; 
-		info.textG = 0.647; 
-		info.textB = 0;
+		names = CHA_GetNames(CHA_NAME_CIRCLE);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info.checked = false
 		info.notCheckable = true;
 		info.func = function(self)
@@ -395,10 +444,9 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 		
 		-- {Star}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = CHA_STAR_DBOX;
-		info.textR = 1; 
-		info.textG = 1; 
-		info.textB = 0;
+		names = CHA_GetNames(CHA_NAME_STAR);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info.checked = false
 		info.notCheckable = true;
 		info.func = function(self)
@@ -410,10 +458,9 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 		
 		-- 	{Square}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = CHA_SQUARE_DBOX;
-		info.textR = 0.255; 
-		info.textG = 0.412; 
-		info.textB = 0.882;
+		names = CHA_GetNames(CHA_NAME_SQUARE);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info.checked = false
 		info.notCheckable = true;
 		info.func = function(self)
@@ -425,10 +472,9 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 		
 		-- {Triangle}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = CHA_TRIANGLE_DBOX;
-		info.textR = 0; 
-		info.textG = 1; 
-		info.textB = 0;
+		names = CHA_GetNames(CHA_NAME_TRIANGLE);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info.checked = false
 		info.notCheckable = true;
 		info.func = function(self)
@@ -440,10 +486,9 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 		
 		--{Diamond}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = CHA_DIAMOND_DBOX;
-		info.textR = 1; 
-		info.textG = 0; 
-		info.textB = 1;
+		names = CHA_GetNames(CHA_NAME_DIAMOND);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info.checked = false
 		info.notCheckable = true;
 		info.func = function(self)
@@ -455,10 +500,9 @@ function HealingAsssignments.Mainframe:PopulateHealerDropdown()
 		
 		-- {Moon}
 		info = UIDropDownMenu_CreateInfo();
-		info.text = CHA_MOON_DBOX;
-		info.textR = 0.878; 
-		info.textG = 1; 
-		info.textB = 1;
+		names = CHA_GetNames(CHA_NAME_MOON);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
 		info.checked = false
 		info.notCheckable = true;
 		info.func = function(self)

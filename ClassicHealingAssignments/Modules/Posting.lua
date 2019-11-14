@@ -50,7 +50,6 @@ function HealingAsssignments:PostAssignments()
 				SendChatMessage("° ° ° Healing Assignments ° ° °",chan,nil,chanNum) 
 				-- here you find the action!
 				for v=1,table.getn(TankName) do
-					--TankName[v] = HealingAsssignments:GetColoredString(TankName[v])
 					TankName[v] = HealingAsssignments:GetTextUIString(TankName[v])
 					PostString = ""
 					PostString = PostString..TankName[v]..": --> "
