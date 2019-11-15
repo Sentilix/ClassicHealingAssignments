@@ -186,8 +186,6 @@ function HealingAsssignments:PostDeathWarning(PlayerName)
 				for j=1,HealerNum do
 					HealerNameTemp = _G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"]:GetText(" ");
 					if HealerNameTemp == PlayerName then 
-						--HealerNameTemp = HealingAsssignments:GetColoredString(HealerNameTemp,1)
-						--TankNameTemp = HealingAsssignments:GetColoredString(TankNameTemp,1)
 						HealerNameTemp = HealingAsssignments:GetTextUIString(HealerNameTemp,1)
 						TankNameTemp = HealingAsssignments:GetTextUIString(TankNameTemp,1)
 						SendChatMessage(HealerNameTemp.." died - Tank was "..TankNameTemp..".",chan,nil,chanNum) 

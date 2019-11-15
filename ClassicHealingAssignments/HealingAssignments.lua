@@ -40,7 +40,7 @@ local function echo(msg)
 	end
 end
 
-function CHA_GetPlayerName(nameAndRealm)
+function HealingAsssignments:GetPlayerName(nameAndRealm)
 	local _, _, name = string.find(nameAndRealm, "([^-]*)-%s*");
 	if not name then
 		name = nameAndRealm;
@@ -51,7 +51,6 @@ end;
 
 
 function HealingAsssignments:OnUpdate()
-
 end
 
 
@@ -66,7 +65,7 @@ function HealingAsssignments:OnEvent(event, ...)
 		local _, _, cmd, message, recipient = string.find(msg, "([^#]*)#([^#]*)#([^#]*)");	
 		
 		if not (recipient == "") then
-			if not (recipient == CHA_GetPlayerName(UnitName("player"))) then
+			if not (recipient == HealingAsssignments:GetPlayerName(UnitName("player"))) then
 				return
 			end
 		end
@@ -1233,12 +1232,6 @@ function HealingAsssignments.Mainframe:CreateOptions(TemplateNumber)
 		else
 			HealingAssignmentsTemplates.Options.AdditionHealers = nil;
 		end;
-
-		--if HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.AdditionalHealersCheckbox:GetChecked() == nil then 
-		--	HealingAssignmentsTemplates.Options.AdditionHealers = nil
-		--elseif HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.AdditionalHealersCheckbox:GetChecked() == 1 then 
-		--	HealingAssignmentsTemplates.Options.AdditionHealers = 1 
-		--end
 	end);
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.AdditionalHealersCheckbox:SetChecked(HealingAssignmentsTemplates.Options.AdditionHealers)
 	
@@ -1325,7 +1318,6 @@ function HealingAsssignments.Minimap:CreateMinimapIcon()
 	self:SetPoint("CENTER", -75, -20)
 	
 	self.Button = CreateFrame("Button",nil,self)
-	--self.Button:SetFrameStrata('HIGH')	
 	self.Button:SetPoint("CENTER",0,0)
 	self.Button:SetWidth(31)
 	self.Button:SetHeight(31)
@@ -1400,7 +1392,6 @@ function HealingAsssignments.Mainframe:AddTemplate()
 	if TemplateNumber <= 15 then
 		HealingAssignmentsTemplates.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[TemplateNumber] = {}
 		self.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[TemplateNumber] = {}
-		--DEFAULT_CHAT_FRAME:AddMessage(TemplateNumber)
 		local name = self.Background.TemplateOption.Editbox:GetText()
 		-- create Template
 		HealingAssignmentsTemplates.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[TemplateNumber].Name = name -- Save this to global
@@ -1714,17 +1705,13 @@ function HealingAsssignments.Mainframe:AddTankDropdown(ProfileNum,TemplateNumber
 		)
 		self.Foreground.Profile[ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[ActiveTankFrame].Tank[ActiveTankFrame]:SetPoint("TOPLEFT", -12, -20)
 
-		--getglobal(self.Foreground.Profile[ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[ActiveTankFrame].Tank[ActiveTankFrame]:GetName().."Button"):SetScript("OnClick", function()
 		_G[self.Foreground.Profile[ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[ActiveTankFrame].Tank[ActiveTankFrame]:GetName().."Button"]:SetScript("OnClick", function()
-			--local DropDownID = getglobal(self.Foreground.Profile[ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[ActiveTankFrame].Tank[ActiveTankFrame]:GetName())
 			local DropDownID = _G[self.Foreground.Profile[ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[ActiveTankFrame].Tank[ActiveTankFrame]:GetName()];
 			HealingAsssignments.Mainframe:TankDropDownOnClick(DropDownID);
 			PlaySound(882, "Master");
-			--ToggleDropDownMenu();
 			ToggleDropDownMenu(1, nil, DropDownID, DropDownID:GetName(), 0, 0);
 		end);
 
-		--getglobal(self.Foreground.Profile[ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[ActiveTankFrame].Tank[ActiveTankFrame]:GetName().."Text"):SetText(" ")
 		_G[self.Foreground.Profile[ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[ActiveTankFrame].Tank[ActiveTankFrame]:GetName().."Text"]:SetText(" ");
 
 		
@@ -1781,19 +1768,14 @@ function HealingAsssignments.Mainframe:AddHealerDropdown(ProfileNum,TemplateNumb
 				"UIDropDownMenuTemplate"
 			);
 
-			-- TIV: OnClick handler on Healer dropdown button - WHat do we do here? Pick selected healer?
-			--getglobal(self.Foreground.Profile[ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[ActiveTankFrame].Healer[ActiveHealerFrame]:GetName().."Button"):SetScript("OnClick", function(...)
 			_G[self.Foreground.Profile[ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[ActiveTankFrame].Healer[ActiveHealerFrame]:GetName().."Button"]:SetScript("OnClick", function()
-				--local DropDownID = getglobal(self.Foreground.Profile[ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[ActiveTankFrame].Healer[ActiveHealerFrame]:GetName())
 				local DropDownID = _G[self.Foreground.Profile[ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[ActiveTankFrame].Healer[ActiveHealerFrame]:GetName()];
 
 				HealingAsssignments.Mainframe:HealerDropDownOnClick(DropDownID);
 				PlaySound(882, "Master");
-				--ToggleDropDownMenu();
 				ToggleDropDownMenu(1, nil, DropDownID, DropDownID:GetName(), 0, 0);
 			end)
 
-			--getglobal(HealingAsssignments.Mainframe.Foreground.Profile[ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[ActiveTankFrame].Healer[ActiveHealerFrame]:GetName().."Text"):SetText(" ")
 			_G[HealingAsssignments.Mainframe.Foreground.Profile[ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[ActiveTankFrame].Healer[ActiveHealerFrame]:GetName().."Text"]:SetText(" ")
 			
 			if math.fmod(ActiveHealerFrame,4) == 1 then 
@@ -1859,7 +1841,6 @@ function HealingAsssignments.Mainframe:LoadDropdown(ProfileNum,TemplateNumber)
 		HealingAsssignments.Mainframe:AddTankDropdown(ProfileNum,TemplateNumber)
 		HealerNum = HealingAssignmentsTemplates.Profile[ProfileNum].Template[TemplateNumber].TankHealer[i]
 
-		--getglobal(HealingAsssignments.Mainframe.Foreground.Profile[ProfileNum].Template[TemplateNumber].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"):SetText(HealingAssignmentsTemplates.Profile[ProfileNum].Template[TemplateNumber].Tank[i])
 		_G[HealingAsssignments.Mainframe.Foreground.Profile[ProfileNum].Template[TemplateNumber].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:SetText(HealingAssignmentsTemplates.Profile[ProfileNum].Template[TemplateNumber].Tank[i]);
 
 		if HealerNum == nil then 
@@ -1868,7 +1849,6 @@ function HealingAsssignments.Mainframe:LoadDropdown(ProfileNum,TemplateNumber)
 		for j=1,HealerNum do
 			HealingAsssignments.Mainframe:AddHealerDropdown(ProfileNum,TemplateNumber)
 			if HealingAssignmentsTemplates.Profile[ProfileNum].Template[TemplateNumber].Tankhealernames[i] ~= nil then
-				--getglobal(HealingAsssignments.Mainframe.Foreground.Profile[ProfileNum].Template[TemplateNumber].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"):SetText(HealingAssignmentsTemplates.Profile[ProfileNum].Template[TemplateNumber].Tankhealernames[i].Healer[j])
 				_G[HealingAsssignments.Mainframe.Foreground.Profile[ProfileNum].Template[TemplateNumber].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"]:SetText(HealingAssignmentsTemplates.Profile[ProfileNum].Template[TemplateNumber].Tankhealernames[i].Healer[j]);
 			end
 		end
@@ -1884,12 +1864,10 @@ function HealingAsssignments.Mainframe:ResetDropdownText()
 		for i=1,TankNum do
 			HealerNum = HealingAssignmentsTemplates.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[ActiveFrame].TankHealer[i]
 
-			--getglobal(HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"):SetText(" ")
 			_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:SetText(" ");
 
 			if HealerNum == nil then HealerNum = 0 end
 			for j=1,HealerNum do
-				--getglobal(HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"):SetText(" ")
 				_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"]:SetText(" ");
 			end
 		end
