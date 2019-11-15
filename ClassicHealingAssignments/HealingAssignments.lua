@@ -70,7 +70,7 @@ function HealingAsssignments:OnEvent(event, ...)
 			end
 		end
 
-		sender = CHA_GetPlayerName(sender);
+		sender = HealingAsssignments:GetPlayerName(sender);
 
 		if cmd == "TX_VERSION" then
 			HealingAsssignments:HandleTXVersion(message,sender);
@@ -100,7 +100,7 @@ function HealingAsssignments:OnEvent(event, ...)
 		
 	elseif event == "CHAT_MSG_WHISPER" then
 		local arg1, arg2 = ...;
-		local sender = CHA_GetPlayerName(arg2);
+		local sender = HealingAsssignments:GetPlayerName(arg2);
 
 		if arg1 == "!repost" or arg1 == "repost" then
 			HealingAsssignments:RepostAssignments(sender)
