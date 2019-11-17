@@ -116,6 +116,8 @@ function HealingAsssignments:AnswerAssignments(PlayerName)
 			end
 
 			TankNameTemp = _G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:GetText(" ");
+			TankNameTemp = HealingAsssignments:WashName(TankNameTemp);
+
 			if TankNameTemp == PlayerName then 
 				WhisperString = "Your Healers are: "
 				for j=1,HealerNum do
@@ -129,6 +131,8 @@ function HealingAsssignments:AnswerAssignments(PlayerName)
 			else 
 				for j=1,HealerNum do
 					HealerNameTemp = _G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"]:GetText(" ");
+					HealerNameTemp = HealingAsssignments:WashName(HealerNameTemp);
+
 					if HealerNameTemp == PlayerName then 
 						WhisperString = "You are assigned to: "..TankNameTemp; 
 						break; 

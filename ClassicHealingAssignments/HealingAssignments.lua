@@ -14,7 +14,7 @@ HealingAsssignments.Syncframe = CreateFrame("Frame",nil,HealingAsssignments.Main
 tinsert(UISpecialFrames, "CHAMainFrame")
 
 HealingAsssignments:RegisterEvent("ADDON_LOADED")
-HealingAsssignments:RegisterEvent("RAID_ROSTER_UPDATE")
+HealingAsssignments:RegisterEvent("GROUP_ROSTER_UPDATE")
 HealingAsssignments:RegisterEvent("CHAT_MSG_WHISPER")
 --HealingAsssignments:RegisterEvent("CHAT_MSG_COMBAT_FRIENDLY_DEATH")
 HealingAsssignments:RegisterEvent("CHAT_MSG_ADDON")
@@ -50,8 +50,8 @@ function HealingAsssignments:GetPlayerName(nameAndRealm)
 end;
 
 
-function HealingAsssignments:OnUpdate()
-end
+--function HealingAsssignments:OnUpdate()
+--end
 
 
 function HealingAsssignments:OnEvent(event, ...)
@@ -88,7 +88,7 @@ function HealingAsssignments:OnEvent(event, ...)
 		--	HealingAsssignments.Syncframe:Send()
 		--end
 	
-	elseif event == "RAID_ROSTER_UPDATE" then
+	elseif event == "GROUP_ROSTER_UPDATE" then
 		HealingAsssignments:SetNumberOfHealers()
 		HealingAsssignments:UpdateRaidDataBase()
 	
@@ -137,7 +137,7 @@ end;
 
 
 HealingAsssignments:SetScript("OnEvent", HealingAsssignments.OnEvent)
-HealingAsssignments:SetScript("OnUpdate", HealingAsssignments.OnUpdate)
+--HealingAsssignments:SetScript("OnUpdate", HealingAsssignments.OnUpdate)
 
 
 -- from healCommm-1.0 addon / lua 5.1 workaround

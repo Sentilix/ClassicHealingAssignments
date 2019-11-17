@@ -67,13 +67,20 @@ local CHA_MOON_ICON = "{Moon}";
 local CHA_MOON_DBOX = "MOON";
 
 
--- Called when writing a string to the console:
-function HealingAsssignments:GetTextUIString(name)
+function HealingAsssignments:WashName(name)
 	if string.sub(name, 1, 1) == "|" then
 		-- Player-by-name; remove color info (10 chars): "|c00FFFFFF" + 2 chars: "|r"
 		local nameStr = string.sub(name, 11);
 		name = string.sub(nameStr, 1, string.len(nameStr) - 2);
 	end;
+
+	return name;
+end;
+
+
+-- Called when writing a string to the console:
+function HealingAsssignments:GetTextUIString(name)
+	name = HealingAsssignments:WashName(name);
 	
 	local names = HealingAsssignments:GetNames(name);
 	if names then
