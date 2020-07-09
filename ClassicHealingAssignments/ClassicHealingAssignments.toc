@@ -1,8 +1,8 @@
-## Interface: 11303
+## Interface: 11305
 ## Title: Classic Healing Assignments
 ## Author: Mimma @ <EU-Pyrewood Village>
 ## X-Originally By: Renew @ vanillagaming.org for the 1.12 client.
-## Version: 0.2.3
+## Version: 0.2.4
 ## Notes: Addon for Healing Assignments
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
