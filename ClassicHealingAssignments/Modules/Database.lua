@@ -4,9 +4,14 @@ local GlobalTankDropDownID -- use global variable to get ID into populate functi
 HealingAsssignments.Raiddatabase = {} -- Database of raidmembers -> all 40
 
 
-local CHA_NAME_LEFTSIDE	= "LEFT";
-local CHA_NAME_RIGHTSIDE= "RIGHT";
+local CHA_NAME_TANKS	= "TANKS";
+local CHA_NAME_RAID	= "RAID";
+local CHA_NAME_RANGED	= "RANGED";
+local CHA_NAME_MELEE    = "MELEE";
 local CHA_NAME_CUSTOM	= "CUSTOM";
+local CHA_NAME_CUSTOM2	= "CUSTOM2";
+local CHA_NAME_CUSTOM3	= "CUSTOM3";
+local CHA_NAME_CUSTOM4	= "CUSTOM4";
 local CHA_NAME_SKULL	= "SKULL";
 local CHA_NAME_CROSS	= "CROSS";
 local CHA_NAME_CIRCLE	= "CIRCLE";
@@ -27,9 +32,15 @@ local CHA_NAME_WARRIOR	= "WARRIOR";
 
 -- { Normal, DropDown, UI form, Color }
 local CHA_Names = {
-	{ CHA_NAME_LEFTSIDE,	"<< Left side",		"<< Left side",		"FF0000" },
-	{ CHA_NAME_RIGHTSIDE,	"Right side >>",	"Right side >>",	"00FF00" },
-	{ CHA_NAME_CUSTOM,		CHA_NAME_CUSTOM,	CHA_NAME_CUSTOM,	"00FFC0" },
+
+	{ CHA_NAME_TANKS,	"Tanks",		"Tanks",		"FF3F3F" },
+	{ CHA_NAME_RANGED,	"Ranged",		"Ranged",		"2BD1FC" },
+	{ CHA_NAME_MELEE,	"Melee",	"Melee",	"F3EA5F" },
+	{ CHA_NAME_RAID,	"Raid",		"Raid",		"C04DF9" },
+	{ CHA_NAME_CUSTOM,		CHA_NAME_CUSTOM,	CHA_NAME_CUSTOM,	"FF48C4" },
+	{ CHA_NAME_CUSTOM2,		CHA_NAME_CUSTOM2,	CHA_NAME_CUSTOM2,	"6AE6BC" },
+	{ CHA_NAME_CUSTOM3,		CHA_NAME_CUSTOM3,	CHA_NAME_CUSTOM3,	"4078FC" },
+	{ CHA_NAME_CUSTOM4,		CHA_NAME_CUSTOM4,	CHA_NAME_CUSTOM4,	"F79665" },
 	{ CHA_NAME_SKULL,		"Skull",			"{skull}",			"FFFFFF" },
 	{ CHA_NAME_CROSS,		"Cross",			"{cross}",			"FF0000" },
 	{ CHA_NAME_CIRCLE,		"Circle",			"{circle}",			"FFA400" },
@@ -115,10 +126,14 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 
 	local names;
 	local OptionsFrame = 16
-	local LeftsideCheck = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.LeftsideCheckbox:GetChecked();
-	local RightsideCheck = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.RightsideCheckbox:GetChecked()
+	local TanksCheck = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.TanksCheckbox:GetChecked();
+	local RaidCheck = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.RaidCheckbox:GetChecked();
+	local RangedCheck = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.RangedCheckbox:GetChecked();
+	local MeleeCheck = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.MeleeCheckbox:GetChecked()
 	local CustomCheckbox = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.CustomCheckbox:GetChecked()
-	
+	local Custom2Checkbox = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.Custom2Checkbox:GetChecked()
+	local Custom3Checkbox = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.Custom3Checkbox:GetChecked()
+	local Custom4Checkbox = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.Custom4Checkbox:GetChecked()
 
 	local info = {};
 	for i=1,table.getn(HealingAsssignments.Raiddatabase) do
@@ -139,7 +154,7 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 			info.checked = false
 			info.notCheckable = true
 			info.func = function(self)
-				UIDropDownMenu_SetText(GlobalTankDropDownID, self:GetText())
+			UIDropDownMenu_SetText(GlobalTankDropDownID, self:GetText())
 
 				HealingAsssignments:UpdateRaidDataBase()
 			end
@@ -148,8 +163,8 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 	end
 
 	local names;
-	if LeftsideCheck then 
-		names = HealingAsssignments:GetNames(CHA_NAME_LEFTSIDE);
+	if TanksCheck then 
+		names = HealingAsssignments:GetNames(CHA_NAME_TANKS);
 		info.text = names[2];
 		info.colorCode = "|c00".. names[4];
 		info.checked = false
@@ -160,9 +175,35 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		end
 		UIDropDownMenu_AddButton(info);
 	end
-	
-	if RightsideCheck then 
-		names = HealingAsssignments:GetNames(CHA_NAME_RIGHTSIDE);
+
+	if RaidCheck then 
+		names = HealingAsssignments:GetNames(CHA_NAME_RAID);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
+		info.checked = false
+		info.notCheckable = true
+		info.func = function(self)
+			UIDropDownMenu_SetText(GlobalTankDropDownID, self:GetText())
+			HealingAsssignments:UpdateRaidDataBase()
+		end
+		UIDropDownMenu_AddButton(info);
+	end
+
+	if RangedCheck then 
+		names = HealingAsssignments:GetNames(CHA_NAME_RANGED);
+		info.text = names[2];
+		info.colorCode = "|c00".. names[4];
+		info.checked = false
+		info.notCheckable = true
+		info.func = function(self)
+			UIDropDownMenu_SetText(GlobalTankDropDownID, self:GetText())
+			HealingAsssignments:UpdateRaidDataBase()
+		end
+		UIDropDownMenu_AddButton(info);
+	end
+
+	if MeleeCheck then 
+		names = HealingAsssignments:GetNames(CHA_NAME_MELEE);
 		info.text = names[2];
 		info.colorCode = "|c00".. names[4];
 		info.checked = false
@@ -186,6 +227,48 @@ function HealingAsssignments.Mainframe:PopulateTankDropdown()
 		end
 		UIDropDownMenu_AddButton(info);
 	end	
+
+	if Custom2Checkbox then 
+		names = HealingAsssignments:GetNames(CHA_NAME_CUSTOM2);
+		info.text = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.Custom2CheckboxText:GetText()
+		info.colorCode = "|c00".. names[4];
+		info.checked = false
+		info.notCheckable = true
+		info.func = function(self)
+			UIDropDownMenu_SetText(GlobalTankDropDownID, self:GetText())
+			HealingAsssignments:UpdateRaidDataBase()
+		end
+		UIDropDownMenu_AddButton(info);
+	end	
+
+	
+	if Custom3Checkbox then 
+		names = HealingAsssignments:GetNames(CHA_NAME_CUSTOM3);
+		info.text = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.Custom3CheckboxText:GetText()
+		info.colorCode = "|c00".. names[4];
+		info.checked = false
+		info.notCheckable = true
+		info.func = function(self)
+			UIDropDownMenu_SetText(GlobalTankDropDownID, self:GetText())
+			HealingAsssignments:UpdateRaidDataBase()
+		end
+		UIDropDownMenu_AddButton(info);
+	end	
+
+	
+	if Custom4Checkbox then 
+		names = HealingAsssignments:GetNames(CHA_NAME_CUSTOM4);
+		info.text = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.Custom4CheckboxText:GetText()
+		info.colorCode = "|c00".. names[4];
+		info.checked = false
+		info.notCheckable = true
+		info.func = function(self)
+			UIDropDownMenu_SetText(GlobalTankDropDownID, self:GetText())
+			HealingAsssignments:UpdateRaidDataBase()
+		end
+		UIDropDownMenu_AddButton(info);
+	end	
+
 
 	-- Raid Marks for Tanks:
 	if HealingAsssignments.Mainframe.Foreground.Profile[1].Template[16].Assigments.Content.TankRaidMarkCheckbox:GetChecked() then 
@@ -523,10 +606,22 @@ function HealingAsssignments:UpdateRaidDataBase()
 				end	
 			end
 			-- check for additional tanks
-			if TankName == CHA_NAME_LEFTSIDE then 
-				_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:SetTextColor(1,0,0,1);
-			elseif TankName == CHA_NAME_RIGHTSIDE then 
-				_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:SetTextColor(0,0,1,1);
+			if TankName == CHA_NAME_RAID then 
+				_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:SetTextColor(.7,.1,1,1);
+			elseif TankName == CHA_NAME_RANGED then 
+				_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:SetTextColor(0,.8,1,1);
+			elseif TankName == CHA_NAME_MELEE then 
+				_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:SetTextColor(.9,.9,.3,1);
+			elseif TankName == CHA_NAME_TANKS then 
+				_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:SetTextColor(1,.1,.1,1);
+			elseif TankName == CHA_NAME_CUSTOM then 
+				_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:SetTextColor(1,.3,.8,1);
+			elseif TankName == CHA_NAME_CUSTOM2 then 
+				_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:SetTextColor(.1,1,.6,1);
+			elseif TankName == CHA_NAME_CUSTOM3 then 
+				_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:SetTextColor(.2,.5,1,1);
+			elseif TankName == CHA_NAME_CUSTOM4 then 
+				_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:SetTextColor(1,.5,.4,1);
 			elseif foundName == 0 then 
 				_G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[activeFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:SetTextColor(0,1,0,1);
 			end
@@ -604,4 +699,3 @@ function HealingAsssignments:GetClassColors(RaidID)
 
 	return classColors;
 end
-

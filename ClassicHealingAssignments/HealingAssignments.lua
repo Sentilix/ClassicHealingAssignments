@@ -6,6 +6,7 @@ local COLOUR_INTRO							= COLOUR_BEGINMARK.."B040F0"
 
 local CHA_MESSAGE_PREFIX					= "CHA";
 
+
 HealingAsssignments = CreateFrame("Frame"); -- Event Frame
 HealingAsssignments.Minimap = CreateFrame("Frame",nil,Minimap) -- Minimap Frame
 HealingAsssignments.Mainframe = CreateFrame("Frame","CHAMainFrame",UIParent) -- Main Display Frame
@@ -16,19 +17,19 @@ tinsert(UISpecialFrames, "CHAMainFrame")
 HealingAsssignments:RegisterEvent("ADDON_LOADED")
 HealingAsssignments:RegisterEvent("GROUP_ROSTER_UPDATE")
 HealingAsssignments:RegisterEvent("CHAT_MSG_WHISPER")
---HealingAsssignments:RegisterEvent("CHAT_MSG_COMBAT_FRIENDLY_DEATH")
+HealingAsssignments:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 HealingAsssignments:RegisterEvent("CHAT_MSG_ADDON")
-
 
 C_ChatInfo.RegisterAddonMessagePrefix(CHA_MESSAGE_PREFIX);
 
+local GetTime, wipe, type, band = GetTime, wipe, type, bit.band
 
-
-
+local FEIGN = GetSpellInfo(5384)
 
 function HealingAsssignments:GetMessagePrefix()
 	return CHA_MESSAGE_PREFIX;
 end;
+
 
 
 --[[
@@ -53,9 +54,22 @@ end;
 --function HealingAsssignments:OnUpdate()
 --end
 
+-- function HealingAsssignments:COMBAT_LOG_EVENT_UNFILTERED(timestamp, event, hideCaster, srcGUID, srcName, srcFlags, srcRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
+-- 	if not (UnitInRaid(destName) or UnitInParty(destName)) then 
+-- 		return 
+-- 	end
+-- 	print(event)
+-- 	if event == "UNIT_DIED" and not UnitBuff(destName, FEIGN) then
+-- 		print("oh nos ", destName, " died")
+-- 		if HealingAsssignments.Mainframe.DeathWarningCheckbox:GetChecked() == 1 then
+-- 			HealingAsssignments:PostDeathWarning(string.sub(destName, 1, -7)) -- Name dies.
+-- 		end
+-- 	end
+-- end
+
 
 function HealingAsssignments:OnEvent(event, ...)
-
+	
 	if event == "CHAT_MSG_ADDON" then
 		local prefix, msg, channel, sender = ...;
 		if prefix ~= HealingAsssignments:GetMessagePrefix() then	
@@ -78,33 +92,37 @@ function HealingAsssignments:OnEvent(event, ...)
 			HealingAsssignments:HandleRXVersion(message,sender);
 		end;
 			
-		--local arg1, arg2, _, arg4 = ...;
-		--if HealingAsssignments.Mainframe.SyncCheckbox:GetChecked() == 1 and string.sub(arg1, 1, 3) == prefix and arg4 ~= UnitName("player") then
-		--	local TemplateNum = tonumber(string.sub(arg1, 5,6))
-		--	local TemplateName = string.sub(arg1, 8)
-		--	local NameArray = CHAstrsplit(arg2,"#")
-		--	HealingAsssignments.Syncframe:Receive(arg4,TemplateNum,TemplateName,NameArray)
-		--elseif HealingAsssignments.Mainframe.SyncCheckbox:GetChecked() == 1 and arg1 == "CHTrigger" and arg2 == "trigger" then 
-		--	HealingAsssignments.Syncframe:Send()
-		--end
+		local arg1, arg2, _, arg4 = ...;
+		if HealingAsssignments.Mainframe.SyncCheckbox:GetChecked() == 1 and string.sub(arg1, 1, 3) == prefix and arg4 ~= UnitName("player") then
+			print("SYNC")
+			local TemplateNum = tonumber(string.sub(arg1, 5,6))
+			local TemplateName = string.sub(arg1, 8)
+			local NameArray = CHAstrsplit(arg2,"#")
+			HealingAsssignments.Syncframe:Receive(arg4,TemplateNum,TemplateName,NameArray)
+		elseif HealingAsssignments.Mainframe.SyncCheckbox:GetChecked() == 1 and arg1 == "CHTrigger" and arg2 == "trigger" then 
+			HealingAsssignments.Syncframe:Send()
+		end
 	
 	elseif event == "GROUP_ROSTER_UPDATE" then
 		HealingAsssignments:SetNumberOfHealers()
 		HealingAsssignments:UpdateRaidDataBase()
-	
-	elseif event == "CHAT_MSG_COMBAT_FRIENDLY_DEATH" then
-		if HealingAsssignments.Mainframe.DeathWarningCheckbox:GetChecked() == 1 then
-			local arg1 = ...;
-			HealingAsssignments:PostDeathWarning(string.sub(arg1, 1, -7)) -- Name dies.
-		end;
-		
+
+	elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
+		local timestamp, type, hideCaster, sourceGUID, sourceName, sourceFlags, sourceFlags2, destGUID, destName, destFlags, destFlags2 = CombatLogGetCurrentEventInfo()
+		if not (UnitInRaid(destName) or UnitInParty(destName)) then 
+			return 
+		end
+		if type == "UNIT_DIED" and not AuraUtil.FindAuraByName("Feign Death", destName) then
+			if HealingAsssignments.Mainframe.DeathWarningCheckbox:GetChecked() then
+				HealingAsssignments:PostDeathWarning(destName) -- Name dies.
+			end
+		end
+
+
 	elseif event == "CHAT_MSG_WHISPER" then
 		local arg1, arg2 = ...;
 		local sender = HealingAsssignments:GetPlayerName(arg2);
 
-		if arg1 == "!repost" or arg1 == "repost" then
-			HealingAsssignments:RepostAssignments(sender)
-		end
 		if arg1 == "!heal" or arg1 == "heal" then
 			HealingAsssignments:AnswerAssignments(sender)
 		end
@@ -251,7 +269,11 @@ function HealingAsssignments.Mainframe:ConfigureFrame()
 		end
 	end
 	HealingAssignmentsTemplates.Profile[1].Name = UnitName("player")
-
+	HealingAssignmentsTemplates.Profile[2].Name = "Molten Core"
+	HealingAssignmentsTemplates.Profile[3].Name = "BlackWing Lair"
+	HealingAssignmentsTemplates.Profile[4].Name = "Ahn'Qiraj"
+	HealingAssignmentsTemplates.Profile[5].Name = "Naxxramas"
+	HealingAssignmentsTemplates.Profile[6].Name = "Other"
 	
 	
 	local OptionsFrameNum = 16;		-- options frame
@@ -284,8 +306,8 @@ function HealingAsssignments.Mainframe:ConfigureFrame()
 	
 	
 	-- Bottomright Background Frame
-	local backdrop = {bgFile = "Interface\\AddOns\\ClassicHealingAssignments\\Media\\Icon"}
-	local backdropMouseOver = {bgFile = "Interface\\AddOns\\ClassicHealingAssignments\\Media\\IconMouseOver"}
+	local backdrop = {bgFile = "Interface\\AddOns\\ClassicHealingAssignments\\Media\\icon"}
+	local backdropMouseOver = {bgFile = "Interface\\AddOns\\ClassicHealingAssignments\\Media\\iconmouseover"}
 	self.Background.Icon:SetFrameStrata("LOW")
 	self.Background.Icon:SetWidth(64) -- Set these to whatever height/width is needed 
 	self.Background.Icon:SetHeight(64) -- for your Texture
@@ -632,6 +654,7 @@ function HealingAsssignments.Mainframe:ConfigureFrame()
 	-- Open Sync Button
 	self.SyncButton = CreateFrame("Button",nil,self,"UIPanelButtonTemplate")
 	self.SyncButton:SetPoint("TOPLEFT",480,-48)
+	self.SyncButton:SetFrameStrata("MEDIUM")
 	self.SyncButton:SetWidth(60)
 	self.SyncButton:SetHeight(18)
 	self.SyncButton:SetText("Sync!")
@@ -692,10 +715,10 @@ function HealingAsssignments.Mainframe:ConfigureFrame()
     self.HealerChannelSelectedFontString:SetText("TEST")
 	
 	-- sync profiles string
-	--self.SyncProfilesString = self.Background.Topleft:CreateFontString(nil, "OVERLAY")
-	--self.SyncProfilesString:SetPoint("TOPLEFT", self, "TOPLEFT", 190, -416)
-    --self.SyncProfilesString:SetFont("Fonts\\FRIZQT__.TTF", 11)
-    --self.SyncProfilesString:SetText("Active Profile:     "..UnitName("player"))
+	self.SyncProfilesString = self.Background.Topleft:CreateFontString(nil, "OVERLAY")
+	self.SyncProfilesString:SetPoint("TOPLEFT", self, "TOPLEFT", 190, -416)
+    self.SyncProfilesString:SetFont("Fonts\\FRIZQT__.TTF", 11)
+    self.SyncProfilesString:SetText("Active Profile:     "..UnitName("player"))
 	
 	-- create Checkboxes
 	-- Death Warning Checkbox
@@ -703,8 +726,8 @@ function HealingAsssignments.Mainframe:ConfigureFrame()
 	self.DeathWarningCheckbox:SetPoint("TOPLEFT",260,-42)
 	self.DeathWarningCheckbox:SetFrameStrata("LOW")
 	self.DeathWarningCheckbox:SetScript("OnClick", function () 
-		if self.DeathWarningCheckbox:GetChecked() == nil then HealingAssignmentsTemplates.Options.Deathwarnings = nil
-		elseif self.DeathWarningCheckbox:GetChecked() == 1 then HealingAssignmentsTemplates.Options.Deathwarnings = 1 end
+		if not self.DeathWarningCheckbox:GetChecked() then HealingAssignmentsTemplates.Options.Deathwarnings = nil
+		elseif self.DeathWarningCheckbox:GetChecked() then HealingAssignmentsTemplates.Options.Deathwarnings = 1 end
 		end)
 	self.DeathWarningCheckbox:SetScript("OnEnter", function() 
 		GameTooltip:SetOwner(HealingAsssignments.Mainframe, "ANCHOR_TOPLEFT");
@@ -718,9 +741,15 @@ function HealingAsssignments.Mainframe:ConfigureFrame()
 	self.SyncCheckbox = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate")
 	self.SyncCheckbox:SetPoint("TOPLEFT",440,-42)
 	self.SyncCheckbox:SetFrameStrata("LOW")
-	self.SyncCheckbox:SetScript("OnClick", function () PlaySound(882, "Master");
-		if self.SyncCheckbox:GetChecked() == nil then HealingAssignmentsTemplates.Options.SyncData = nil; HealingAsssignments.Mainframe.SyncButton:Disable()
-		elseif self.SyncCheckbox:GetChecked() == 1 then HealingAssignmentsTemplates.Options.SyncData = 1; HealingAsssignments.Mainframe.SyncButton:Enable() end 
+	self.SyncCheckbox:SetScript("OnClick", function () 
+		PlaySound(882, "Master");
+		if not self.SyncCheckbox:GetChecked() then 
+			HealingAssignmentsTemplates.Options.SyncData = nil; 
+			HealingAsssignments.Mainframe.SyncButton:Disable();
+		elseif self.SyncCheckbox:GetChecked() then 
+			HealingAssignmentsTemplates.Options.SyncData = 1; 
+			HealingAsssignments.Mainframe.SyncButton:Enable(); 
+		end 
 		end)
 	self.SyncCheckbox:SetScript("OnEnter", function() 
 		GameTooltip:SetOwner(HealingAsssignments.Mainframe, "ANCHOR_TOPLEFT");
@@ -729,7 +758,7 @@ function HealingAsssignments.Mainframe:ConfigureFrame()
 	end)
 	self.SyncCheckbox:SetScript("OnLeave", function() GameTooltip:Hide() end)
 	self.SyncCheckbox:SetChecked(HealingAssignmentsTemplates.Options.SyncData)
-	if HealingAssignmentsTemplates.Options.SyncData == nil then HealingAsssignments.Mainframe.SyncButton:Disable() end
+	if HealingAssignmentsTemplates.Options.SyncData == nil then HealingAsssignments.Mainframe.SyncButton:Disable(); end
 	
 	
 	-- create Editbox
@@ -744,7 +773,7 @@ function HealingAsssignments.Mainframe:ConfigureFrame()
 	self.HealerChannelEditBox:SetScript("OnTextChanged", function() PlaySound(882, "Master");
 		HealingAssignmentsTemplates.Options.HealerChannel = self.HealerChannelEditBox:GetText()
 		HealingAsssignments.Mainframe:SetHealerChannelString()
-		HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrameNum].Assigments.Content.DeathWarningChannelTextbox:SetText(HealingAssignmentsTemplates.Options.HealerChannel)
+		-- HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrameNum].Assigments.Content.DeathWarningChannelTextbox:SetText(HealingAssignmentsTemplates.Options.HealerChannel)
 		end)
 	if HealingAssignmentsTemplates.Options.HealerChannel then self.HealerChannelEditBox:SetText(HealingAssignmentsTemplates.Options.HealerChannel) end	
 	
@@ -763,6 +792,7 @@ function HealingAsssignments.Mainframe:ConfigureFrame()
 	self.SyncDeleteButton:SetPoint("TOPLEFT",665,-46)
 	self.SyncDeleteButton:SetWidth(18)
 	self.SyncDeleteButton:SetHeight(18)
+	self.SyncDeleteButton:SetFrameStrata("MEDIUM")
 	self.SyncDeleteButton:SetText("X")
 	self.SyncDeleteButton:SetScript("OnClick", function() PlaySound(882, "Master")
 												HealingAsssignments.Syncframe:DeleteProfile()
@@ -806,7 +836,7 @@ function HealingAsssignments.Mainframe:CreateOptions(TemplateNumber)
     String1:SetFont("Fonts\\FRIZQT__.TTF", 11)
 	String1:SetWidth(200)
 	String1:SetJustifyH("RIGHT")
-    String1:SetText("Post Bottom Test:")
+    String1:SetText("Post Bottom Text:")
 	
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.BottomText = CreateFrame("EditBox", "BottomTextEditBox", self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content,"InputBoxTemplate")
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.BottomText:SetPoint("TOPLEFT",160,-10)
@@ -814,7 +844,7 @@ function HealingAsssignments.Mainframe:CreateOptions(TemplateNumber)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.BottomText:SetHeight(30)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.BottomText:SetAutoFocus(0)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.BottomText:SetFrameStrata("LOW")
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.BottomText:SetText("Rest: Raidheal")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.BottomText:SetText("Everyone else: Raid heal.")
 	
 	-- create additional tanks
 	local String2 = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
@@ -991,52 +1021,31 @@ function HealingAsssignments.Mainframe:CreateOptions(TemplateNumber)
 	Paladin:SetJustifyH("RIGHT")
     Paladin:SetText("Paladin")
 	Paladin:SetTextColor(0.96, 0.55, 0.73,1)
-	
-	--	Left Side:
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.LeftsideCheckbox = CreateFrame("CheckButton", nil, self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content, "UICheckButtonTemplate")
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.LeftsideCheckbox:SetPoint("TOPLEFT",150,-130)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.LeftsideCheckbox:SetFrameStrata("LOW")
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.LeftsideCheckbox:SetScript("OnClick", function (self) 
+
+	--	Raid:
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RaidCheckbox = CreateFrame("CheckButton", nil, self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content, "UICheckButtonTemplate")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RaidCheckbox:SetPoint("TOPLEFT",420,-100)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RaidCheckbox:SetFrameStrata("LOW")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RaidCheckbox:SetScript("OnClick", function (self) 
 		PlaySound(882, "Master");
-		if(HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.LeftsideCheckbox:GetChecked()) then
-			HealingAssignmentsTemplates.Options.TankLeftSide = 1 
+		if(HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RaidCheckbox:GetChecked()) then
+			HealingAssignmentsTemplates.Options.TankRaid = 1 
 		else
-			HealingAssignmentsTemplates.Options.TankLeftSide = nil;
+			HealingAssignmentsTemplates.Options.TankRaid = nil;
 		end;
 	end);
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.LeftsideCheckbox:SetChecked(HealingAssignmentsTemplates.Options.TankLeftSide)			
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RaidCheckbox:SetChecked(HealingAssignmentsTemplates.Options.Raid)			
 	
-	local Leftside = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
-    Leftside:SetPoint("TOPLEFT", 190, -140)
-    Leftside:SetFont("Fonts\\FRIZQT__.TTF", 11)
-	Leftside:SetJustifyH("RIGHT")
-    Leftside:SetText("Left Side")
-	Leftside:SetTextColor(1, 0, 0,1)
-	
-	--	RightSide:
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RightsideCheckbox = CreateFrame("CheckButton", nil, self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content, "UICheckButtonTemplate")
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RightsideCheckbox:SetPoint("TOPLEFT",300,-130)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RightsideCheckbox:SetFrameStrata("LOW")
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RightsideCheckbox:SetScript("OnClick", function (self)
-		PlaySound(882, "Master");
-		if(HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RightsideCheckbox:GetChecked()) then
-			HealingAssignmentsTemplates.Options.TankRightSide = 1 
-		else
-			HealingAssignmentsTemplates.Options.TankRightSide = nil;
-		end;
-	end);
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RightsideCheckbox:SetChecked(HealingAssignmentsTemplates.Options.TankRightSide)					
-	
-	local Rightside = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
-    Rightside:SetPoint("TOPLEFT", 340, -140)
-    Rightside:SetFont("Fonts\\FRIZQT__.TTF", 11)
-	Rightside:SetJustifyH("RIGHT")
-    Rightside:SetText("Right Side")
-	Rightside:SetTextColor(0, 0, 1,1)
-	
+	local Raid = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
+    Raid:SetPoint("TOPLEFT", 460, -110)
+    Raid:SetFont("Fonts\\FRIZQT__.TTF", 11)
+	Raid:SetJustifyH("RIGHT")
+    Raid:SetText("Raid")
+	Raid:SetTextColor(.7, .1, 1,1)
+
 	--	Custom target:
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.CustomCheckbox = CreateFrame("CheckButton", nil, self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content, "UICheckButtonTemplate")
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.CustomCheckbox:SetPoint("TOPLEFT",150,-160)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.CustomCheckbox:SetPoint("TOPLEFT",150,-130)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.CustomCheckbox:SetFrameStrata("LOW")
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.CustomCheckbox:SetScript("OnClick", function (self) 
 		PlaySound(882, "Master");
@@ -1049,20 +1058,174 @@ function HealingAsssignments.Mainframe:CreateOptions(TemplateNumber)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.CustomCheckbox:SetChecked(HealingAssignmentsTemplates.Options.TankCustomTarget)					
 	
 	local Custom = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
-    Custom:SetPoint("TOPLEFT", 190, -170)
-    Custom:SetFont("Fonts\\FRIZQT__.TTF", 11)
+	Custom:SetPoint("TOPLEFT", 190, -140)
+	Custom:SetFont("Fonts\\FRIZQT__.TTF", 11)
 	Custom:SetJustifyH("RIGHT")
-    Custom:SetText("Custom Text:")
-	Custom:SetTextColor(0, 1, 0,1)
-	
+	Custom:SetText("Custom Text:")
+	Custom:SetTextColor(1, .3, .8,1)
+		
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.CustomCheckboxText = CreateFrame("EditBox", "CustomTextEditBox", self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content,"InputBoxTemplate")
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.CustomCheckboxText:SetPoint("TOPLEFT",280,-160)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.CustomCheckboxText:SetPoint("TOPLEFT",280,-130)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.CustomCheckboxText:SetWidth(90)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.CustomCheckboxText:SetHeight(30)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.CustomCheckboxText:SetAutoFocus(0)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.CustomCheckboxText:SetFrameStrata("LOW")
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.CustomCheckboxText:SetMaxLetters(40)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.CustomCheckboxText:SetText(" ")
+	
+	--	Ranged:
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RangedCheckbox = CreateFrame("CheckButton", nil, self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content, "UICheckButtonTemplate")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RangedCheckbox:SetPoint("TOPLEFT",420,-130)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RangedCheckbox:SetFrameStrata("LOW")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RangedCheckbox:SetScript("OnClick", function (self) 
+		PlaySound(882, "Master");
+		if(HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RangedCheckbox:GetChecked()) then
+			HealingAssignmentsTemplates.Options.TankRanged = 1 
+		else
+			HealingAssignmentsTemplates.Options.TankRanged = nil;
+		end;
+	end);
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.RangedCheckbox:SetChecked(HealingAssignmentsTemplates.Options.TankRanged)			
+	
+	local Ranged = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
+    Ranged:SetPoint("TOPLEFT", 460, -140)
+    Ranged:SetFont("Fonts\\FRIZQT__.TTF", 11)
+	Ranged:SetJustifyH("RIGHT")
+    Ranged:SetText("Ranged")
+	Ranged:SetTextColor(0, .8, 1,1)
+	
+	--	Custom2 target:
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom2Checkbox = CreateFrame("CheckButton", nil, self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content, "UICheckButtonTemplate")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom2Checkbox:SetPoint("TOPLEFT",150,-160)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom2Checkbox:SetFrameStrata("LOW")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom2Checkbox:SetScript("OnClick", function (self) 
+		PlaySound(882, "Master");
+		if(HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom2Checkbox:GetChecked()) then
+			HealingAssignmentsTemplates.Options.TankCustom2Target = 1 
+		else
+			HealingAssignmentsTemplates.Options.TankCustom2Target = nil;
+		end;
+	end);
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom2Checkbox:SetChecked(HealingAssignmentsTemplates.Options.TankCustom2Target)					
+	
+	local Custom2 = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
+    Custom2:SetPoint("TOPLEFT", 190, -170)
+    Custom2:SetFont("Fonts\\FRIZQT__.TTF", 11)
+	Custom2:SetJustifyH("RIGHT")
+    Custom2:SetText("Custom Text:")
+	Custom2:SetTextColor(.1, 1, .6,1)
+		
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom2CheckboxText = CreateFrame("EditBox", "Custom2TextEditBox", self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content,"InputBoxTemplate")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom2CheckboxText:SetPoint("TOPLEFT",280,-160)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom2CheckboxText:SetWidth(90)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom2CheckboxText:SetHeight(30)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom2CheckboxText:SetAutoFocus(0)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom2CheckboxText:SetFrameStrata("LOW")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom2CheckboxText:SetMaxLetters(40)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom2CheckboxText:SetText(" ")
+
+	--	Melee:
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.MeleeCheckbox = CreateFrame("CheckButton", nil, self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content, "UICheckButtonTemplate")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.MeleeCheckbox:SetPoint("TOPLEFT",420,-160)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.MeleeCheckbox:SetFrameStrata("LOW")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.MeleeCheckbox:SetScript("OnClick", function (self)
+		PlaySound(882, "Master");
+		if(HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.MeleeCheckbox:GetChecked()) then
+			HealingAssignmentsTemplates.Options.TankMelee = 1 
+		else
+			HealingAssignmentsTemplates.Options.TankMelee = nil;
+		end;
+	end);
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.MeleeCheckbox:SetChecked(HealingAssignmentsTemplates.Options.TankMelee)					
+	
+	local Melee = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
+    Melee:SetPoint("TOPLEFT", 460, -170)
+    Melee:SetFont("Fonts\\FRIZQT__.TTF", 11)
+	Melee:SetJustifyH("RIGHT")
+    Melee:SetText("Melee")
+	Melee:SetTextColor(.9, .9, .3,1)
+
+	--	Custom3 target:
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom3Checkbox = CreateFrame("CheckButton", nil, self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content, "UICheckButtonTemplate")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom3Checkbox:SetPoint("TOPLEFT",150,-190)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom3Checkbox:SetFrameStrata("LOW")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom3Checkbox:SetScript("OnClick", function (self) 
+		PlaySound(882, "Master");
+		if(HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom3Checkbox:GetChecked()) then
+			HealingAssignmentsTemplates.Options.TankCustom3Target = 1 
+		else
+			HealingAssignmentsTemplates.Options.TankCustom3Target = nil;
+		end;
+	end);
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom3Checkbox:SetChecked(HealingAssignmentsTemplates.Options.TankCustom3Target)					
+			
+	local Custom3 = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
+	Custom3:SetPoint("TOPLEFT", 190, -200)
+	Custom3:SetFont("Fonts\\FRIZQT__.TTF", 11)
+	Custom3:SetJustifyH("RIGHT")
+	Custom3:SetText("Custom Text:")
+	Custom3:SetTextColor(.17, .41, .99, 1)
+				
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom3CheckboxText = CreateFrame("EditBox", "Custom3TextEditBox", self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content,"InputBoxTemplate")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom3CheckboxText:SetPoint("TOPLEFT",280,-190)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom3CheckboxText:SetWidth(90)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom3CheckboxText:SetHeight(30)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom3CheckboxText:SetAutoFocus(0)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom3CheckboxText:SetFrameStrata("LOW")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom3CheckboxText:SetMaxLetters(40)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom3CheckboxText:SetText(" ")
+	
+	--	Tanks:
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.TanksCheckbox = CreateFrame("CheckButton", nil, self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content, "UICheckButtonTemplate")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.TanksCheckbox:SetPoint("TOPLEFT",420,-190)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.TanksCheckbox:SetFrameStrata("LOW")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.TanksCheckbox:SetScript("OnClick", function (self) 
+		PlaySound(882, "Master");
+		if(HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.TanksCheckbox:GetChecked()) then
+			HealingAssignmentsTemplates.Options.TankTanks = 1 
+		else
+			HealingAssignmentsTemplates.Options.TankTanks = nil;
+		end;
+	end);
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.TanksCheckbox:SetChecked(HealingAssignmentsTemplates.Options.Tanks)			
+	
+	local Tanks = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
+    Tanks:SetPoint("TOPLEFT", 460, -200)
+    Tanks:SetFont("Fonts\\FRIZQT__.TTF", 11)
+	Tanks:SetJustifyH("RIGHT")
+    Tanks:SetText("Tanks")
+	Tanks:SetTextColor(1, .1, .1,1)
+
+	--	Custom4 target:
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom4Checkbox = CreateFrame("CheckButton", nil, self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content, "UICheckButtonTemplate")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom4Checkbox:SetPoint("TOPLEFT",150,-220)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom4Checkbox:SetFrameStrata("LOW")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom4Checkbox:SetScript("OnClick", function (self) 
+		PlaySound(882, "Master");
+		if(HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom4Checkbox:GetChecked()) then
+			HealingAssignmentsTemplates.Options.TankCustom4Target = 1 
+		else
+			HealingAssignmentsTemplates.Options.TankCustom4Target = nil;
+		end;
+	end);
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom4Checkbox:SetChecked(HealingAssignmentsTemplates.Options.TankCustom4Target)					
+	
+	local Custom4 = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
+	Custom4:SetPoint("TOPLEFT", 190, -230)
+	Custom4:SetFont("Fonts\\FRIZQT__.TTF", 11)
+	Custom4:SetJustifyH("RIGHT")
+	Custom4:SetText("Custom Text:")
+	Custom4:SetTextColor(1, .5, .4,1)
+		
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom4CheckboxText = CreateFrame("EditBox", "Custom4TextEditBox", self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content,"InputBoxTemplate")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom4CheckboxText:SetPoint("TOPLEFT",280,-220)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom4CheckboxText:SetWidth(90)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom4CheckboxText:SetHeight(30)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom4CheckboxText:SetAutoFocus(0)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom4CheckboxText:SetFrameStrata("LOW")
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom4CheckboxText:SetMaxLetters(40)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.Custom4CheckboxText:SetText(" ")
+	
 
 	-- Enable raid markers for tanks:
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.TankRaidMarkCheckbox = CreateFrame(
@@ -1071,9 +1234,9 @@ function HealingAsssignments.Mainframe:CreateOptions(TemplateNumber)
 		self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content, 
 		"UICheckButtonTemplate"
 	)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.TankRaidMarkCheckbox:SetPoint("TOPLEFT",150,-190)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.TankRaidMarkCheckbox:SetPoint("TOPLEFT",420,-220)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.TankRaidMarkCheckbox:SetFrameStrata("LOW")
-
+	
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.TankRaidMarkCheckbox:SetScript("OnEnter", function(self) 
 		GameTooltip:SetOwner(HealingAsssignments.Mainframe, "ANCHOR_TOPLEFT");
 		GameTooltip:SetText("Add Raid Markers to Tank Dropdowns.", 1,1,1);
@@ -1091,42 +1254,46 @@ function HealingAsssignments.Mainframe:CreateOptions(TemplateNumber)
 		end;
 	end);
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.TankRaidMarkCheckbox:SetChecked(HealingAssignmentsTemplates.Options.TankRaidMarkers)
-
-
+		
 	local TankRaidMark = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
-    TankRaidMark:SetPoint("TOPLEFT", 190, -200)
-    TankRaidMark:SetFont("Fonts\\FRIZQT__.TTF", 11)
+	TankRaidMark:SetPoint("TOPLEFT", 460, -230)
+	TankRaidMark:SetFont("Fonts\\FRIZQT__.TTF", 11)
 	TankRaidMark:SetJustifyH("RIGHT")
-    TankRaidMark:SetText("Raid Markers")
-	
-	-- death warning options
+	TankRaidMark:SetText("Raid Markers")
+	TankRaidMark:SetTextColor(1, 1, 1,1)
+
+
+		-- death warning options
 	local DeathWarningText = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
     DeathWarningText:SetPoint("TOPLEFT", -70, -260)
     DeathWarningText:SetFont("Fonts\\FRIZQT__.TTF", 11)
 	DeathWarningText:SetWidth(200)
 	DeathWarningText:SetJustifyH("RIGHT")
-    DeathWarningText:SetText("Death Warn Options:")
+    DeathWarningText:SetText("Death Warn Channel")
 	
 	local DeathWarningChannelText = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
-    DeathWarningChannelText:SetPoint("TOPLEFT", -30, -260)
+    DeathWarningChannelText:SetPoint("TOPLEFT", 100, -260)
     DeathWarningChannelText:SetFont("Fonts\\FRIZQT__.TTF", 11)
 	DeathWarningChannelText:SetWidth(200)
 	DeathWarningChannelText:SetJustifyH("RIGHT")
     DeathWarningChannelText:SetText("Posting Channel:")
 	
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.DeathWarningChannelTextbox = CreateFrame("EditBox", "DeathWarningChannelTextbox", self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content,"InputBoxTemplate")
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.DeathWarningChannelTextbox:SetPoint("TOPLEFT",190,-250)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.DeathWarningChannelTextbox:SetPoint("TOPLEFT",160,-250)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.DeathWarningChannelTextbox:SetWidth(18)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.DeathWarningChannelTextbox:SetHeight(30)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.DeathWarningChannelTextbox:SetAutoFocus(0)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.DeathWarningChannelTextbox:SetFrameStrata("LOW")
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.DeathWarningChannelTextbox:SetMaxLetters(1)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.DeathWarningChannelTextbox:SetScript("OnTextChanged", function() 
+		-- new
+		HealingAssignmentsTemplates.Options.DeathChannel = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.DeathWarningChannelTextbox:GetText()
 		HealingAsssignments.Mainframe:SetHealerChannelString()
 	end)
+	if HealingAssignmentsTemplates.Options.DeathChannel then self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.DeathWarningChannelTextbox:SetText(HealingAssignmentsTemplates.Options.DeathChannel) end	
 
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.ColoredPostingChannelText = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
-    self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.ColoredPostingChannelText:SetPoint("TOPLEFT", 220, -260)
+    self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.ColoredPostingChannelText:SetPoint("TOPLEFT", 190, -260)
     self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.ColoredPostingChannelText:SetFont("Fonts\\FRIZQT__.TTF", 11)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.ColoredPostingChannelText:SetWidth(200)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.ColoredPostingChannelText:SetJustifyH("LEFT")
@@ -1141,41 +1308,8 @@ function HealingAsssignments.Mainframe:CreateOptions(TemplateNumber)
 	DeathWarningChannelText:SetJustifyH("RIGHT")
     DeathWarningChannelText:SetText("Whisper Mode:")
 	
-	local WhisperRepostText = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
-    WhisperRepostText:SetPoint("TOPLEFT", -30, -310)
-    WhisperRepostText:SetFont("Fonts\\FRIZQT__.TTF", 11)
-	WhisperRepostText:SetWidth(200)
-	WhisperRepostText:SetJustifyH("RIGHT")
-    WhisperRepostText:SetText("Repost:")
-	
-	local WhisperHealText = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
-    WhisperHealText:SetPoint("TOPLEFT", 130, -310)
-    WhisperHealText:SetFont("Fonts\\FRIZQT__.TTF", 11)
-	WhisperHealText:SetWidth(200)
-	WhisperHealText:SetJustifyH("RIGHT")
-    WhisperHealText:SetText("Whisper:")
-	
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperRepostCheckbox = CreateFrame("CheckButton", nil, self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content, "UICheckButtonTemplate")
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperRepostCheckbox:SetPoint("TOPLEFT",180,-300)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperRepostCheckbox:SetFrameStrata("LOW")
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperRepostCheckbox:SetScript("OnEnter", function() 
-		GameTooltip:SetOwner(HealingAsssignments.Mainframe, "ANCHOR_TOPLEFT");
-		GameTooltip:SetText("Enable/Disable Auto-Repost Assignments by whispers.", 1,1,1);
-		GameTooltip:Show()
-	end)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperRepostCheckbox:SetScript("OnLeave", function() GameTooltip:Hide() end)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperRepostCheckbox:SetScript("OnClick", function (self) 
-		PlaySound(882, "Master");
-		if HealingAsssignments.Mainframe.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperRepostCheckbox:GetChecked() then
-			HealingAssignmentsTemplates.Options.WhisperRepost = nil
-		else
-			HealingAssignmentsTemplates.Options.WhisperRepost = 1 
-		end;
-	end);
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperRepostCheckbox:SetChecked(HealingAssignmentsTemplates.Options.WhisperRepost)
-	
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperHealCheckbox = CreateFrame("CheckButton", nil, self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content, "UICheckButtonTemplate")
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperHealCheckbox:SetPoint("TOPLEFT",340,-300)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperHealCheckbox:SetPoint("TOPLEFT",150,-280)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperHealCheckbox:SetFrameStrata("LOW")
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.WhisperHealCheckbox:SetScript("OnEnter", function() 
 		GameTooltip:SetOwner(HealingAsssignments.Mainframe, "ANCHOR_TOPLEFT");
@@ -1196,15 +1330,15 @@ function HealingAsssignments.Mainframe:CreateOptions(TemplateNumber)
 	
 	-- additional healers
 	local AdditionHealersText = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
-    AdditionHealersText:SetPoint("TOPLEFT", -70, -340)
+    AdditionHealersText:SetPoint("TOPLEFT", -70, -320)
     AdditionHealersText:SetFont("Fonts\\FRIZQT__.TTF", 11)
 	AdditionHealersText:SetWidth(200)
 	AdditionHealersText:SetJustifyH("RIGHT")
-    AdditionHealersText:SetText("additional Healers:")
+    AdditionHealersText:SetText("Additional Healers:")
 	
 	-- Healer raidmarks:
 	local AdditionHealersMarksText = self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content:CreateFontString(nil, "OVERLAY")
-    AdditionHealersMarksText:SetPoint("TOPLEFT", 70, -340)
+    AdditionHealersMarksText:SetPoint("TOPLEFT", 60, -320)
     AdditionHealersMarksText:SetFont("Fonts\\FRIZQT__.TTF", 11)
 	AdditionHealersMarksText:SetWidth(200)
 	AdditionHealersMarksText:SetJustifyH("RIGHT")
@@ -1215,7 +1349,7 @@ function HealingAsssignments.Mainframe:CreateOptions(TemplateNumber)
 		self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content, 
 		"UICheckButtonTemplate"
 	)
-	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.AdditionalHealersCheckbox:SetPoint("TOPLEFT",150,-330)
+	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.AdditionalHealersCheckbox:SetPoint("TOPLEFT",150,-310)
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.AdditionalHealersCheckbox:SetFrameStrata("LOW")
 	self.Foreground.Profile[1].Template[TemplateNumber].Assigments.Content.AdditionalHealersCheckbox:SetScript("OnEnter", function(self) 
 		GameTooltip:SetOwner(HealingAsssignments.Mainframe, "ANCHOR_TOPLEFT");
@@ -1245,6 +1379,23 @@ function HealingAsssignments.Mainframe:CreateOptions(TemplateNumber)
 	BottomText:SetTextColor(1, 1, 1,0.5)
 end
 
+
+-- -- Using LibDBIcon for minimap --
+-- local ChaLDB = LibStub("LibDataBroker-1.1"):NewDataObject("ChaLDB", {
+-- 	type = "data source",
+-- 	text = "ChaLDB!",
+-- 	icon = "Interface\Icons\INV_Chest_Cloth_17",
+-- 	OnClick = function() print("BUNNIES ARE TAKING OVER THE WORLD") end,
+-- 	})
+-- local icon = LibStub("LibDBIcon-1.0")
+	
+-- function addon:OnInitialize() -- Obviously you'll need a ## SavedVariables: BunniesDB line in your TOC, duh! 
+-- 	icon:Register("ChaLDB", ChaLDB, self.db.profile.minimap);
+-- end
+	
+-- function addon:CommandTheBunnies() 
+-- 	self.db.profile.minimap.hide = not self.db.profile.minimap.hide if self.db.profile.minimap.hide then icon:Hide("Bunnies!") else icon:Show("Bunnies!") end 
+-- end
 
 
 -- http://www.wowinterface.com/forums/archive/index.php/t-16339.html
@@ -1278,6 +1429,7 @@ function HealingAsssignments.Minimap:CreateMinimapIcon()
 	
 	function self:OnUpdate()
 		if Moving == true then
+			
 			local xpos,ypos = GetCursorPosition();
 			local xmin,ymin = Minimap:GetLeft(), Minimap:GetBottom();
 			xpos = xmin-xpos/UIParent:GetScale()+70;
@@ -1301,7 +1453,7 @@ function HealingAsssignments.Minimap:CreateMinimapIcon()
 	
 	function self:OnEnter()
 		GameTooltip:SetOwner(HealingAsssignments.Minimap, "ANCHOR_LEFT");
-		GameTooltip:SetText("Classic Healing Assignments");
+		GameTooltip:SetText("Classic Initiative Healing Assignments");
 		GameTooltip:AddLine("Left Click to show/hide menu.",1,1,1);
 		GameTooltip:AddLine("Right Click to post open assignment window.",1,1,1);
 		GameTooltip:AddLine("Middle Button Click to move Icon.",1,1,1);
@@ -1338,7 +1490,7 @@ function HealingAsssignments.Minimap:CreateMinimapIcon()
 	local icon = self:CreateTexture(nil, "BACKGROUND")
 	icon:SetWidth(20)
 	icon:SetHeight(20)
-	icon:SetTexture("Interface\\AddOns\\ClassicHealingAssignments\\Media\\Icon")
+	icon:SetTexture("Interface\\AddOns\\ClassicHealingAssignments\\Media\\icon")
 	icon:SetTexCoord(0.18, 0.82, 0.18, 0.82)
 	icon:SetPoint('CENTER', 0, 0)
 	self.icon = icon

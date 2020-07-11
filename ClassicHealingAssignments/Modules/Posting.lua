@@ -47,7 +47,11 @@ function HealingAsssignments:PostAssignments()
 			if table.getn(TankName) == 0 then 
 				DEFAULT_CHAT_FRAME:AddMessage("No Tank Selected.",1,1,1)
 			else
-				SendChatMessage("° ° ° Healing Assignments ° ° °",chan,nil,chanNum) 
+				-- HealingAssignmentsTemplates.Profile[ProfileNumber].Template[TemplateNumber].Name
+				-- HealingAssignmentsTemplates.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[TemplateNumber].Name
+				HeaderString = "° ° ° Healing for "..HealingAssignmentsTemplates.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[ActiveFrame].Name.." ° ° °"
+				--SendChatMessage("° ° ° Healing Assignments ° ° °",chan,nil,chanNum) 
+				SendChatMessage(HeaderString,chan,nil,chanNum) 
 				-- here you find the action!
 				for v=1,table.getn(TankName) do
 					TankName[v] = HealingAsssignments:GetTextUIString(TankName[v])
@@ -76,16 +80,9 @@ function HealingAsssignments:PostAssignments()
 end
 
 function HealingAsssignments:PostLastLine(chan,chanNum)
-	local repost = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[16].Assigments.Content.WhisperRepostCheckbox:GetChecked()
 	local heal = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[16].Assigments.Content.WhisperHealCheckbox:GetChecked()
-	if repost and heal then
-		SendChatMessage("Whisper me: heal (whisper) or repost (repost)!",chan,nil,chanNum)
-	elseif repost and not heal then
-		SendChatMessage("Whisper me: repost (repost Assignments)!",chan,nil,chanNum)
-	elseif not repost and heal then
-		SendChatMessage("Whisper me: heal (re-whisper Assignments)!",chan,nil,chanNum)
-	else
-	
+	if heal then
+		SendChatMessage("Whisper me 'heal' for your assignment.",chan,nil,chanNum)
 	end
 end
 
@@ -104,7 +101,7 @@ function HealingAsssignments:AnswerAssignments(PlayerName)
 
 	local ActiveFrame = HealingAsssignments.Mainframe.ActiveFrame;
 	if ActiveFrame ~= nil and ActiveFrame ~= 16 and found == 1 then
-		local WhisperString = "You are not assigned."
+		local WhisperString = "You do not have an assignment."
 		local TankNameTemp
 		local HealerNameTemp
 		local TankNum = HealingAssignmentsTemplates.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[ActiveFrame].TankNum
@@ -159,18 +156,21 @@ function HealingAsssignments:RepostAssignments(PlayerName)
 end
 
 function HealingAsssignments:PostDeathWarning(PlayerName)
-	if PlayerName == "Yo" then PlayerName = UnitName("player"); end
+
+--	if PlayerName == "Yo" then PlayerName = UnitName("player"); end
 	local OptionsFrame = 16;
 	local ActiveFrame = HealingAsssignments.Mainframe.ActiveFrame;
 	if ActiveFrame ~= nil and ActiveFrame ~= 16 then
 		local chanText = HealingAsssignments.Mainframe.Foreground.Profile[1].Template[OptionsFrame].Assigments.Content.DeathWarningChannelTextbox:GetText()
 		local id, chatnamename = GetChannelName(chanText);
+
 		if chanText == nil or chanText == "" then 
 			return
 		elseif chatnamename == "world" or chatnamename == "World" or chanText == "1" or chanText == "2" or chanText == "3" then 
 			return
 		else
 			local chan,chanNum = HealingAsssignments:GetSendChannel(chanText)
+
 			if not chan and not chanNum then 
 				return 
 			end
@@ -178,21 +178,28 @@ function HealingAsssignments:PostDeathWarning(PlayerName)
 			local TankNameTemp
 			local HealerNameTemp
 			local TankNum = HealingAssignmentsTemplates.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[ActiveFrame].TankNum
+
 			local HealerNum = 0
 			
 			for i=1,TankNum do			
 				HealerNum = HealingAssignmentsTemplates.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[ActiveFrame].TankHealer[i]
+
 				if HealerNum == nil then 
 					HealerNum = 0 
 				end
 
 				TankNameTemp = _G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[i].Tank[i]:GetName().."Text"]:GetText(" ");
+
 				for j=1,HealerNum do
 					HealerNameTemp = _G[HealingAsssignments.Mainframe.Foreground.Profile[HealingAsssignments.Mainframe.ActiveProfile].Template[ActiveFrame].Assigments.Content.Frame[i].Healer[j]:GetName().."Text"]:GetText(" ");
-					if HealerNameTemp == PlayerName then 
+
+					
+					if strmatch(HealerNameTemp, PlayerName) then 
+
 						HealerNameTemp = HealingAsssignments:GetTextUIString(HealerNameTemp,1)
 						TankNameTemp = HealingAsssignments:GetTextUIString(TankNameTemp,1)
-						SendChatMessage(HealerNameTemp.." died - Tank was "..TankNameTemp..".",chan,nil,chanNum) 
+						SendChatMessage(HealerNameTemp.." died - Assignment was "..TankNameTemp..".",chan,nil,chanNum) 
+						-- TODO: commenting out might allow multiple assignments to be listed?
 						break; 
 					end
 				end
