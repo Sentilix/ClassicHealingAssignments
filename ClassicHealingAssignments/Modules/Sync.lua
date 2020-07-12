@@ -278,6 +278,11 @@ function HealingAsssignments.Syncframe:ResetDropdownText(ProfileNum,TemplateNum)
 	end
 end
 
+local function HandleDropdownClick(self, arg1, checked)
+	HealingAsssignments.Syncframe:ProfileDropdown(arg1)
+		HealingAsssignments.Syncframe:UpdateDeleteButton()
+end
+
 function HealingAsssignments.Syncframe:PopulateDropdown()
 	-- get the number of profiles
 	local NumofProfiles = 0
@@ -285,12 +290,13 @@ function HealingAsssignments.Syncframe:PopulateDropdown()
 	for i=1,11 do
 		if HealingAssignmentsTemplates.Profile[i].Name ~= " " then 
 			info.text = HealingAssignmentsTemplates.Profile[i].Name
-			info.checked = false
-			info.func = function()
-				UIDropDownMenu_SetSelectedID(GlobalDropDownID, self:GetID(), 0);
-				HealingAsssignments.Syncframe:ProfileDropdown()
-				HealingAsssignments.Syncframe:UpdateDeleteButton()
+			info.arg1 = info.text
+			if HealingAssignmentsTemplates.Profile[HealingAsssignments.Mainframe.ActiveProfile].Name == HealingAssignmentsTemplates.Profile[i].Name then
+				info.checked = true
+			else
+				info.checked = false
 			end
+			info.func = HandleDropdownClick
 			UIDropDownMenu_AddButton(info);
 		end
 	end
@@ -301,13 +307,15 @@ function HealingAsssignments.Syncframe:UpdateDropdown(...)
 	--local DropDownID = getglobal(HealingAsssignments.Mainframe.ProfileDropdown:GetName())
 	local DropDownID = _G[HealingAsssignments.Mainframe.ProfileDropdown:GetName()];
 	GlobalDropDownID = DropDownID
+
 	-- feed the dropdown
 	UIDropDownMenu_Initialize(DropDownID, self.PopulateDropdown)
 end
 
-function HealingAsssignments.Syncframe:ProfileDropdown()
+function HealingAsssignments.Syncframe:ProfileDropdown(text)
 	--local ProfileName = UIDropDownMenu_GetText(getglobal(HealingAsssignments.Mainframe.ProfileDropdown:GetName()))
-	local ProfileName = UIDropDownMenu_GetText(_G[HealingAsssignments.Mainframe.ProfileDropdown:GetName()]);
+	local ProfileName = text
+
 	local ProfileNumber
 	for i=1,11 do
 		if HealingAssignmentsTemplates.Profile[i].Name == ProfileName then 
@@ -315,7 +323,7 @@ function HealingAsssignments.Syncframe:ProfileDropdown()
 			break;
 		end
 	end
-	
+
 	HealingAsssignments.Syncframe:SelectProfile(ProfileNumber)
 end
 
@@ -430,8 +438,10 @@ end
 
 function HealingAsssignments.Syncframe:UpdateDeleteButton()
 	--local ProfileName = UIDropDownMenu_GetText(getglobal(HealingAsssignments.Mainframe.ProfileDropdown:GetName()))
-	local ProfileName = UIDropDownMenu_GetText(_G[HealingAsssignments.Mainframe.ProfileDropdown:GetName()]);
-	if ProfileName == UnitName("player") then 
+	--local ProfileName = UIDropDownMenu_GetText(_G[HealingAsssignments.Mainframe.ProfileDropdown:GetName()]);
+	--if ProfileName == UnitName("player") then 
+	local ProfileNum = HealingAsssignments.Syncframe:GetProfileNumNonSave(UIDropDownMenu_GetText(_G[HealingAsssignments.Mainframe.ProfileDropdown:GetName()]));
+    if ProfileNum <= 6 then
 		HealingAsssignments.Mainframe.SyncDeleteButton:Disable()
 	else 
 		HealingAsssignments.Mainframe.SyncDeleteButton:Enable() 
