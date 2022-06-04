@@ -16,31 +16,42 @@ local COLOUR_BEGINMARK						= "|c80";
 local COLOUR_CHAT							= COLOUR_BEGINMARK.."40A0F8";
 local COLOUR_INTRO							= COLOUR_BEGINMARK.."B040F0";
 local CHA_MESSAGE_PREFIX					= "CHAv2";
-local CHA_TEMPLATES_MAX						= 15;	-- room for max 15 templates. This is a limitation on the frame UI.
+local CHA_TEMPLATES_MAX						= 15;	-- room for max 15 templates. This is a limitation in the UI design.
 local CHA_COLOR_SELECTED					= {1.0, 1.0, 1.0};
 local CHA_COLOR_UNSELECTED					= {1.0, 0.8, 0.0};
 local CHA_ALPHA_ENABLED						= 1.0;
 local CHA_ALPHA_DISABLED					= 0.3;
 
-local CHA_CLASS_DRUID			= 0x0001;
-local CHA_CLASS_HUNTER			= 0x0002;
-local CHA_CLASS_MAGE			= 0x0004;
-local CHA_CLASS_PALADIN			= 0x0008;
-local CHA_CLASS_PRIEST			= 0x0010;
-local CHA_CLASS_ROGUE			= 0x0020;
-local CHA_CLASS_SHAMAN			= 0x0040;
-local CHA_CLASS_WARLOCK			= 0x0080;
-local CHA_CLASS_WARRIOR			= 0x0100;
-local CHA_CLASS_DEATHKNIGHT		= 0x0200;
+local CHA_CLASS_DRUID						= 0x00001;
+local CHA_CLASS_HUNTER						= 0x00002;
+local CHA_CLASS_MAGE						= 0x00004;
+local CHA_CLASS_PALADIN						= 0x00008;
+local CHA_CLASS_PRIEST						= 0x00010;
+local CHA_CLASS_ROGUE						= 0x00020;
+local CHA_CLASS_SHAMAN						= 0x00040;
+local CHA_CLASS_WARLOCK						= 0x00080;
+local CHA_CLASS_WARRIOR						= 0x00100;
+local CHA_CLASS_DEATHKNIGHT					= 0x00200;
 
-local CHA_ROLE_NONE				= 0x00;
-local CHA_ROLE_TANK				= 0x01;
-local CHA_ROLE_HEAL				= 0x02;
-local CHA_ROLE_DECURSE			= 0x04;
+--	Not implemented, but do these need a separate class (always enabled)?
+local CHA_CLASS_RAIDSIGN					= 0x01000;	-- Skull, Cross, Square ...
+local CHA_CLASS_ARROWS						= 0x02000;	-- "<<====", "====>>" (Left, Right)
+local CHA_CLASS_DIRECTION					= 0x04000;	-- North,East,South,West
 
-local CHA_ROLE_DEFAULT_TANK		= CHA_CLASS_DRUID + CHA_CLASS_WARRIOR;
-local CHA_ROLE_DEFAULT_HEAL		= CHA_CLASS_DRUID + CHA_CLASS_PALADIN + CHA_CLASS_PRIEST + CHA_CLASS_SHAMAN;
-local CHA_ROLE_DEFAULT_DECURSE	= CHA_CLASS_DRUID + CHA_CLASS_MAGE;
+local CHA_ROLE_NONE							= 0x00;
+local CHA_ROLE_TANK							= 0x01;
+local CHA_ROLE_HEAL							= 0x02;
+local CHA_ROLE_DECURSE						= 0x04;
+
+local CHA_RoleMatrix = {
+	[CHA_ROLE_TANK] = "Tanks", 
+	[CHA_ROLE_HEAL] = "Heals", 
+	[CHA_ROLE_DECURSE] = "Decurses"
+};
+
+local CHA_ROLE_DEFAULT_TANK					= CHA_CLASS_DRUID + CHA_CLASS_WARRIOR + CHA_CLASS_DEATHKNIGHT;
+local CHA_ROLE_DEFAULT_HEAL					= CHA_CLASS_DRUID + CHA_CLASS_PALADIN + CHA_CLASS_PRIEST + CHA_CLASS_SHAMAN;
+local CHA_ROLE_DEFAULT_DECURSE				= CHA_CLASS_DRUID + CHA_CLASS_MAGE;
 
 
 
@@ -66,14 +77,13 @@ local CHA_ActiveTemplate					= CHA_DEFAULT_ActiveTemplate;
 local CHA_ActiveRole						= CHA_DEFAULT_ActiveRole;
 local CHA_MinimapX							= 0;
 local CHA_MinimapY							= 0;
-local CHA_TankAsDruid						= true;		-- Druids are viable tanks in vanilla: add to tank list as default
 local CHA_Templates							= { };
 --[[
 	Template: a table of template objects with:
 		"NAME": Unique name of the template
-		"TANKMASK": bitmask for classes assigned for Tanking
-		"HEALMASK": bitmask for classes assigned for Healing
-		"DECURSEMASK": bitmask for classes assigned for Decursing
+		"Tanks/Heals/Decurses" = {
+			"ROLEMASK": bitmask for classes assigned for Tanking/healing/decursing
+		}
 --]]
 local CHA_WhisperHeal						= true;
 local CHA_WhisperRepost						= true;
@@ -483,19 +493,15 @@ function CHA_ClassIconOnClick(sender)
 	local _, _, className, _ = string.find(buttonName, "classicon_(%S*)");
 
 	local template = CHA_GetActiveTemplate();
-	if not template then
-		return;
-	end;
+	if not template then return; end;
+
+	local roleName = CHA_RoleMatrix[CHA_ActiveRole];
+	if not roleName then return; end;
 
 	local classInfo = CHA_ClassMatrix[className];
+	if not classInfo then return; end;
 
-	if CHA_ActiveRole == CHA_ROLE_TANK then
-		template["TANKMASK"] = bit.bxor(template["TANKMASK"], classInfo["MASK"]);
-	elseif CHA_ActiveRole == CHA_ROLE_HEAL then
-		template["HEALMASK"] = bit.bxor(template["HEALMASK"], classInfo["MASK"]);
-	elseif CHA_ActiveRole == CHA_ROLE_DECURSE then
-		template["DECURSEMASK"] = bit.bxor(template["DECURSEMASK"], classInfo["MASK"]);
-	end;
+	template[roleName]["ROLEMASK"] = bit.bxor(template[roleName]["ROLEMASK"], classInfo["MASK"]);
 
 	CHA_UpdateClassIcons();
 end;
@@ -582,7 +588,7 @@ end;
 
 function CHA_AddTemplate_OK(templateName)
 	if not CHA_GetTemplateByName(templateName) then
-		CHA_AddTemplate(templateName);
+		CHA_CreateTemplate(templateName);
 	else
 		DIGAM_ShowError("A template with that name already exists.");
 	end;
@@ -611,7 +617,7 @@ function CHA_RenameTemplate_OK(oldTemplateName, newTemplateName)
 		end;
 	elseif CHA_CurrentTemplateOperation == "CLONE" then
 		--	Clone template to new (keep existing)
-		local newIndex = CHA_AddTemplate(newTemplateName);
+		local newIndex = CHA_CreateTemplate(newTemplateName);
 
 		local template = DIGAM_CloneTable(CHA_Templates[index]);
 		template["NAME"] = newTemplateName;
@@ -752,28 +758,27 @@ end;
 --	Update class icons based on the current template + role:
 function CHA_UpdateClassIcons()
 	local template = CHA_GetActiveTemplate();
-	local templateMask = 0x0000;
+	local roleName = CHA_RoleMatrix[CHA_ActiveRole];
 
-	if template then
-		if CHA_ActiveRole == CHA_ROLE_TANK then
-			templateMask = template["TANKMASK"];
-		elseif CHA_ActiveRole == CHA_ROLE_HEAL then
-			templateMask = template["HEALMASK"];
-		elseif CHA_ActiveRole == CHA_ROLE_DECURSE then
-			templateMask = template["DECURSEMASK"];
-		end;
+	local templateMask = CHA_ROLE_NONE;
+	if template and roleName and template[roleName] then
+		templateMask = template[roleName]["ROLEMASK"];
 	end;
 
 	for className, classInfo in next, CHA_ClassMatrix do
 		local buttonName = string.format("classicon_%s", className);
-		local entry = _G[buttonName];
 
-		if bit.band(classInfo["MASK"], templateMask) > 0 then
-			entry:SetAlpha(CHA_ALPHA_ENABLED);
+		if bit.band(templateMask, classInfo["MASK"]) > 0 then
+			_G[buttonName]:SetAlpha(CHA_ALPHA_ENABLED);
 		else
-			entry:SetAlpha(CHA_ALPHA_DISABLED);
+			_G[buttonName]:SetAlpha(CHA_ALPHA_DISABLED);
 		end;
 	end;
+
+	
+	local roleName = CHA_RoleMatrix[CHA_ActiveRole];
+
+	CHARoleCaption:SetText(roleName);
 end;
 
 
@@ -813,15 +818,21 @@ function CHA_GetActiveTemplate()
 end;
 
 --	Add a new Template to the template array
-function CHA_AddTemplate(templateName)
+function CHA_CreateTemplate(templateName)
 	local templateCount = table.getn(CHA_Templates);
 	if templateCount < CHA_TEMPLATES_MAX then
 		templateCount = templateCount + 1;
 		CHA_Templates[templateCount] = {
-			["NAME"] = templateName ,
-			["TANKMASK"] = CHA_ROLE_DEFAULT_TANK,
-			["HEALMASK"] = CHA_ROLE_DEFAULT_HEAL,
-			["DECURSEMASK"] = CHA_ROLE_DEFAULT_DECURSE,
+			["NAME"] = templateName,
+			["Tanks"] = {
+				["ROLEMASK"] = CHA_ROLE_DEFAULT_TANK,
+			},
+			["Heals"] = {
+				["ROLEMASK"] = CHA_ROLE_DEFAULT_HEAL,
+			},
+			["Decurses"] = {
+				["ROLEMASK"] = CHA_ROLE_DEFAULT_DECURSE,
+			},
 		};
 	end;
 	return templateCount;
@@ -831,29 +842,29 @@ end;
 function CHA_CreateDefaultTemplates()
 	CHA_Templates = { };
 
-	CHA_AddTemplate("Default");
+	CHA_CreateTemplate("Default");
 
 	if CHA_Expansionlevel == 1 then
-		CHA_AddTemplate("Molten Core");
-		CHA_AddTemplate("Onyxia's Lair");
-		CHA_AddTemplate("Blackwing Lair");
-		CHA_AddTemplate("Temple of Ahn'Qiraj");
-		CHA_AddTemplate("Naxxramas");
-		CHA_AddTemplate("20 man");
+		CHA_CreateTemplate("Molten Core");
+		CHA_CreateTemplate("Onyxia's Lair");
+		CHA_CreateTemplate("Blackwing Lair");
+		CHA_CreateTemplate("Temple of Ahn'Qiraj");
+		CHA_CreateTemplate("Naxxramas");
+		CHA_CreateTemplate("20 man");
 	end;
 
 	if CHA_Expansionlevel == 2 then
-		CHA_AddTemplate("Karazhan");
-		CHA_AddTemplate("Serpentshrine Cavern");
-		CHA_AddTemplate("The Eye");
-		CHA_AddTemplate("Magtheridon");
-		CHA_AddTemplate("Gruuls Lair");
-		CHA_AddTemplate("Black Temple");
-		CHA_AddTemplate("Mount Hyjal");
-		CHA_AddTemplate("Sunwell");
+		CHA_CreateTemplate("Karazhan");
+		CHA_CreateTemplate("Serpentshrine Cavern");
+		CHA_CreateTemplate("The Eye");
+		CHA_CreateTemplate("Magtheridon");
+		CHA_CreateTemplate("Gruuls Lair");
+		CHA_CreateTemplate("Black Temple");
+		CHA_CreateTemplate("Mount Hyjal");
+		CHA_CreateTemplate("Sunwell");
 	end;
 
-	CHA_AddTemplate("Other");
+	CHA_CreateTemplate("Other");
 end;
 
 --	Create (initialize) the template buttons. 
@@ -945,17 +956,18 @@ function CHA_ProcessConfiguredTemplateData(workTemplates)
 	CHA_Templates = { };
 
 	if type(workTemplates) == "table" then
-		--DIGAM_PrintAll(workTemplates);
 		for key, template in next, workTemplates do
 			local templateName = template["NAME"];
 			if templateName then
 				--	This creates the template with default setup data:
-				local tpl = CHA_Templates[CHA_AddTemplate(templateName)];
+				local tpl = CHA_Templates[CHA_CreateTemplate(templateName)];
 
 				--	Read tank/healer/decursers from template and overwrite defaults if available:
-				tpl["TANKMASK"] = template["TANKMASK"] or tpl["TANKMASK"];
-				tpl["HEALMASK"] = template["HEALMASK"] or tpl["HEALMASK"];
-				tpl["DECURSEMASK"] = template["DECURSEMASK"] or tpl["DECURSEMASK"];
+				for roleMask, roleName in next, CHA_RoleMatrix do
+					if template[roleName] and template[roleName]["ROLEMASK"] then
+						tpl[roleName]["ROLEMASK"] = template[roleName]["ROLEMASK"];
+					end;
+				end;
 			end;
 		end;
 	end;

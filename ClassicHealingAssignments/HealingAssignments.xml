@@ -115,7 +115,7 @@
 					<AbsDimension x="0" y="0" />
 				</Offset>
 			</Anchor>
-		</Anchors>
+		</Anchors>		
 		<Frames>
 			<Frame name="$parentIcon" parent="CHAMainFrame" inherits="BackdropTemplate" frameStrata="LOW">
 				<KeyValues>
@@ -149,7 +149,6 @@
 				<Layers>
 					<Layer level="ARTWORK">
 						<FontString name="CHAHeadlineCaption" inherits="GameFontNormal" text="Classic Healing Assignments version x.y" justifyH="CENTER">
-							<Color r="0.9" g="0.9" b="0.9" />
 							<Size x="660" y="18" />
 							<Anchors>
 								<Anchor point="TOPLEFT" relativeTo="$parent">
@@ -158,6 +157,18 @@
 									</Offset>
 								</Anchor>
 							</Anchors>
+							<Color r="0.9" g="0.9" b="0.9" />
+						</FontString>
+						<FontString name="CHARoleCaption" inherits="GameFontNormal" font="Fonts\FRIZQT__.TTF" text="">
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="80" y="-40"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<Color r="1" g="1" b="1" />
+							<FontHeight val="32" />
 						</FontString>
 					</Layer>
 				</Layers>
