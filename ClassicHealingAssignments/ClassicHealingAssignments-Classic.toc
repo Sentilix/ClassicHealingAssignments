@@ -1,8 +1,8 @@
-## Interface: 20504
+## Interface: 11403
 ## Title: Classic Healing Assignments
-## Author: Mimma @ <EU-Pyrewood Village>, Zeroinitiative2
+## Author: Mimma @ <EU-Pyrewood Village>
 ## X-Originally By: Renew @ vanillagaming.org for the 1.12 client.
-## X-Expansion-Level: 2
+## X-Expansion-Level: 1
 ## Version: 2.0.0-alpha1-b1
 ## Notes: Addon for Healing Assignments
 ## DefaultState: Enabled
@@ -10,7 +10,7 @@
 ## SavedVariables: HealingAssignmentsTemplates
 
 DigamCommon.lua
-HealingAssignments.lua
+HealingAssignments.xml
 
 ##Modules\Database.lua
 ##Modules\Posting.lua

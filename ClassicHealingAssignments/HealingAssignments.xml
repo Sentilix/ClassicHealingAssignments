@@ -1,0 +1,356 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<Script file="HealingAssignments.lua" />
+
+	<!-- Frame template for config dialogue background  -->
+	<Frame name="FrameBackgroundTemplate" inherits="BackdropTemplate" virtual="true" frameStrata="LOW">
+		<KeyValues>
+			<KeyValue key="backdropColor" value="BLACK" type="global"/>
+			<KeyValue key="backdropBorderColor" value="WHITE" type="global"/>
+		</KeyValues>
+		<Size>
+			<AbsDimension x="256" y="256" />
+		</Size>
+	</Frame>
+
+	<!-- Frame template for one template column -->
+	<Button name="TemplateButtonTemplate" hidden="true" virtual="true">
+		<Size>
+			<AbsDimension x="150" y="20" />
+		</Size>
+		<Layers>
+			<Layer>
+				<FontString name="$parentText" justifyH="LEFT" inherits="GameFontNormal">
+					<Size>
+						<AbsDimension x="140" y="16"/>
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT">
+							<Offset>
+								<AbsDimension x="4" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnClick>
+				PlaySound(882, "Master")
+				CHA_TemplateOnClick(self)
+			</OnClick>
+			<OnEnter>
+				_G[self:GetName().."BG"]:SetVertexColor(1, 1, 1, 1)
+			</OnEnter>
+			<OnLeave>
+				_G[self:GetName().."BG"]:SetVertexColor(0.7, 0.7, 0.7, 0.0)
+			</OnLeave>
+			<OnLoad>
+				self:GetScript("OnLeave")(self)
+				self:RegisterForClicks("LeftButtonDown", "RightButtonDown");
+			</OnLoad>
+		</Scripts>
+		<NormalTexture name="$parentBG">
+			<Color r="0.0" g="0.0" b="0.5" a="0.5"/>
+		</NormalTexture>
+	</Button>
+
+
+	<!-- Minimap icon -->
+	<Frame name="CHAIconFrame" parent="UIParent" toplevel="true" inherits="BackdropTemplate" frameStrata="LOW">
+		<KeyValues>
+			<KeyValue key="backdropInfo" value="CHA_BACKDROP_ICON" type="global"/>
+			<KeyValue key="backdropColor" value="BLACK" type="global"/>
+			<KeyValue key="backdropBorderColor" value="WHITE" type="global"/>
+		</KeyValues>
+
+		<Size>
+			<AbsDimension x="24" y="24" />
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER">
+				<Offset>
+					<AbsDimension x="0" y="0" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		
+		<Scripts>
+			<OnLoad inherit="prepend">
+				self:SetMovable(true);
+				self:SetUserPlaced(true);
+				self:RegisterForDrag("LeftButton");
+			</OnLoad>
+			<OnDragStart>
+				self:StartMoving();
+			</OnDragStart>
+			<OnDragStop>
+				self:StopMovingOrSizing();
+			</OnDragStop>
+		</Scripts>
+	</Frame>
+
+	<!-- Main config frame -->
+	<Frame name="CHAMainFrame" parent="UIParent" toplevel="true" inherits="BackdropTemplate" frameStrata="MEDIUM" hidden="true">
+		<Size>
+			<AbsDimension x="768" y="446" />
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER">
+				<Offset>
+					<AbsDimension x="0" y="0" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Frames>
+			<Frame name="$parentIcon" parent="CHAMainFrame" inherits="BackdropTemplate" frameStrata="LOW">
+				<KeyValues>
+					<KeyValue key="backdropInfo" value="CHA_BACKDROP_LOGO" type="global"/>
+					<KeyValue key="backdropColor" value="BLACK" type="global"/>
+					<KeyValue key="backdropBorderColor" value="WHITE" type="global"/>
+				</KeyValues>
+				<Size>
+					<AbsDimension x="64" y="64" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="6" y="-2" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<!-- 6 x background frames: -->
+			<Frame name="$parentTopleft" parent="CHAMainFrame" inherits="FrameBackgroundTemplate">
+				<KeyValues>
+					<KeyValue key="backdropInfo" value="CHA_BACKDROP_TOPLEFT" type="global"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="TOP">
+						<Offset>
+							<AbsDimension x="-256" y="0" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="CHAHeadlineCaption" inherits="GameFontNormal" text="Classic Healing Assignments version x.y" justifyH="CENTER">
+							<Color r="0.9" g="0.9" b="0.9" />
+							<Size x="660" y="18" />
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="80" y="-16"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame name="$parentTopmid" parent="CHAMainFrame" inherits="FrameBackgroundTemplate">
+				<KeyValues>
+					<KeyValue key="backdropInfo" value="CHA_BACKDROP_TOPMID" type="global"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="TOP">
+						<Offset>
+							<AbsDimension x="0" y="0" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parentTopright" parent="CHAMainFrame" inherits="FrameBackgroundTemplate">
+				<KeyValues>
+					<KeyValue key="backdropInfo" value="CHA_BACKDROP_TOPRIGHT" type="global"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="TOP">
+						<Offset>
+							<AbsDimension x="256" y="0" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parentBottomleft" parent="CHAMainFrame" inherits="FrameBackgroundTemplate">
+				<KeyValues>
+					<KeyValue key="backdropInfo" value="CHA_BACKDROP_BOTTOMLEFT" type="global"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="TOP">
+						<Offset>
+							<AbsDimension x="-256" y="-256" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="CHAHealerCountCaption" inherits="GameFontNormal" text="Healers: ?">
+							<Anchors>
+								<Anchor point="BOTTOMLEFT" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="32" y="84"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame name="$parentBottommid" parent="CHAMainFrame" inherits="FrameBackgroundTemplate">
+				<KeyValues>
+					<KeyValue key="backdropInfo" value="CHA_BACKDROP_BOTTOMMID" type="global"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="TOP">
+						<Offset>
+							<AbsDimension x="0" y="-256" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parentBottomright" parent="CHAMainFrame" inherits="FrameBackgroundTemplate">
+				<KeyValues>
+					<KeyValue key="backdropInfo" value="CHA_BACKDROP_BOTTOMRIGHT" type="global"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="TOP">
+						<Offset>
+							<AbsDimension x="256" y="-256" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+
+			<Frame name="$parentTemplates" parent="CHAMainFrame" inherits="FrameBackgroundTemplate" frameStrata="MEDIUM">
+				<KeyValues>
+					<KeyValue key="backdropInfo" value="CHA_BACKDROP_TEMPLATE" type="global"/>
+				</KeyValues>
+				<Size>
+					<AbsDimension x="160" y="307" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="CHAMainFrame">
+						<Offset>
+							<AbsDimension x="20" y="-102" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+
+
+			<!-- Close button -->
+			<Button name="$parentCloseButton" inherits="UIPanelButtonTemplate" text="X" frameStrata="HIGH">
+				<Size>
+					<AbsDimension x="22" y="22" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset x="-3" y="-13" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>CHA_CloseConfigurationDialogue();</OnClick>
+				</Scripts>
+			</Button>
+			<!-- "Add template" button -->
+			<Button name="$parentAddTemplateButton" inherits="UIPanelButtonTemplate" text="Add template" frameStrata="HIGH">
+				<Size>
+					<AbsDimension x="100" y="22" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="37" y="-78" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>CHA_AddTemplateOnClick();</OnClick>
+				</Scripts>
+			</Button>
+			<!-- "Tank" button -->
+			<Button name="$parentTankButton" inherits="UIPanelButtonTemplate" text="Tanks" frameStrata="HIGH">
+				<Size>
+					<AbsDimension x="78" y="22" />
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT">
+						<Offset x="-170" y="13" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>CHA_ShowTankConfiguration();</OnClick>
+				</Scripts>
+			</Button>
+			<!-- "Healer" button -->
+			<Button name="$parentHealButton" inherits="UIPanelButtonTemplate" text="Healers" frameStrata="HIGH">
+				<Size>
+					<AbsDimension x="78" y="22" />
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT">
+						<Offset x="-89" y="13" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>CHA_ShowHealerConfiguration();</OnClick>
+				</Scripts>
+			</Button>
+			<!-- "Decurse" button -->
+			<Button name="$parentDecurseButton" inherits="UIPanelButtonTemplate" text="Decursers" frameStrata="HIGH">
+				<Size>
+					<AbsDimension x="78" y="22" />
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT">
+						<Offset x="-8" y="13" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>CHA_ShowDecurseConfiguration();</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+
+		<Scripts>
+			<OnLoad inherit="prepend">
+				self:SetMovable(true)
+				self:SetUserPlaced(true)
+				self:RegisterForDrag("LeftButton")
+				tinsert(UISpecialFrames, self:GetName());
+			</OnLoad>
+			<OnShow>
+				PlaySound(IG_MAINMENU_OPEN);
+			</OnShow>
+			<OnHide>
+				PlaySound(IG_MAINMENU_CLOSE);
+			</OnHide>
+			<OnDragStart>
+				self:StartMoving()
+			</OnDragStart>
+			<OnDragStop>
+				self:StopMovingOrSizing()
+			</OnDragStop>
+		</Scripts>
+	</Frame>
+
+	
+	<!-- Dummy event frame -->
+	<Frame name="CHAEventFrame">
+		<Scripts>
+			<OnLoad>
+				if (CHA_OnLoad) then
+					CHA_OnLoad();
+				end
+			</OnLoad>
+			<OnEvent>
+				if (CHA_OnEvent) then
+					CHA_OnEvent(self, event, ...);
+				end
+			</OnEvent>
+			<OnUpdate>
+				if (CHA_OnTimer) then
+				CHA_OnTimer(elapsed);
+				end
+			</OnUpdate>
+		</Scripts>
+	</Frame>
+</Ui>

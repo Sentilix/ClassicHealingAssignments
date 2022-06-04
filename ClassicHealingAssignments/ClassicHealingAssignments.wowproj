@@ -11,15 +11,21 @@
     <OutputPath>.</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="Bindings.xml">
-      <SubType>Frame</SubType>
-    </Content>
-    <Content Include="classic.txt" />
     <Content Include="ClassicHealingAssignments.toc">
       <SubType>TableOfContents</SubType>
     </Content>
+    <Content Include="ClassicHealingAssignments-Classic.toc">
+      <SubType>TableOfContents</SubType>
+    </Content>
+    <Content Include="DigamCommon.lua">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="HealingAssignments.lua">
       <SubType>Code</SubType>
+      <DependentUpon>HealingAssignments.xml</DependentUpon>
+    </Content>
+    <Content Include="HealingAssignments.xml">
+      <SubType>Frame</SubType>
     </Content>
     <Content Include="Media\Icon.tga" />
     <Content Include="Media\IconMouseOver.tga" />
@@ -30,6 +36,9 @@
       <SubType>Code</SubType>
     </Content>
     <Content Include="Modules\Sync.lua">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="renewOriginal.lua">
       <SubType>Code</SubType>
     </Content>
   </ItemGroup>
