@@ -54,6 +54,21 @@
 		</NormalTexture>
 	</Button>
 
+	<!-- Frame template for one class button -->
+	<Button name="CHAClassButtonTemplate" inherits="ActionButtonTemplate" frameStrata="HIGH" hidden="false" virtual="true">
+		<Size>
+			<AbsDimension x="16" y="16" />
+		</Size>
+		<NormalTexture file="Interface\PaperDoll\UI-Backpack-EmptySlot" />
+		<Scripts>
+			<OnLoad>
+				self:RegisterForClicks("LeftButtonDown", "RightButtonDown");
+			</OnLoad>
+			<OnClick>
+				CHA_ClassIconOnClick(self);
+			</OnClick>
+		</Scripts>
+	</Button>
 
 	<!-- Minimap icon -->
 	<Frame name="CHAIconFrame" parent="UIParent" toplevel="true" inherits="BackdropTemplate" frameStrata="LOW">
@@ -221,6 +236,33 @@
 				</Anchors>
 			</Frame>
 
+			<!-- Class frame: room for class icons -->
+			<Frame name="$parentClasses" parent="CHAMainFrame">
+				<Size>
+					<AbsDimension x="324" y="18" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="CHAMainFrame">
+						<Offset>
+							<AbsDimension x="190" y="-413" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="$parentClassesCaption" inherits="GameFontNormal" text="Class Filter:">
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="-4"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<!-- Template frame: -->
 			<Frame name="$parentTemplates" parent="CHAMainFrame" inherits="FrameBackgroundTemplate" frameStrata="MEDIUM">
 				<KeyValues>
 					<KeyValue key="backdropInfo" value="CHA_BACKDROP_TEMPLATE" type="global"/>
@@ -236,7 +278,6 @@
 					</Anchor>
 				</Anchors>
 			</Frame>
-
 
 			<!-- Close button -->
 			<Button name="$parentCloseButton" inherits="UIPanelButtonTemplate" text="X" frameStrata="HIGH">
@@ -337,19 +378,13 @@
 	<Frame name="CHAEventFrame">
 		<Scripts>
 			<OnLoad>
-				if (CHA_OnLoad) then
-					CHA_OnLoad();
-				end
+				CHA_OnLoad();
 			</OnLoad>
 			<OnEvent>
-				if (CHA_OnEvent) then
-					CHA_OnEvent(self, event, ...);
-				end
+				CHA_OnEvent(self, event, ...);
 			</OnEvent>
 			<OnUpdate>
-				if (CHA_OnTimer) then
 				CHA_OnTimer(elapsed);
-				end
 			</OnUpdate>
 		</Scripts>
 	</Frame>

@@ -110,6 +110,9 @@ function DIGAM_UnitClass(unitid)
 	return classname;
 end;
 
+--[[
+	Table functions
+--]]
 function DIGAM_RenumberTable(table)
 	local newTable = { };
 	local index = 1;
@@ -120,6 +123,17 @@ function DIGAM_RenumberTable(table)
 	end;
 	
 	return newTable;
+end;
+
+function DIGAM_CloneTable(sourceTable)
+	if type(sourceTable) ~= "table" then return sourceTable; end;
+
+	local t = { };
+	for k, v in pairs(sourceTable) do
+		t[k] = DIGAM_CloneTable(v);
+	end;
+
+	return setmetatable(t, DIGAM_CloneTable(getmetatable(sourceTable)));
 end;
 
 

@@ -16,12 +16,33 @@ local COLOUR_BEGINMARK						= "|c80";
 local COLOUR_CHAT							= COLOUR_BEGINMARK.."40A0F8";
 local COLOUR_INTRO							= COLOUR_BEGINMARK.."B040F0";
 local CHA_MESSAGE_PREFIX					= "CHAv2";
-local CHA_ROLE_TANK							= "TANK";
-local CHA_ROLE_HEALER						= "HEAL";
-local CHA_ROLE_DECURSER						= "DECURSE";
 local CHA_TEMPLATES_MAX						= 15;	-- room for max 15 templates. This is a limitation on the frame UI.
 local CHA_COLOR_SELECTED					= {1.0, 1.0, 1.0};
 local CHA_COLOR_UNSELECTED					= {1.0, 0.8, 0.0};
+local CHA_ALPHA_ENABLED						= 1.0;
+local CHA_ALPHA_DISABLED					= 0.3;
+
+local CHA_CLASS_DRUID			= 0x0001;
+local CHA_CLASS_HUNTER			= 0x0002;
+local CHA_CLASS_MAGE			= 0x0004;
+local CHA_CLASS_PALADIN			= 0x0008;
+local CHA_CLASS_PRIEST			= 0x0010;
+local CHA_CLASS_ROGUE			= 0x0020;
+local CHA_CLASS_SHAMAN			= 0x0040;
+local CHA_CLASS_WARLOCK			= 0x0080;
+local CHA_CLASS_WARRIOR			= 0x0100;
+local CHA_CLASS_DEATHKNIGHT		= 0x0200;
+
+local CHA_ROLE_NONE				= 0x00;
+local CHA_ROLE_TANK				= 0x01;
+local CHA_ROLE_HEAL				= 0x02;
+local CHA_ROLE_DECURSE			= 0x04;
+
+local CHA_ROLE_DEFAULT_TANK		= CHA_CLASS_DRUID + CHA_CLASS_WARRIOR;
+local CHA_ROLE_DEFAULT_HEAL		= CHA_CLASS_DRUID + CHA_CLASS_PALADIN + CHA_CLASS_PRIEST + CHA_CLASS_SHAMAN;
+local CHA_ROLE_DEFAULT_DECURSE	= CHA_CLASS_DRUID + CHA_CLASS_MAGE;
+
+
 
 --	Local variables:
 local CHA_CurrentVersion					= 0;
@@ -31,17 +52,29 @@ local CHA_IconMoving						= false;
 local CHA_CurrentTemplateIndex				= 0;
 local CHA_CurrentTemplateOperation			= "";
 
+--	Persisted options:
+CHA_PersistedData							= { };
 
---	Options:
+local CHA_KEY_ActiveTemplate				= "ActiveTemplate";
+local CHA_KEY_ActiveRole					= "ActiveRole";
+local CHA_KEY_Templates						= "Templates";
+
 local CHA_DEFAULT_ActiveTemplate			= nil;
-local CHA_DEFAULT_ConfigurationRole			= CHA_ROLE_TANK;
+local CHA_DEFAULT_ActiveRole				= CHA_ROLE_TANK;
 
 local CHA_ActiveTemplate					= CHA_DEFAULT_ActiveTemplate;
-local CHA_ConfigurationRole					= CHA_DEFAULT_ConfigurationRole;
+local CHA_ActiveRole						= CHA_DEFAULT_ActiveRole;
 local CHA_MinimapX							= 0;
 local CHA_MinimapY							= 0;
 local CHA_TankAsDruid						= true;		-- Druids are viable tanks in vanilla: add to tank list as default
 local CHA_Templates							= { };
+--[[
+	Template: a table of template objects with:
+		"NAME": Unique name of the template
+		"TANKMASK": bitmask for classes assigned for Tanking
+		"HEALMASK": bitmask for classes assigned for Healing
+		"DECURSEMASK": bitmask for classes assigned for Decursing
+--]]
 local CHA_WhisperHeal						= true;
 local CHA_WhisperRepost						= true;
 
@@ -160,12 +193,74 @@ UIDropDownMenu_Initialize(CHA_TemplateDropdownMenu, function(self, level, menuLi
 	UIDropDownMenu_AddButton(info)
 end);
 
+--	Classes setup:
+local CHA_ClassMatrix = { };
+local CHA_CLASS_MATRIX_MASTER = {
+	["DRUID"] = {
+		["MASK"] = CHA_CLASS_DRUID,
+		["ICONID"] = 625999,
+		["ROLE"] = CHA_ROLE_TANK + CHA_ROLE_HEAL + CHA_ROLE_DECURSE,
+	},
+	["HUNTER"] = {
+		["MASK"] = CHA_CLASS_HUNTER,
+		["ICONID"] = 626000,
+		["ROLE"] = CHA_ROLE_NONE,
+	},
+	["MAGE"] = {
+		["MASK"] = CHA_CLASS_MAGE,
+		["ICONID"] = 626001,
+		["ROLE"] = CHA_ROLE_DECURSE,
+	},
+	["PALADIN"] = {
+		["MASK"] = CHA_CLASS_PALADIN,
+		["ICONID"] = 626003,
+		["ALLIANCE-EXPAC"] = 1,
+		["HORDE-EXPAC"] = 2,
+		["ROLE"] = CHA_ROLE_NONE,	-- Paladin role is set during initialization since it depends on expac.
+	},
+	["PRIEST"] = {
+		["MASK"] = CHA_CLASS_PRIEST,
+		["ICONID"] = 626004,
+		["ROLE"] = CHA_ROLE_HEAL,
+	},
+	["ROGUE"] = {
+		["MASK"] = CHA_CLASS_ROGUE,
+		["ICONID"] = 626005,
+		["ROLE"] = CHA_ROLE_NONE,
+	},
+	["SHAMAN"] = {
+		["MASK"] = CHA_CLASS_SHAMAN,
+		["ICONID"] = 626006,
+		["ALLIANCE-EXPAC"] = 2,
+		["HORDE-EXPAC"] = 1,
+		["ROLE"] = CHA_ROLE_HEAL,
+	},
+	["WARLOCK"] = {
+		["MASK"] = CHA_CLASS_WARLOCK,
+		["ICONID"] = 626007,
+		["ROLE"] = CHA_ROLE_NONE,
+	},
+	["WARRIOR"] = {
+		["MASK"] = CHA_CLASS_WARRIOR,
+		["ICONID"] = 626008,
+		["ROLE"] = CHA_ROLE_TANK,
+	},
+	["DEATHKNIGHT"] = {
+		["MASK"] = CHA_CLASS_DEATHKNIGHT,
+		["ICONID"] = 135771,
+		["ALLIANCE-EXPAC"] = 3,
+		["HORDE-EXPAC"] = 3,
+		["ROLE"] = CHA_ROLE_TANK,
+	},
+};
+
+
 
 
 --[[
 	Slash commands
 
-	Main entry for Buffalo "slash" commands.
+	Main entry for CHA "slash" commands.
 	This will send the request to one of the sub slash commands.
 	Syntax: /cha [option, defaulting to "cfg"]
 	Added in: 2.0.0
@@ -279,18 +374,69 @@ end
 --[[
 	Initialization functions
 --]]
-local function CHA_MainInitialization()
-	CHA_ReadConfigurationSettings();
-	CHA_CreateTemplates();
+local function CHA_PreInitialization()
+	CHA_Templates = { };
 
---	local index, template = CHA_GetTemplateByName(CHA_ActiveTemplate);
+	CHA_InitializeClassMatrix();
 
 	CHA_InitializeUI();
 end;
 
-function CHA_ReadConfigurationSettings()
+local function CHA_PostInitialization()
+	CHA_ReadConfigurationSettings();
+	CHA_UpdateUI();
 end;
 
+--	Read all configuration options, and fill in with defaults if not present.
+--	Therefore value is written back immediately:
+function CHA_ReadConfigurationSettings()
+	--	Current active template:
+	CHA_ActiveTemplate = CHA_GetOption(CHA_KEY_ActiveTemplate, CHA_DEFAULT_ActiveTemplate);
+	CHA_SetOption(CHA_KEY_ActiveTemplate, CHA_ActiveTemplate);
+
+	--	Current active role:
+	CHA_ActiveRole = CHA_GetOption(CHA_KEY_ActiveRole, CHA_DEFAULT_ActiveRole);
+	CHA_SetOption(CHA_KEY_ActiveRole, CHA_ActiveRole);
+
+	--	Templates: These are processed in the Template code:
+	CHA_ProcessConfiguredTemplateData(CHA_GetOption(CHA_KEY_Templates, nil));
+	CHA_SetOption(CHA_KEY_Templates, CHA_Templates);
+
+end;
+
+function CHA_GetOption(parameter, defaultValue)
+	local realmname = GetRealmName();
+	local playername = UnitName("player");
+
+	-- Character level
+	if CHA_PersistedData[realmname] then
+		if CHA_PersistedData[realmname][playername] then
+			if CHA_PersistedData[realmname][playername][parameter] then
+				local value = CHA_PersistedData[realmname][playername][parameter];
+				if (type(value) == "table") or value ~= "" then
+					return value;
+				end
+			end		
+		end
+	end
+	return defaultValue;
+end
+
+function CHA_SetOption(parameter, value)
+	local realmname = GetRealmName();
+	local playername = UnitName("player");
+
+	-- Character level:
+	if not CHA_PersistedData[realmname] then
+		CHA_PersistedData[realmname] = { };
+	end
+		
+	if not CHA_PersistedData[realmname][playername] then
+		CHA_PersistedData[realmname][playername] = { };
+	end
+		
+	CHA_PersistedData[realmname][playername][parameter] = value;
+end
 
 
 
@@ -307,18 +453,21 @@ function CHA_CloseConfigurationDialogue()
 end;
 
 function CHA_ShowTankConfiguration()
-	CHA_ConfigurationRole = CHA_ROLE_TANK;
-	CHA_UpdateRoleCounter();
+	CHA_ActiveRole = CHA_ROLE_TANK;
+	CHA_SetOption(CHA_KEY_ActiveRole, CHA_ActiveRole);
+	CHA_UpdateUI();
 end;
 
 function CHA_ShowHealerConfiguration()
-	CHA_ConfigurationRole = CHA_ROLE_HEALER;
-	CHA_UpdateRoleCounter();
+	CHA_ActiveRole = CHA_ROLE_HEAL;
+	CHA_SetOption(CHA_KEY_ActiveRole, CHA_ActiveRole);
+	CHA_UpdateUI();
 end;
 
 function CHA_ShowDecurseConfiguration()
-	CHA_ConfigurationRole = CHA_ROLE_DECURSER;
-	CHA_UpdateRoleCounter();
+	CHA_ActiveRole = CHA_ROLE_DECURSE;
+	CHA_SetOption(CHA_KEY_ActiveRole, CHA_ActiveRole);
+	CHA_UpdateUI();
 end;
 
 function CHA_ToggleConfigurationDialogue()
@@ -327,6 +476,28 @@ function CHA_ToggleConfigurationDialogue()
 	else
 		CHA_OpenConfigurationDialogue();
 	end
+end;
+
+function CHA_ClassIconOnClick(sender)
+	local buttonName = sender:GetName();
+	local _, _, className, _ = string.find(buttonName, "classicon_(%S*)");
+
+	local template = CHA_GetActiveTemplate();
+	if not template then
+		return;
+	end;
+
+	local classInfo = CHA_ClassMatrix[className];
+
+	if CHA_ActiveRole == CHA_ROLE_TANK then
+		template["TANKMASK"] = bit.bxor(template["TANKMASK"], classInfo["MASK"]);
+	elseif CHA_ActiveRole == CHA_ROLE_HEAL then
+		template["HEALMASK"] = bit.bxor(template["HEALMASK"], classInfo["MASK"]);
+	elseif CHA_ActiveRole == CHA_ROLE_DECURSE then
+		template["DECURSEMASK"] = bit.bxor(template["DECURSEMASK"], classInfo["MASK"]);
+	end;
+
+	CHA_UpdateClassIcons();
 end;
 
 function CHA_TemplateOnClick(sender)
@@ -455,18 +626,6 @@ function CHA_RenameTemplate_OK(oldTemplateName, newTemplateName)
 	CHA_UpdateUI();
 end;
  
-function DIGAM_CloneTable(sourceTable)
-	if type(sourceTable) ~= "table" then return sourceTable; end;
-
-	local t = { };
-	for k, v in pairs(sourceTable) do
-		t[k] = DIGAM_CloneTable(v);
-	end;
-	--table.setn(t, table.getn(sourceTable));
-
-	return setmetatable(t, DIGAM_CloneTable(getmetatable(sourceTable)));
-end;
-
 function CHA_IconMouseDown(...)
 	local arg1 = ...;
 
@@ -484,14 +643,34 @@ function CHA_IconMouseDown(...)
 	end
 end
 
+function CHA_UpdateRoleButtons()
+ 	CHA_UpdateRoleCounter();
+
+	if CHA_ActiveRole == CHA_ROLE_TANK then
+		CHAMainFrameTankButton:Disable();
+		CHAMainFrameHealButton:Enable();
+		CHAMainFrameDecurseButton:Enable();
+	elseif CHA_ActiveRole == CHA_ROLE_HEAL then
+		CHAMainFrameTankButton:Enable();
+		CHAMainFrameHealButton:Disable();
+		CHAMainFrameDecurseButton:Enable();
+	elseif CHA_ActiveRole == CHA_ROLE_DECURSE then
+		CHAMainFrameTankButton:Enable();
+		CHAMainFrameHealButton:Enable();
+		CHAMainFrameDecurseButton:Disable();
+	end;
+end;
+
 function CHA_InitializeUI()
+	CHA_CreateClassIcons();
 	CHA_CreateTemplateButtons();
 
 	CHA_UpdateUI();
 end;
 
 function CHA_UpdateUI()
-	CHA_UpdateRoleCounter();
+	CHA_UpdateClassIcons();
+	CHA_UpdateRoleButtons();
 	CHA_UpdateTemplates();
 end;
 
@@ -525,7 +704,7 @@ function CHA_UpdateRoleCounter()
 	local Class = ""
 	for i = 1, GetNumGroupMembers() do
 		class = DIGAM_UnitClass("raid"..i)
-		--	TODO: Make a class mask!
+		--	TODO: Count using Class Matrix instead!
 		if Class == "WARRIOR" or Class == "DRUID" then 
 			numTanks = numTanks + 1;
 		end
@@ -539,33 +718,117 @@ function CHA_UpdateRoleCounter()
 		end
 	end
 
-	if CHA_ConfigurationRole == CHA_ROLE_TANK then
+	if CHA_ActiveRole == CHA_ROLE_TANK then
 		CHAHealerCountCaption:SetText(string.format("Tanks: %s", numTanks or "?"));
-	elseif CHA_ConfigurationRole == CHA_ROLE_HEALER then
+	elseif CHA_ActiveRole == CHA_ROLE_HEAL then
 		CHAHealerCountCaption:SetText(string.format("Healers: %s", numHealers or "?"));
 	else -- Decurser:
 		CHAHealerCountCaption:SetText(string.format("Decursers: %s", numDecursers or "?"));
 	end;
 end
 
+--[[
+	Class functions
+--]]
+function CHA_CreateClassIcons()
+
+	local offsetX = 80;
+	local offsetY = -2;
+	local width = 24;
+	local posX = offsetX;
+	for className, classInfo in next, CHA_ClassMatrix do		
+		local buttonName = string.format("classicon_%s", className);
+
+		local entry = CreateFrame("Button", buttonName, CHAMainFrameClasses, "CHAClassButtonTemplate");
+		entry:SetAlpha(CHA_ALPHA_DISABLED);
+		entry:SetPoint("TOPLEFT", posX, offsetY);
+		entry:SetNormalTexture(classInfo["ICONID"]);
+		entry:SetPushedTexture(classInfo["ICONID"]);
+
+		posX = posX + width;
+	end;
+end;
+
+--	Update class icons based on the current template + role:
+function CHA_UpdateClassIcons()
+	local template = CHA_GetActiveTemplate();
+	local templateMask = 0x0000;
+
+	if template then
+		if CHA_ActiveRole == CHA_ROLE_TANK then
+			templateMask = template["TANKMASK"];
+		elseif CHA_ActiveRole == CHA_ROLE_HEAL then
+			templateMask = template["HEALMASK"];
+		elseif CHA_ActiveRole == CHA_ROLE_DECURSE then
+			templateMask = template["DECURSEMASK"];
+		end;
+	end;
+
+	for className, classInfo in next, CHA_ClassMatrix do
+		local buttonName = string.format("classicon_%s", className);
+		local entry = _G[buttonName];
+
+		if bit.band(classInfo["MASK"], templateMask) > 0 then
+			entry:SetAlpha(CHA_ALPHA_ENABLED);
+		else
+			entry:SetAlpha(CHA_ALPHA_DISABLED);
+		end;
+	end;
+end;
+
+
+
+function CHA_InitializeClassMatrix()
+	CHA_ClassMatrix = { };
+
+	local factionEN = UnitFactionGroup("player");
+	local expacKey = "ALLIANCE-EXPAC";
+	if factionEN == "Horde" then
+		expacKey = "HORDE-EXPAC";
+	end;
+
+	local paladinRole = CHA_ROLE_TANK + CHA_ROLE_HEAL;
+	if CHA_Expansionlevel == 1 then
+		--	Sorry, paladins cannot tank in Classic!
+		paladinRole = CHA_ROLE_HEAL;
+	end;
+
+	for className, classInfo in next, CHA_CLASS_MATRIX_MASTER do
+		if not classInfo[expacKey] or classInfo[expacKey] <= CHA_Expansionlevel then
+			if className == "PALADIN" then
+				classInfo["ROLE"] = paladinRole;
+			end;
+			CHA_ClassMatrix[className] = classInfo;
+		end;
+	end;
+end;
 
 
 --[[
 	Template logic
 --]]
+function CHA_GetActiveTemplate()
+	local _, template = CHA_GetTemplateByName(CHA_ActiveTemplate);
+	return template;
+end;
 
 --	Add a new Template to the template array
 function CHA_AddTemplate(templateName)
 	local templateCount = table.getn(CHA_Templates);
 	if templateCount < CHA_TEMPLATES_MAX then
 		templateCount = templateCount + 1;
-		CHA_Templates[templateCount] = { ["NAME"] = templateName };
+		CHA_Templates[templateCount] = {
+			["NAME"] = templateName ,
+			["TANKMASK"] = CHA_ROLE_DEFAULT_TANK,
+			["HEALMASK"] = CHA_ROLE_DEFAULT_HEAL,
+			["DECURSEMASK"] = CHA_ROLE_DEFAULT_DECURSE,
+		};
 	end;
 	return templateCount;
 end;
 
 --	initialize profile names.
-function CHA_CreateTemplates()
+function CHA_CreateDefaultTemplates()
 	CHA_Templates = { };
 
 	CHA_AddTemplate("Default");
@@ -678,12 +941,44 @@ function CHA_GetTemplateById(templateId)
 end;
 
 
+function CHA_ProcessConfiguredTemplateData(workTemplates)
+	CHA_Templates = { };
+
+	if type(workTemplates) == "table" then
+		--DIGAM_PrintAll(workTemplates);
+		for key, template in next, workTemplates do
+			local templateName = template["NAME"];
+			if templateName then
+				--	This creates the template with default setup data:
+				local tpl = CHA_Templates[CHA_AddTemplate(templateName)];
+
+				--	Read tank/healer/decursers from template and overwrite defaults if available:
+				tpl["TANKMASK"] = template["TANKMASK"] or tpl["TANKMASK"];
+				tpl["HEALMASK"] = template["HEALMASK"] or tpl["HEALMASK"];
+				tpl["DECURSEMASK"] = template["DECURSEMASK"] or tpl["DECURSEMASK"];
+			end;
+		end;
+	end;
+
+	if table.getn(CHA_Templates) == 0 then
+		CHA_CreateDefaultTemplates();
+	end;
+end;
+
+
 
 --[[
 	Event handlers
 --]]
-function CHA_OnEvent(event, ...)	
-	if event == "CHAT_MSG_ADDON" then
+function CHA_OnEvent(self, event, ...)
+
+	if event == "ADDON_LOADED" then
+		local addonname = ...;
+		if addonname == CHA_ADDON_NAME then
+			CHA_PostInitialization();
+		end;
+
+	elseif event == "CHAT_MSG_ADDON" then
 		local prefix, msg, channel, sender = ...;
 		if prefix ~= CHA_MESSAGE_PREFIX then	
 			return;
@@ -738,20 +1033,7 @@ function CHA_OnEvent(event, ...)
 		--if arg1 == "!heal" or arg1 == "heal" then
 		--	HealingAsssignments:AnswerAssignments(sender)
 		--end
-
-	elseif event == "ADDON_LOADED" then
-		local addonname = ...;
-		if addonname == CHA_ADDON_NAME then
-			CHA_Echo(string.format("Classic Healing Assignments version ".. GetAddOnMetadata(CHA_ADDON_NAME, "Version") .." - by "..GetAddOnMetadata(CHA_ADDON_NAME, "Author")));
-
-			--HealingAsssignments.Mainframe:ConfigureFrame()
-			--HealingAsssignments.MessageBuffer = {}
-			--HealingAsssignments.LastAddonMessageTime = 0;
-			--if ChaFu then 
-			--	HealingAsssignments.Minimap:Hide();
-			--end
-		end;
-	end
+	end;
 end
 
 function CHA_OnTimer(elapsed)
@@ -772,18 +1054,18 @@ function CHA_OnLoad()
 	CHA_CurrentVersion = CHA_CalculateVersion(GetAddOnMetadata(CHA_ADDON_NAME, "Version") );
 
 	CHA_Echo(string.format("Version %s by %s", GetAddOnMetadata(CHA_ADDON_NAME, "Version"), GetAddOnMetadata(CHA_ADDON_NAME, "Author")));
-	CHA_Echo(string.format("Type %s/buffalo%s to configure the addon.", COLOUR_INTRO, COLOUR_CHAT));
+	CHA_Echo(string.format("Type %s/cha%s to configure the addon.", COLOUR_INTRO, COLOUR_CHAT));
 
 	CHAHeadlineCaption:SetText(string.format("Classic Healing Assignments - version %s", GetAddOnMetadata(CHA_ADDON_NAME, "Version")));
 --	CHAVersionCaption:SetText(string.format("Classic Healing Assignments version %s by %s", GetAddOnMetadata(CHA_ADDON_NAME, "Version"), GetAddOnMetadata(CHA_ADDON_NAME, "Author")));
 
-	CHA_MainInitialization();
+	CHA_PreInitialization();
 
 	CHAEventFrame:RegisterEvent("ADDON_LOADED")
-	CHAEventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
-	CHAEventFrame:RegisterEvent("CHAT_MSG_WHISPER")
-	CHAEventFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-	CHAEventFrame:RegisterEvent("CHAT_MSG_ADDON")
+	--CHAEventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+	--CHAEventFrame:RegisterEvent("CHAT_MSG_WHISPER")
+	--CHAEventFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+	--CHAEventFrame:RegisterEvent("CHAT_MSG_ADDON")
 
 	C_ChatInfo.RegisterAddonMessagePrefix(CHA_MESSAGE_PREFIX);
 end;
