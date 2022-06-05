@@ -89,13 +89,33 @@ end;
 --
 --	WoW helpers
 --
-function DIGAM_GetPlayerName(nameAndRealm)
+function DIGAM_StripRealmName(nameAndRealm)
 	local _, _, name = string.find(nameAndRealm, "([^-]*)-%s*");
 	if not name then
 		name = nameAndRealm;
 	end;
 
 	return name;
+end;
+
+function DIGAM_GetPlayer(unitid)
+	return UnitName(unitid);
+end;
+
+function DIGAM_GetPlayerAndRealm(unitid)
+	local playername, realmname = UnitName(unitid);
+	return playername.."-".. (realmname or DIGAM_GetMyRealm());
+end;
+
+function DIGAM_GetMyRealm()
+	local realmname = GetRealmName();
+	
+	if string.find(realmname, " ") then
+		local _, _, name1, name2 = string.find(realmname, "([a-zA-Z]*) ([a-zA-Z]*)");
+		realmname = name1 .. name2; 
+	end;
+
+	return realmname;
 end;
 
 function DIGAM_IsInParty()

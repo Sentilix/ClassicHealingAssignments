@@ -69,6 +69,23 @@
 			</OnClick>
 		</Scripts>
 	</Button>
+	
+	<!-- Frame template for one target button -->
+	<Button name="CHATargetButtonTemplate" inherits="ActionButtonTemplate" frameStrata="HIGH" hidden="false" virtual="true">
+		<Size>
+			<AbsDimension x="16" y="16" />
+		</Size>
+		<NormalTexture file="Interface\Icons\Ability_Hunter_Snipershot" />
+		<Scripts>
+			<OnClick>
+				PlaySound(882, "Master")
+				CHA_TargetOnClick(self)
+			</OnClick>
+			<OnLoad>
+				self:RegisterForClicks("LeftButtonDown", "RightButtonDown");
+			</OnLoad>
+		</Scripts>
+	</Button>
 
 	<!-- Minimap icon -->
 	<Frame name="CHAIconFrame" parent="UIParent" toplevel="true" inherits="BackdropTemplate" frameStrata="LOW">
@@ -134,6 +151,41 @@
 					</Anchor>
 				</Anchors>
 			</Frame>
+
+			<!-- "Add Target" button -->
+			<Button name="$parentSymbolTargetButton" inherits="ActionButtonTemplate" frameStrata="HIGH">
+				<Size>
+					<AbsDimension x="16" y="16" />
+				</Size>
+				<NormalTexture file="Interface\Icons\ability_hunter_snipershot" />
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="CHAMainFrame">
+						<Offset>
+							<AbsDimension x="192" y="-105" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						CHA_AddSymbolTargetOnClick();
+					</OnClick>
+				</Scripts>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="$parentCaption" inherits="GameFontNormal" text="Add Target">
+							<Anchors>
+								<Anchor point="RIGHT" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="78" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<Color r="0.9" g="0.9" b="0.9" />
+						</FontString>
+					</Layer>
+				</Layers>
+			</Button>
+
 			<!-- 6 x background frames: -->
 			<Frame name="$parentTopleft" parent="CHAMainFrame" inherits="FrameBackgroundTemplate">
 				<KeyValues>
@@ -272,6 +324,20 @@
 						</FontString>
 					</Layer>
 				</Layers>
+			</Frame>
+
+			<!-- Target outer frame: -->
+			<Frame name="CHAMainFrameTargets" parent="CHAMainFrame" inherits="FrameBackgroundTemplate" frameStrata="MEDIUM">
+				<Size>
+					<AbsDimension x="560" y="280" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="CHAMainFrame">
+						<Offset>
+							<AbsDimension x="192" y="-124" />
+						</Offset>
+					</Anchor>
+				</Anchors>
 			</Frame>
 			<!-- Template frame: -->
 			<Frame name="$parentTemplates" parent="CHAMainFrame" inherits="FrameBackgroundTemplate" frameStrata="MEDIUM">
