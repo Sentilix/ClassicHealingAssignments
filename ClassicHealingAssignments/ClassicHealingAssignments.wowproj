@@ -29,6 +29,7 @@
     </Content>
     <Content Include="Media\Icon.tga" />
     <Content Include="Media\IconMouseOver.tga" />
+    <Content Include="Media\logo-square.tga" />
     <Content Include="Modules\Database.lua">
       <SubType>Code</SubType>
     </Content>

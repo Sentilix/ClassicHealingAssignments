@@ -122,7 +122,7 @@
 	</Button>
 
 	<!-- Minimap icon -->
-	<Frame name="CHAIconFrame" parent="UIParent" toplevel="true" inherits="BackdropTemplate" frameStrata="LOW">
+	<!--<Frame name="CHAIconFrame" parent="UIParent" toplevel="true" inherits="BackdropTemplate" frameStrata="LOW">
 		<KeyValues>
 			<KeyValue key="backdropInfo" value="CHA_BACKDROP_ICON" type="global"/>
 			<KeyValue key="backdropColor" value="BLACK" type="global"/>
@@ -153,7 +153,40 @@
 				self:StopMovingOrSizing();
 			</OnDragStop>
 		</Scripts>
-	</Frame>
+	</Frame>-->
+
+	<Button name="CHAAnnounceButton" inherits="SecureActionButtonTemplate" parent="UIParent" toplevel="true" hidden="false" frameStrata="LOW" movable="true">
+		<Size>
+			<AbsDimension x="32" y="32" />
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER">
+				<Offset>
+					<AbsDimension x="0" y="100" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				self:EnableMouse(true);
+				self:EnableKeyboard(false);
+				self:RegisterForDrag("LeftButton", "RightButton");
+				self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
+			</OnLoad>
+			<OnDragStart>
+				if (button == "LeftButton" and IsShiftKeyDown()) then
+				self:StartMoving();
+				end
+			</OnDragStart>
+			<OnDragStop>
+				self:StopMovingOrSizing();
+				CHA_RepositionateButton(self);
+			</OnDragStop>
+			<OnClick>
+				CHA_AnnouncementButtonOnClick(self);
+			</OnClick>
+		</Scripts>
+	</Button>
 
 	<!-- Main config frame -->
 	<Frame name="CHAMainFrame" parent="UIParent" toplevel="true" inherits="BackdropTemplate" frameStrata="MEDIUM" hidden="true">
@@ -376,7 +409,7 @@
 			<!-- Template frame: -->
 			<Frame name="$parentTemplates" parent="CHAMainFrame" inherits="FrameBackgroundTemplate" frameStrata="MEDIUM">
 				<KeyValues>
-					<KeyValue key="backdropInfo" value="CHA_BACKDROP_TEMPLATE" type="global"/>
+					<KeyValue key="backdropInfo" value="CHA_BACKDROP_TANK" type="global"/>
 				</KeyValues>
 				<Size>
 					<AbsDimension x="160" y="307" />

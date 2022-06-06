@@ -7,14 +7,47 @@
 --
 --	Version 1.x by Renew, Mimma.
 --	Version 2.x coded from scratch by Mimma
+
+
+	Templates:
+	The array containing the template setup is a huge table.
+	We are reading data into a work table and then creating data in.the-fly to make
+	sure data is consistent.
+
+	CHA_Templates = {
+		["TemplateName"] = "Molten Core",
+		["Roles"] = {
+			["Tanks/Heals/Decurses"] = {
+				["Caption"] = "Tanks/Heals/Decurses",
+				["Mask"] = 769,
+				["Targets"] = 
+				{
+					{
+						["Mask"] = 65536,
+						["Name"] = "Skull",
+						["Icon"] = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8",
+						["Players"] = 
+						{
+							{
+								["Class"] = "WARRIOR",
+								["Mask"] = 256,
+								["Name"] = "Donald-Firemaw",
+								["Icon"] = 626008,
+							},
+						},
+					},
+				},
+			},
+		},
+	},
 --]]
 
 --	Addon constants:
 local CHA_ADDON_NAME						= "ClassicHealingAssignments";
 local CHAT_END								= "|r";
 local COLOUR_BEGINMARK						= "|c80";
-local COLOUR_CHAT							= COLOUR_BEGINMARK.."40A0F8";
-local COLOUR_INTRO							= COLOUR_BEGINMARK.."B040F0";
+local COLOUR_CHAT							= COLOUR_BEGINMARK.."40A0F8"
+local COLOUR_INTRO							= COLOUR_BEGINMARK.."B0F0F0"
 local CHA_MESSAGE_PREFIX					= "CHAv2";
 local CHA_TEMPLATES_MAX						= 15;	-- room for max 15 templates. This is a limitation in the UI design.
 local CHA_COLOR_SELECTED					= {1.0, 1.0, 1.0};
@@ -87,10 +120,10 @@ local CHA_TargetMatrix =  {
 local CHA_FRAME_MAXTARGET	= 8;
 local CHA_FRAME_MAXPLAYERS	= 8;	-- Would like at least 10, but there isn't room :(
 	
-	
-local _icon_tank = 132341;			-- Defensive stance
-local _icon_heal = 135907;			-- Flash of Light
-local _icon_decurse = 135952;		-- remove Curse
+local CHA_ICON_NONE							= "Interface\\AddOns\\ClassicHealingAssignments\\Media\\logo-square";
+local CHA_ICON_TANK							= 132341;		-- Defensive stance
+local CHA_ICON_HEAL							= 135907;		-- Flash of Light
+local CHA_ICON_DECURSE						= 132095;		-- remove Curse
 
 
 local CHA_ROLE_NONE							= 0x00;
@@ -126,12 +159,20 @@ CHA_PersistedData							= { };
 local CHA_KEY_ActiveTemplate				= "ActiveTemplate";
 local CHA_KEY_ActiveRole					= "ActiveRole";
 local CHA_KEY_Templates						= "Templates";
+local CHA_KEY_AnnounceButtonPosX			= "AnnounceButton.X";
+local CHA_KEY_AnnounceButtonPosY			= "AnnounceButton.Y";
+local CHA_KEY_AnnounceButtonSize			= "AnnounceButton.Size";
+local CHA_KEY_AnnounceButtonVisible			= "AnnounceButton.Visible";
 
 local CHA_DEFAULT_ActiveTemplate			= nil;
 local CHA_DEFAULT_ActiveRole				= CHA_ROLE_TANK;
+local CHA_DEFAULT_AnnounceButtonSize		= 32;
+local CHA_DEFAULT_AnnounceButtonVisible		= true;
 
 local CHA_ActiveTemplate					= CHA_DEFAULT_ActiveTemplate;
 local CHA_ActiveRole						= CHA_DEFAULT_ActiveRole;
+local CHA_AnnounceButtonSize				= CHA_DEFAULT_AnnounceButtonSize;
+local CHA_AnnounceButtonVisible				= CHA_DEFAULT_AnnounceButtonVisible;
 local CHA_MinimapX							= 0;
 local CHA_MinimapY							= 0;
 local CHA_Templates							= { };
@@ -147,13 +188,8 @@ local CHA_WhisperRepost						= true;
 
 
 --	Backdrops:
-CHA_BACKDROP_ICON = {
-	bgFile = "Interface\\AddOns\\ClassicHealingAssignments\\Media\\icon",
-	edgeSize = 0,
-	tileEdge = true,
-};
 CHA_BACKDROP_LOGO = {
-	bgFile = "Interface\\AddOns\\ClassicHealingAssignments\\Media\\iconmouseover",
+	bgFile = "Interface\\AddOns\\ClassicHealingAssignments\\Media\\icon",
 	edgeSize = 0,
 	tileEdge = true,
 };
@@ -187,7 +223,17 @@ CHA_BACKDROP_BOTTOMRIGHT = {
 	edgeSize = 0,
 	tileEdge = true,
 };
-CHA_BACKDROP_TEMPLATE = {
+CHA_BACKDROP_TANK = {
+	bgFile = "Interface\\TalentFrame\\WarriorProtection-Topleft",
+	edgeSize = 0,
+	tileEdge = true,
+}
+CHA_BACKDROP_HEALER = {
+	bgFile = "Interface\\TalentFrame\\PriestHoly-Topleft",
+	edgeSize = 0,
+	tileEdge = true,
+}
+CHA_BACKDROP_DECURSE = {
 	bgFile = "Interface\\TalentFrame\\DruidBalance-Topleft",
 	edgeSize = 0,
 	tileEdge = true,
@@ -536,7 +582,7 @@ end
 --]]
 function CHA_Echo(msg)
 	if msg then
-		DEFAULT_CHAT_FRAME:AddMessage(COLOUR_CHAT .. msg .. CHAT_END)
+		DEFAULT_CHAT_FRAME:AddMessage(COLOUR_CHAT.."-[".. COLOUR_INTRO.."CHA".. COLOUR_CHAT .."]- ".. msg .. CHAT_END);
 	end
 end
 
@@ -854,20 +900,77 @@ end;
 function CHA_UpdateRoleButtons()
  	CHA_UpdateRoleCounter();
 
+	local announceButtonIcon = CHA_ICON_NONE;
+	local announceButtonActive = false;
+	local targetCount = table.getn(CHA_GetActiveTargetTemplate() or {});
+
 	if CHA_ActiveRole == CHA_ROLE_TANK then
 		CHAMainFrameTankButton:Disable();
 		CHAMainFrameHealButton:Enable();
 		CHAMainFrameDecurseButton:Enable();
+		CHAMainFrameTemplates:SetBackdrop(CHA_BACKDROP_TANK);
+
+		if targetCount > 0 then
+			announceButtonIcon = CHA_ICON_TANK;
+		end;			
 	elseif CHA_ActiveRole == CHA_ROLE_HEAL then
 		CHAMainFrameTankButton:Enable();
 		CHAMainFrameHealButton:Disable();
 		CHAMainFrameDecurseButton:Enable();
+		CHAMainFrameTemplates:SetBackdrop(CHA_BACKDROP_HEALER);
+
+		if targetCount > 0 then
+			announceButtonIcon = CHA_ICON_HEAL;
+		end;
 	elseif CHA_ActiveRole == CHA_ROLE_DECURSE then
 		CHAMainFrameTankButton:Enable();
 		CHAMainFrameHealButton:Enable();
 		CHAMainFrameDecurseButton:Disable();
+		CHAMainFrameTemplates:SetBackdrop(CHA_BACKDROP_DECURSE);
+
+		if targetCount > 0 then
+			announceButtonIcon = CHA_ICON_DECURSE;
+		end;
+	end;
+
+	CHAAnnounceButton:SetNormalTexture(announceButtonIcon);
+	if targetCount > 0 then
+		CHAAnnounceButton:SetAlpha(CHA_ALPHA_ENABLED);
+	else
+		CHAAnnounceButton:SetAlpha(CHA_ALPHA_DISABLED);
+	end;
+
+end;
+
+function CHA_AnnouncementButtonOnClick(sender)
+	local buttonType = GetMouseButtonClicked();
+
+	if buttonType == "LeftButton" then
+		CHA_OpenConfigurationDialogue();
+	else
+		CHA_AnnounceAssignments();
 	end;
 end;
+
+function CHA_UpdateAnnounceButton()
+	CHA_UpdateRoleButtons();
+
+	CHA_RepositionateButton();
+end;
+
+function CHA_RepositionateButton(self)
+	local x, y = CHAAnnounceButton:GetLeft(), CHAAnnounceButton:GetTop() - UIParent:GetHeight();
+
+	CHA_SetOption(CHA_KEY_AnnounceButtonPosX, x);
+	CHA_SetOption(CHA_KEY_AnnounceButtonPosY, y);
+	CHAAnnounceButton:SetSize(CHA_AnnounceButtonSize, CHA_AnnounceButtonSize);
+
+	if CHA_AnnounceButtonVisible then
+		CHAAnnounceButton:Show();
+	else
+		CHAAnnounceButton:Hide();
+	end;
+end
 
 
 --[[
@@ -1454,6 +1557,7 @@ function CHA_InitializeUI()
 end;
 
 function CHA_UpdateUI()
+	CHA_UpdateAnnounceButton();
 	CHA_UpdateClassIcons();
 	CHA_UpdateRoleButtons();
 	CHA_UpdateTemplates();
@@ -1759,39 +1863,6 @@ end;
 function CHA_ProcessConfiguredTemplateData(workTemplates)
 	CHA_Templates = { };
 
-	--[[
-	The array containing the template setup is a huge table.
-	We are reading data into a work table and then creating data in.the-fly to make
-	sure data is consistent.
-
-	CHA_Templates = {
-		["TemplateName"] = "Molten Core",
-		["Roles"] = {
-			["Tanks/Heals/Decurses"] = {
-				["Caption"] = "Tanks/Heals/Decurses",
-				["Mask"] = 769,
-				["Targets"] = 
-				{
-					{
-						["Mask"] = 65536,
-						["Name"] = "Skull",
-						["Icon"] = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8",
-						["Players"] = 
-						{
-							{
-								["Class"] = "WARRIOR",
-								["Mask"] = 256,
-								["Name"] = "Donald-Firemaw",
-								["Icon"] = 626008,
-							},
-						},
-					},
-				},
-			},
-		},
-	},
-	--]]
-
 	--	//Templates
 	if type(workTemplates) == "table" then
 		for key, template in next, workTemplates do
@@ -1862,6 +1933,46 @@ function CHA_ImportTemplateData(template)
 	end;
 end;
 
+
+
+--[[
+	Announce functionality
+--]]
+function CHA_AnnounceAssignments()
+	local roleTargets = CHA_GetActiveTargetTemplate();
+	local targetCount = table.getn(roleTargets or { });
+	if targetCount == 0 then
+		return;
+	end;
+	
+	--	TODO: Configure texts based on Role:
+	local announcementTexts = {
+		[CHA_ROLE_TANK] = "--!!!-- TANK Assignments:",
+		[CHA_ROLE_HEAL] = "--+++-- HEAL Assignments",
+		[CHA_ROLE_DECURSE] = "--/\\/\\-- DECURSE Assignments",
+	};
+	local text = announcementTexts[CHA_ActiveRole];
+
+
+	--	TODO: Configure target output. Currently we write locally, but
+	--	that is soon to be changed!
+	CHA_Echo(text);
+
+	for tIndex, target in next, roleTargets do
+		local tankName = target["Name"];
+		local assigned = "";
+		
+		for pIndex, player in next, target["Players"] do
+			if assigned ~= "" then
+				assigned = assigned ..", ";
+			end;
+			assigned = assigned .. player["Name"];
+		end;
+
+		CHA_Echo(string.format("%s: %s", tankName, assigned));
+	end;
+
+end;
 
 
 --[[
