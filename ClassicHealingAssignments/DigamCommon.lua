@@ -104,7 +104,13 @@ end;
 
 function DIGAM_GetPlayerAndRealm(unitid)
 	local playername, realmname = UnitName(unitid);
-	return playername.."-".. (realmname or DIGAM_GetMyRealm());
+	if not playername then return nil; end;
+
+	if not realmname or realmname == "" then
+		realmname = DIGAM_GetMyRealm();
+	end;
+
+	return playername.."-".. realmname;
 end;
 
 function DIGAM_GetMyRealm()
@@ -155,7 +161,5 @@ function DIGAM_CloneTable(sourceTable)
 
 	return setmetatable(t, DIGAM_CloneTable(getmetatable(sourceTable)));
 end;
-
-
 
 

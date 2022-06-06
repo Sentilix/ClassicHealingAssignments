@@ -87,6 +87,40 @@
 		</Scripts>
 	</Button>
 
+	<!-- Frame template for one player button -->
+	<Button name="CHAPlayerButtonTemplate" hidden="true" frameStrata="HIGH" virtual="true">
+		<Size>
+			<AbsDimension x="90" y="17" />
+		</Size>
+		<Layers>
+			<Layer>
+				<!-- Player name -->
+				<FontString name="$parentCaption" justifyH="LEFT" inherits="GameFontNormal">
+					<Size>
+						<AbsDimension x="100" y="16" />
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT">
+							<Offset>
+								<AbsDimension x="4" y="0" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<Color r="1" g="1" b="1" />
+				</FontString>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnClick>
+				PlaySound(882, "Master")
+				CHA_PlayerButtonOnClick(self)
+			</OnClick>
+		</Scripts>
+		<NormalTexture name="$parentBG">
+			<Color r="1.0" g="1.0" b="1.0" a="0.7" />
+		</NormalTexture>
+	</Button>
+
 	<!-- Minimap icon -->
 	<Frame name="CHAIconFrame" parent="UIParent" toplevel="true" inherits="BackdropTemplate" frameStrata="LOW">
 		<KeyValues>

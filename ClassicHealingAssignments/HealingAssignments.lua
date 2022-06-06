@@ -59,6 +59,7 @@ local CHA_TARGET_PLAYERS					= 0x000003ff;	--	Bitmask for all player types
 local CHA_TARGET_DIRECTIONS					= 0x0000fc00;	--	Bitmask for all symbol types
 local CHA_TARGET_RAIDICONS					= 0x00ff0000;	--	Bitmask for all raid icons
 local CHA_TARGET_CUSTOM						= 0x0f000000;	--	Bitmask for all custom types
+local CHA_TARGET_SYMBOLS					= CHA_TARGET_DIRECTIONS + CHA_TARGET_RAIDICONS + CHA_TARGET_CUSTOM;
 
 local CHA_CUSTOM_CAPTION = "(Custom)";
 local CHA_TargetMatrix =  {
@@ -84,9 +85,7 @@ local CHA_TargetMatrix =  {
 
 
 local CHA_FRAME_MAXTARGET	= 8;
-local CHA_FRAME_MAXTANK		= 4;
-local CHA_FRAME_MAXHEAL		= 10;
-local CHA_FRAME_MAXDECURSE	= 4;
+local CHA_FRAME_MAXPLAYERS	= 8;	-- Would like at least 10, but there isn't room :(
 	
 	
 local _icon_tank = 132341;			-- Defensive stance
@@ -266,26 +265,31 @@ UIDropDownMenu_Initialize(CHA_TemplateDropdownMenu, function(self, level, menuLi
 	local info = UIDropDownMenu_CreateInfo()
 	info.text = "Move up";
 	info.func = CHA_TemplateDropdownMenu_MoveUp;
+	info.notCheckable = true;
 	UIDropDownMenu_AddButton(info)
 
 	info = UIDropDownMenu_CreateInfo()
 	info.text = "Move down";
 	info.func = CHA_TemplateDropdownMenu_MoveDown;
+	info.notCheckable = true;
 	UIDropDownMenu_AddButton(info)
 
 	info = UIDropDownMenu_CreateInfo()
 	info.text = "Copy template";
 	info.func = CHA_TemplateDropdownMenu_Clone;
+	info.notCheckable = true;
 	UIDropDownMenu_AddButton(info)
 
 	info = UIDropDownMenu_CreateInfo()
 	info.text = "Rename template";
 	info.func = CHA_TemplateDropdownMenu_Rename;
+	info.notCheckable = true;
 	UIDropDownMenu_AddButton(info)
 
 	info = UIDropDownMenu_CreateInfo()
 	info.text = "Delete template";
 	info.func = CHA_TemplateDropdownMenu_Delete;
+	info.notCheckable = true;
 	UIDropDownMenu_AddButton(info)
 end);
 
@@ -300,21 +304,25 @@ UIDropDownMenu_Initialize(CHA_TargetDropdownMenu, function(self, level, menuList
 	local info = UIDropDownMenu_CreateInfo()
 	info.text = "Move up";
 	info.func = CHA_TargetDropdownMenu_MoveUp;
+	info.notCheckable = true;
 	UIDropDownMenu_AddButton(info)
 
 	info = UIDropDownMenu_CreateInfo()
 	info.text = "Move down";
 	info.func = CHA_TargetDropdownMenu_MoveDown;
+	info.notCheckable = true;
 	UIDropDownMenu_AddButton(info)
 
 	info = UIDropDownMenu_CreateInfo()
 	info.text = "Rename target";
 	info.func = CHA_TargetDropdownMenu_Rename;
+	info.notCheckable = true;
 	UIDropDownMenu_AddButton(info)
 
 	info = UIDropDownMenu_CreateInfo()
 	info.text = "Delete target";
 	info.func = CHA_TargetDropdownMenu_Delete;
+	info.notCheckable = true;
 	UIDropDownMenu_AddButton(info)
 end);
 
@@ -344,6 +352,33 @@ UIDropDownMenu_Initialize(CHA_PlayerDropdownMenu, function(self, level, menuList
 	end;
 end);
 
+--	DropDown menu for Assigned(Player) options:
+local CHA_AssignedDropdownMenu = CreateFrame("FRAME", "CHA_AssignedDropdownMenuFrame", UIParent, "UIDropDownMenuTemplate");
+CHA_AssignedDropdownMenu:SetPoint("CENTER");
+CHA_AssignedDropdownMenu:Hide();
+UIDropDownMenu_SetWidth(CHA_AssignedDropdownMenu, 1);
+UIDropDownMenu_SetText(CHA_AssignedDropdownMenu, "");
+
+UIDropDownMenu_Initialize(CHA_AssignedDropdownMenu, function(self, level, menuList)
+	local info = UIDropDownMenu_CreateInfo()
+	info.text = "Move up";
+	info.func = CHA_AssignedDropdownMenu_MoveUp;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+
+	info = UIDropDownMenu_CreateInfo()
+	info.text = "Move down";
+	info.func = CHA_AssignedDropdownMenu_MoveDown;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+
+	info = UIDropDownMenu_CreateInfo()
+	info.text = "Delete target";
+	info.func = CHA_AssignedDropdownMenu_Delete;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+end);
+
 
 
 --	Classes setup:
@@ -353,16 +388,19 @@ local CHA_CLASS_MATRIX_MASTER = {
 		["MASK"] = CHA_CLASS_DRUID,
 		["ICON"] = 625999,
 		["ROLE"] = CHA_ROLE_TANK + CHA_ROLE_HEAL + CHA_ROLE_DECURSE,
+		["COLOR"] = { 255, 125, 10 },
 	},
 	["HUNTER"] = {
 		["MASK"] = CHA_CLASS_HUNTER,
 		["ICON"] = 626000,
 		["ROLE"] = CHA_ROLE_NONE,
+		["COLOR"] = { 171, 212, 115 },
 	},
 	["MAGE"] = {
 		["MASK"] = CHA_CLASS_MAGE,
 		["ICON"] = 626001,
 		["ROLE"] = CHA_ROLE_DECURSE,
+		["COLOR"] = { 105, 204, 240 },
 	},
 	["PALADIN"] = {
 		["MASK"] = CHA_CLASS_PALADIN,
@@ -370,16 +408,19 @@ local CHA_CLASS_MATRIX_MASTER = {
 		["ALLIANCE-EXPAC"] = 1,
 		["HORDE-EXPAC"] = 2,
 		["ROLE"] = CHA_ROLE_NONE,	-- Paladin role is set during initialization since it depends on expac.
+		["COLOR"] = { 245, 140, 186 },
 	},
 	["PRIEST"] = {
 		["MASK"] = CHA_CLASS_PRIEST,
 		["ICON"] = 626004,
 		["ROLE"] = CHA_ROLE_HEAL,
+		["COLOR"] = { 255, 255, 255 },
 	},
 	["ROGUE"] = {
 		["MASK"] = CHA_CLASS_ROGUE,
 		["ICON"] = 626005,
 		["ROLE"] = CHA_ROLE_NONE,
+		["COLOR"] = { 255, 245, 105 },
 	},
 	["SHAMAN"] = {
 		["MASK"] = CHA_CLASS_SHAMAN,
@@ -387,16 +428,19 @@ local CHA_CLASS_MATRIX_MASTER = {
 		["ALLIANCE-EXPAC"] = 2,
 		["HORDE-EXPAC"] = 1,
 		["ROLE"] = CHA_ROLE_HEAL,
+		["COLOR"] = { 0, 112, 221 },
 	},
 	["WARLOCK"] = {
 		["MASK"] = CHA_CLASS_WARLOCK,
 		["ICON"] = 626007,
 		["ROLE"] = CHA_ROLE_NONE,
+		["COLOR"] = { 148, 130, 201 },
 	},
 	["WARRIOR"] = {
 		["MASK"] = CHA_CLASS_WARRIOR,
 		["ICON"] = 626008,
 		["ROLE"] = CHA_ROLE_TANK,
+		["COLOR"] = { 199, 156, 110 },
 	},
 	["DEATHKNIGHT"] = {
 		["MASK"] = CHA_CLASS_DEATHKNIGHT,
@@ -404,6 +448,7 @@ local CHA_CLASS_MATRIX_MASTER = {
 		["ALLIANCE-EXPAC"] = 3,
 		["HORDE-EXPAC"] = 3,
 		["ROLE"] = CHA_ROLE_TANK,
+		["COLOR"] = { 196, 30, 58 },
 	},
 };
 
@@ -522,8 +567,6 @@ end
 
 
 
-
-
 --[[
 	Initialization functions
 --]]
@@ -546,7 +589,6 @@ function CHA_ReadConfigurationSettings()
 	--	Current active template:
 	CHA_ActiveTemplate = CHA_GetOption(CHA_KEY_ActiveTemplate, CHA_DEFAULT_ActiveTemplate);
 	CHA_SetOption(CHA_KEY_ActiveTemplate, CHA_ActiveTemplate);
-	CHA_Echo(string.format("Active template: %s", CHA_ActiveTemplate or "nil"));
 
 	--	Current active role:
 	CHA_ActiveRole = CHA_GetOption(CHA_KEY_ActiveRole, CHA_DEFAULT_ActiveRole);
@@ -604,6 +646,7 @@ end;
 
 function CHA_CloseConfigurationDialogue()
 	CHAMainFrame:Hide();
+	CHA_SetOption(CHA_KEY_Templates, CHA_Templates);
 end;
 
 function CHA_ShowTankConfiguration()
@@ -636,16 +679,13 @@ function CHA_ClassIconOnClick(sender)
 	local buttonName = sender:GetName();
 	local _, _, className, _ = string.find(buttonName, "classicon_(%S*)");
 
-	local template = CHA_GetActiveTemplate();
-	if not template then return; end;
-
-	local roleName = CHA_RoleMatrix[CHA_ActiveRole];
-	if not roleName then return; end;
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if not roleTemplate then return; end;
 
 	local classInfo = CHA_ClassMatrix[className];
 	if not classInfo then return; end;
 
-	template[roleName]["ROLEMASK"] = bit.bxor(template[roleName]["ROLEMASK"], classInfo["MASK"]);
+	roleTemplate["Mask"] = bit.bxor(roleTemplate["Mask"], classInfo["MASK"]);
 
 	CHA_UpdateClassIcons();
 end;
@@ -655,12 +695,22 @@ function CHA_AddSymbolTargetOnClick()
 end;
 
 function CHA_SymbolTargetDropdown_Initialize(frame, level, menuList)
-	local targets = CHA_GetTargetsByMask(CHA_TARGET_DIRECTIONS + CHA_TARGET_RAIDICONS + CHA_TARGET_CUSTOM);
+	local targetMask = CHA_TARGET_DIRECTIONS + CHA_TARGET_RAIDICONS + CHA_TARGET_CUSTOM;
+
+	if CHA_ActiveRole ~= CHA_ROLE_TANK then
+		--	For healer and decursers: Add TANKS to list:
+		local template = CHA_GetActiveTemplate();
+		if template then
+			targetMask = bit.bor(targetMask, template["Roles"]["Tanks"]["Mask"]);
+		end;
+	end;
+
+	local targets = CHA_GetTargetsByMask(targetMask);
 
 	for n=1, table.getn(targets), 1 do
 		local info = UIDropDownMenu_CreateInfo();
 		info.notCheckable = true;
-		info.text       = targets[n][2];
+		info.text       = targets[n][5] or targets[n][2];
 		info.icon		= targets[n][3];
 		info.func       = function() CHA_SymbolTargetDropdownClick(this, targets[n]) end;
 		UIDropDownMenu_AddButton(info);
@@ -670,10 +720,6 @@ end;
 
 function CHA_SymbolTargetDropdownClick(self, target)
 	CHA_CreateTarget(target);
-end;
-
-function CHA_SymbolTargetDropdownSelect(self, arg1, arg2, checked)
-	CHA_Echo(string.format("Selected %s", arg1 or "nil"));
 end;
 
 function CHA_TemplateOnClick(sender)
@@ -689,7 +735,7 @@ function CHA_TemplateOnClick(sender)
 		else
 			local template = CHA_GetTemplateById(CHA_CurrentTemplateIndex);
 			if template then
-				CHA_ActiveTemplate = template["NAME"];
+				CHA_ActiveTemplate = template["TemplateName"];
 				CHA_SetOption(CHA_KEY_ActiveTemplate, CHA_ActiveTemplate);
 			end;
 			CHA_UpdateUI();
@@ -699,21 +745,21 @@ end;
 
 function CHA_TemplateDropdownMenu_MoveUp()
 	if CHA_CurrentTemplateIndex > 1 then
-		CHA_SwapTemplates(CHA_CurrentTemplateIndex - 1, CHA_CurrentTemplateIndex);
+		CHA_SwapTemplates(CHA_CurrentTemplateIndex - 1);
 		CHA_UpdateUI();
 	end;
 end;
 
 function CHA_TemplateDropdownMenu_MoveDown(...)
 	if CHA_CurrentTemplateIndex < table.getn(CHA_Templates) then
-		CHA_SwapTemplates(CHA_CurrentTemplateIndex, CHA_CurrentTemplateIndex + 1);
+		CHA_SwapTemplates(CHA_CurrentTemplateIndex);
 		CHA_UpdateUI();
 	end;
 end;
 
 function CHA_TemplateDropdownMenu_Clone()
 	local template = CHA_GetTemplateById(CHA_CurrentTemplateIndex);
-	local templateName = template["NAME"];
+	local templateName = template["TemplateName"];
 	CHA_CurrentTemplateOperation = "CLONE";
 
 	StaticPopup_Show("CHA_DIALOG_ADDTEMPLATE", templateName);
@@ -721,7 +767,7 @@ end;
 
 function CHA_TemplateDropdownMenu_Rename()
 	local template = CHA_GetTemplateById(CHA_CurrentTemplateIndex);
-	local templateName = template["NAME"];
+	local templateName = template["TemplateName"];
 	CHA_CurrentTemplateOperation = "RENAME";
 
 	StaticPopup_Show("CHA_DIALOG_ADDTEMPLATE", templateName);
@@ -729,14 +775,14 @@ end;
 
 function CHA_TemplateDropdownMenu_Delete()
 	local template = CHA_GetTemplateById(CHA_CurrentTemplateIndex);
-	local templateName = template["NAME"];
+	local templateName = template["TemplateName"];
 
 	DIGAM_ShowConfirmation(string.format("Really delete the template '%s'?", templateName), CHA_TemplateDropdownMenu_Delete_OK);
 end;
 
 function CHA_TemplateDropdownMenu_Delete_OK()
 	local template = CHA_GetTemplateById(CHA_CurrentTemplateIndex);
-	local templateName = template["NAME"];
+	local templateName = template["TemplateName"];
 	if CHA_ActiveTemplate == templateName then
 		CHA_ActiveTemplate = nil;
 		CHA_SetOption(CHA_KEY_ActiveTemplate, CHA_ActiveTemplate);
@@ -782,7 +828,7 @@ function CHA_RenameTemplate_OK(oldTemplateName, newTemplateName)
 
 	if CHA_CurrentTemplateOperation == "RENAME" then
 		--	Rename existing template:
-		CHA_Templates[index]["NAME"] = newTemplateName;
+		CHA_Templates[index]["TemplateName"] = newTemplateName;
 
 		if CHA_ActiveTemplate == oldTemplateName then
 			CHA_ActiveTemplate = newTemplateName;
@@ -793,7 +839,7 @@ function CHA_RenameTemplate_OK(oldTemplateName, newTemplateName)
 		local newIndex = CHA_CreateTemplate(newTemplateName);
 
 		local template = DIGAM_CloneTable(CHA_Templates[index]);
-		template["NAME"] = newTemplateName;
+		template["TemplateName"] = newTemplateName;
 		CHA_Templates[newIndex] = template;
 
 		--	Move copy up below original table:
@@ -805,23 +851,6 @@ function CHA_RenameTemplate_OK(oldTemplateName, newTemplateName)
 	CHA_UpdateUI();
 end;
  
-function CHA_IconMouseDown(...)
-	local arg1 = ...;
-
-	PlaySound(882, "Master")
-	--CHA_IconMoving = false;
-
-	if (arg1 == "LeftButton") then
-		CHA_ToggleConfigurationDialogue();
-
-	elseif (arg1 == "RightButton") then
-		--HealingAsssignments:PostAssignments()
-
-	else
-		CHA_IconMoving = true;
-	end
-end
-
 function CHA_UpdateRoleButtons()
  	CHA_UpdateRoleCounter();
 
@@ -845,52 +874,55 @@ end;
 	Target functions
 --]]
 function CHA_CreateTarget(target)
-	local roleTpl = CHA_GetActiveRoleTemplate();
-	if not roleTpl then return; end;
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if not roleTemplate then return; end;
 
 	if target[1] == 0 then return; end;
 
-	local targetInfo = { ["NAME"] = target[2], ["ICON"] = target[3], ["MASK"] = target[1] };
+	local targetInfo = { ["Mask"] = target[1], ["Name"] = target[2], ["Icon"] = target[3] };
 
-	tinsert(roleTpl["TARGETS"], targetInfo);
+	tinsert(roleTemplate["Targets"], targetInfo);
 
 	CHA_UpdateTargetFrames();
-	--CHA_UpdateUI();
 end;
 
 function CHA_GetTargetMask()
-	local template = CHA_GetActiveTemplate();
-	if not template then return; end;
-
-	local roleName = CHA_RoleMatrix[CHA_ActiveRole];
-	if not roleName then return; end;
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if not roleTemplate then return; end;
 
 	--	Find TARGET whivh tanks/healers/decursers will be assigned to.
 	local targetMask = CHA_TARGET_DIRECTIONS + CHA_TARGET_RAIDICONS + CHA_TARGET_CUSTOM;
 
 	--	Add all classes configured for the active template+role:
-	if template[roleName] and template[roleName]["ROLEMASK"] then
-		targetMask = bit.bor(targetMask, template[roleName]["ROLEMASK"]);
+	if roleTemplate["Mask"] then
+		targetMask = bit.bor(targetMask, roleTemplate["Mask"]);
 	end;
-
-	--	TODO: Så hvad nu?
-	--	Nu har vi en MASKE der fortæller hvilke TARGETS vi skal hive frem.
-	--	TARGETS inkluderer:
-	--		* Alle DIRECTIONS+RAIDICONS+CUSTOM (ikke implementeret endnu)
-	--		* Alle PLAYERS der matcher den nuværende rolle
-	--
-	--	Nu skal der laves en POPUP der viser alle muligieder, så enduser 
-	--	kan vælge hvilket TARGET der skal tilføjes.
 
 	return targetMask;
 end;
 
---	Fetch all Target (non-player) marks.
+--	Fetch all Target marks.
 --	If includeUsedTargets is set, result will include both used and unused targets.
 function CHA_GetTargetsByMask(mask, includeUsedTargets)
 	local targets = { };
 
-	if mask then
+	if not mask then mask = 0; end;
+	
+	if bit.band(mask, CHA_TARGET_PLAYERS) > 0 then
+		--	Players:
+		local players = CHA_GetPlayersInRoster();
+
+		for n = 1, table.getn(players), 1 do
+			local player = players[n];
+			if bit.band(mask, player["MASK"]) > 0 then
+				if includeUsedPlayers or not CHA_IsPlayerUsedInTemplates(player["FULLNAME"], true) then
+					tinsert(targets, { player["MASK"], player["FULLNAME"], player["ICON"], player["CLASS"], player["DISPNAME"] } );
+				end;
+			end;
+		end;
+	end;
+
+	if bit.band(mask, CHA_TARGET_SYMBOLS) > 0 then
 		--	Add SYMBOLS:
 		for n = 1, table.getn(CHA_TargetMatrix), 1 do
 			if includeUsedTargets or not CHA_IsTargetInUse(CHA_TargetMatrix[n][1], CHA_ActiveRole) then
@@ -905,13 +937,13 @@ function CHA_GetTargetsByMask(mask, includeUsedTargets)
 end;
 
 function CHA_IsTargetInUse(targetMask, targetRole)
-	local tpl = CHA_GetActiveTemplate();
+	local template = CHA_GetActiveTemplate();
 
-	if tpl then
+	if template then
 		if bit.band(targetRole, CHA_ROLE_TANK) > 0 then
-			if tpl["Tanks"] and tpl["Tanks"]["TARGETS"] then
-				for k, v in next, tpl["Tanks"]["TARGETS"] do
-					if v["MASK"] == targetMask then
+			if template["Roles"]["Tanks"] and template["Roles"]["Tanks"]["Targets"] then
+				for k, v in next, template["Roles"]["Tanks"]["Targets"] do
+					if v["Mask"] == targetMask then
 						return true;
 					end;
 				end;
@@ -919,9 +951,9 @@ function CHA_IsTargetInUse(targetMask, targetRole)
 		end;
 
 		if bit.band(targetRole, CHA_ROLE_HEAL) > 0 then
-			if tpl["Heals"] and tpl["Heals"]["TARGETS"] then
-				for k, v in next, tpl["Heals"]["TARGETS"] do
-					if v["MASK"] == targetMask then
+			if template["Roles"]["Heals"] and template["Roles"]["Heals"]["Targets"] then
+				for k, v in next, template["Roles"]["Heals"]["Targets"] do
+					if v["Mask"] == targetMask then
 						return true;
 					end;
 				end;
@@ -929,8 +961,8 @@ function CHA_IsTargetInUse(targetMask, targetRole)
 		end;
 
 		if bit.band(targetRole, CHA_ROLE_DECURSE) > 0 then
-			if tpl["Decurses"] and tpl["Decurses"]["TARGETS"] then
-				for k, v in next, tpl["Decurses"]["TARGETS"] do
+			if template["Roles"]["Decurses"] and template["Roles"]["Decurses"]["Targets"] then
+				for k, v in next, template["Roles"]["Decurses"]["Targets"] do
 					if v["MASK"] == targetMask then
 						return true;
 					end;
@@ -947,6 +979,11 @@ function CHA_CreateTargetFrames()
 	local fOuterHeight	= 280;
 	local fInnerWidth	= 560;
 	local fInnerHeight	= fOuterHeight / CHA_FRAME_MAXTARGET;
+
+	local playerHeight = fInnerHeight / 2;
+	local playerWidth = 107;
+	local playerOffset = 137;
+	local playersPerRow = CHA_FRAME_MAXPLAYERS / 2;
 
 	local frameY = 0;
 	for index = 1, CHA_FRAME_MAXTARGET, 1 do
@@ -967,13 +1004,13 @@ function CHA_CreateTargetFrames()
 		--	... with a Caption:
 		local fTargetCaptionName = string.format("targetcaption_%d", index);
 		local fTargetCaption = fTarget:CreateFontString(fTargetCaptionName, "OVERLAY", "GameTooltipText");
-		fTargetCaption:SetPoint("LEFT", 24, 0);
+		fTargetCaption:SetPoint("LEFT", 20, 0);
 		fTargetCaption:SetText("Target");
 
 		--	And an ability to ADD a new Tank for that specific target:
 		local fTargetButtonName = string.format("targetbutton_%d", index);
 		local fTargetButton = CreateFrame("Button", fTargetButtonName, fTarget, "UIPanelButtonTemplate");
-		fTargetButton:SetPoint("LEFT", 90, 0);
+		fTargetButton:SetPoint("LEFT", 120, 0);
 		fTargetButton:SetHeight(12);
 		fTargetButton:SetWidth(12);
 		fTargetButton:SetText("+");
@@ -981,16 +1018,36 @@ function CHA_CreateTargetFrames()
 
 		fTarget:Show();
 		frameY = frameY - fInnerHeight;
+
+
+		--	PLAYER FRAME: Each frame can have up to CHA_FRAME_MAXPLAYERS tanks assigned.
+		local posX = playerOffset;
+		local posY = 0;
+		for playerIndex = 1, CHA_FRAME_MAXPLAYERS, 1 do
+			--	And an ability to ADD a new Player for that specific target:
+			local fPlayerButtonName = string.format("playerbutton_%d_%d", index, playerIndex);
+			local fPlayerButton = CreateFrame("Button", fPlayerButtonName, fTarget, "CHAPlayerButtonTemplate");
+			fPlayerButton:SetPoint("LEFT", posX, posY);
+			fPlayerButton:SetHeight(playerHeight-1);
+			fPlayerButton:SetWidth(playerWidth-1);
+			_G[fPlayerButton:GetName().."Caption"]:SetText("");
+
+			posX = posX + playerWidth;
+			if playerIndex == playersPerRow then
+				posX = playerOffset;
+				posY = posY - playerHeight;
+			end;
+		end;
 	end;
 end;
 
 function CHA_PlayerDropdown_Initialize()
 	if CHA_CurrentPlayerIndex == 0 then return; end;
 
-	local template = CHA_GetActiveRoleTemplate();
-	if not template then return; end;
-	local target = template["TARGETS"][CHA_CurrentPlayerIndex];
-	local players = CHA_GetPlayersByMask(template["ROLEMASK"]);
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if not roleTemplate then return; end;
+	local target = roleTemplate["Targets"][CHA_CurrentPlayerIndex];
+	local players = CHA_GetPlayersByMask(roleTemplate["Mask"]);
 
 	for n=1, table.getn(players), 1 do
 		local info = UIDropDownMenu_CreateInfo();
@@ -1004,47 +1061,199 @@ end;
 
 function CHA_PlayerDropdownClick(sender, playerInfo)
 	--	Now ASSIGN this player to the current ROLE:
-	local template = CHA_GetActiveRoleTemplate();
-	if not template then return; end;
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if not roleTemplate then return; end;
+
+	local roleTarget = roleTemplate["Targets"][CHA_CurrentPlayerIndex];
+	if not roleTarget then
+		roleTarget = { };
+	end;
+
+	if not roleTarget["Players"] then
+		roleTarget["Players"] = { };
+	end;
+	
+	tinsert(roleTarget["Players"], { 
+		["Mask"] = playerInfo[1], 
+		["Name"] = playerInfo[2], 
+		["Icon"] = playerInfo[3], 
+		["Class"] = playerInfo[4],
+	});
 
 	--	Good news: Player is added.
 	--	Bad news: We have no link from a Player assignment to a Target.
 	--	Furthermore there are no checks to see if a player is double-assignet.
 	--	I need to implement same check as on Symbols.
-	tinsert(template["ASSIGNS"], playerInfo);
 
-	DIGAM_PrintAll(template);
+	CHA_UpdateTargetFrames();
 end;
 
 function CHA_TargetButtonOnClick(sender)
 	local buttonName = sender:GetName();
 	local _, _, index, _ = string.find(buttonName, "targetbutton_(%d*)");
 
-	local template = CHA_GetActiveRoleTemplate();
-	if not template then return; end;
-
 	CHA_CurrentPlayerIndex = 1 * index;
 	ToggleDropDownMenu(1, nil, CHA_PlayerDropdownMenu, "cursor", 3, -3);
 end;
 
-function CHA_GetPlayersByMask(roleMask)
-	local playerTargets = { };
+function CHA_PlayerButtonOnClick(sender)
+	local buttonName = sender:GetName();
+	local _, _, targetIndex, playerIndex = string.find(buttonName, "playerbutton_(%d*)_(%d*)");
+
+	CHA_CurrentTargetIndex = 1 * targetIndex;
+	CHA_CurrentPlayerIndex = 1 * playerIndex;
+	ToggleDropDownMenu(1, nil, CHA_AssignedDropdownMenu, "cursor", 3, -3);
+end;
+
+function CHA_AssignedDropdownMenu_MoveUp()
+	if CHA_CurrentTargetIndex > 1 then
+		CHA_MoveAssignedPlayer(CHA_CurrentPlayerIndex, CHA_CurrentTargetIndex, CHA_CurrentTargetIndex - 1);
+		CHA_UpdateTargetFrames();
+	end;
+end;
+
+function CHA_AssignedDropdownMenu_MoveDown()
+	local roleTarget = CHA_GetActiveTargetTemplate();
+	if not roleTarget then return; end;
+
+	if CHA_CurrentTargetIndex < table.getn(roleTarget) then
+		CHA_MoveAssignedPlayer(CHA_CurrentPlayerIndex, CHA_CurrentTargetIndex, CHA_CurrentTargetIndex + 1);
+		CHA_UpdateTargetFrames();
+	end;
+end;
+
+function CHA_MoveAssignedPlayer(playerIndex, startTargetIndex, endTargetIndex)
+	local roleTarget = CHA_GetActiveTargetTemplate();
+	if not roleTarget then return; end;
+
+	playerIndex = tonumber(playerIndex);
+	startTargetIndex = tonumber(startTargetIndex);
+	endTargetIndex = tonumber(endTargetIndex);
+
+	local sourceTarget = roleTarget[startTargetIndex];
+	local destTarget = roleTarget[endTargetIndex];
+	if not sourceTarget or not destTarget then return; end;
+
+	if not destTarget["Players"] then destTarget["Players"] = { }; end;
+
+	if sourceTarget["Players"][playerIndex] then
+		tinsert(destTarget["Players"], sourceTarget["Players"][playerIndex]);
+
+		sourceTarget["Players"][playerIndex] = nil;
+		sourceTarget["Players"] = DIGAM_RenumberTable(sourceTarget["Players"]);
+
+		CHA_UpdateTargetFrames();
+	end;
+end;
+
+
+--	Delete (remove) assigned player.
+--	This does NOT trigger a popup, thats intentiona to keep # of popups a little down!
+function CHA_AssignedDropdownMenu_Delete()
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if not roleTemplate then return; end;
+
+	local roleTarget = roleTemplate["Targets"][CHA_CurrentTargetIndex];
+	if not roleTarget or not roleTarget["Players"] then return; end;
+
+	if roleTarget["Players"][CHA_CurrentPlayerIndex] then
+		roleTarget["Players"][CHA_CurrentPlayerIndex] = nil;
+		roleTarget["Players"] = DIGAM_RenumberTable(roleTarget["Players"]);
+	end;
+
+	CHA_UpdateTargetFrames();
+end;
+
+
+function CHA_GetPlayersByMask(roleMask, includeUsedPlayers)
+	local targets = { };
 	local players = CHA_GetPlayersInRoster();
 
 	for n = 1, table.getn(players), 1 do
 		local player = players[n];
 		if bit.band(player["MASK"], roleMask) > 0 then
-			tinsert(playerTargets, { player["MASK"], player["FULLNAME"], player["ICON"] } );
+
+			if includeUsedPlayers or not CHA_IsPlayerUsedInTemplates(player["FULLNAME"]) then
+				tinsert(targets, { player["MASK"], player["FULLNAME"], player["ICON"], player["CLASS"], player["DISPNAME"] } );
+			end;
 		end;
 	end;
 
-	return playerTargets;
+	return targets;
 end; 
+
+
+function CHA_IsPlayerInTemplate(roleTemplate, playerName, checkTarget, checkAssignment)
+	--	Check if player is assigned as role in //Template/Roles/<role>/Targets/<targetIndex>/Players/<playerIndex>/:
+	for targetIndex = 1, table.getn(roleTemplate["Targets"]), 1 do
+		local targetTpl = roleTemplate["Targets"][targetIndex];
+		if targetTpl then
+			if checkTarget and targetTpl["Name"] == playerName then
+				return true;
+			end;
+
+			if checkAssignment and targetTpl["Players"] then
+				for playerIndex = 1, table.getn(targetTpl["Players"]), 1 do
+					local playerTpl = targetTpl["Players"][playerIndex];
+					if playerTpl["Name"] == playerName then
+						return true;
+					end; 
+				end;
+			end;
+		end;
+	end;
+end;
+
+--	isTargetDropdown: True if called from TARGET dropdown, False if from Assignments.
+--	Those have different rules when checking for player assignments.
+function CHA_IsPlayerUsedInTemplates(playerName, isTargetDropdown)
+	local template = CHA_GetActiveTemplate();
+	if not template then return false; end;
+
+	--	TANK ROLE: A player cannot be assigned as tank if already assigned as tank or healer.
+	if CHA_ActiveRole == CHA_ROLE_TANK then
+		if CHA_IsPlayerInTemplate(template["Roles"]["Tanks"], playerName, false, true) then
+			return true;
+		end;
+		if CHA_IsPlayerInTemplate(template["Roles"]["Heals"], playerName, false, true) then
+			return true;
+		end;
+	end;
+
+	--	HEAL ROLE: A player cannot be assigned as healer if already assigned as tank or healer.
+	if CHA_ActiveRole == CHA_ROLE_HEAL then
+		if CHA_IsPlayerInTemplate(template["Roles"]["Heals"], playerName, true, true) then
+			return true;
+		end;
+
+		if not isTargetDropdown then
+			if CHA_IsPlayerInTemplate(template["Roles"]["Tanks"], playerName, false, true) then
+				return true;
+			end;
+		end;
+	end;
+
+	--	DECURSOR ROLE: Any player can be ASSIGNED. Targets follows usual rules.
+	if CHA_ActiveRole == CHA_ROLE_DECURSE then
+		if isTargetDropdown then
+			if CHA_IsPlayerInTemplate(template["Roles"]["Decurses"], playerName, true, false) then
+				return true;
+			end;
+		end;
+
+		if CHA_IsPlayerInTemplate(template["Roles"]["Decurses"], playerName, false, true) then
+			return true;
+		end;
+	end;
+
+	return false;
+end;
+
 
 function CHA_GetPlayersInRoster()
 	local unitid, playerName, className, classInfo;
 
-	local players = { };		-- List of { "NAME", "FULLNAME", "CLASS", "MASK", "ICON" }
+	local players = { };		-- List of { "NAME", "FULLNAME", "DISPNAME", "CLASS", "MASK", "ICON" }
 
 	if IsInRaid() then
 		for n = 1, 40, 1 do
@@ -1053,10 +1262,11 @@ function CHA_GetPlayersInRoster()
 			playerName = DIGAM_GetPlayer(unitid);
 			if not playerName then break; end;
 			
+			fullName = DIGAM_GetPlayerAndRealm(unitid);
 			className = DIGAM_UnitClass(unitid);		
 			classInfo = CHA_ClassMatrix[className];
 
-			tinsert(players, { ["NAME"] = playerName, ["FULLNAME"] = DIGAM_GetPlayerAndRealm(unitid), ["CLASS"] = className, ["MASK"] = classInfo["MASK"], ["ICON"] = classInfo["ICON"] });
+			tinsert(players, { ["NAME"] = playerName, ["FULLNAME"] = fullName, ["DISPNAME"] = CHA_FormatPlayerName(fullName), ["CLASS"] = className, ["MASK"] = classInfo["MASK"], ["ICON"] = classInfo["ICON"] });
 		end;
 
 	elseif DIGAM_IsInParty() then
@@ -1087,12 +1297,14 @@ end;
 
 --	Update TARGET icons, captions etc for the selected Frame.
 function CHA_UpdateTargetFrames()
-	local roleTpl = CHA_GetActiveRoleTemplate();
+	local roleTemplate = CHA_GetActiveRoleTemplate();
 
 	local roleTargets = { };
-	if roleTpl and roleTpl["TARGETS"] then
-		roleTargets = roleTpl["TARGETS"];
+	if roleTemplate and roleTemplate["Targets"] then
+		roleTargets = roleTemplate["Targets"];
 	end;
+
+	local playerMask = roleTargets["Mask"];
 
 	for index = 1, CHA_FRAME_MAXTARGET, 1 do
 		local fTarget = _G[string.format("targetframe_%d", index)];
@@ -1100,16 +1312,54 @@ function CHA_UpdateTargetFrames()
 		local fTargetCaption = _G[string.format("targetcaption_%d", index)];
 		local fTargetButton = _G[string.format("targetbutton_%d", index)];
 
-		local roleInfo = roleTargets[index];
-		if roleInfo then
-			fTargetIcon:SetNormalTexture(roleInfo["ICON"]);
-			fTargetIcon:SetPushedTexture(roleInfo["ICON"]);
-			fTargetCaption:SetText(roleInfo["NAME"]);
+		local target = roleTargets[index];
+		if target then
+			fTargetIcon:SetNormalTexture(target["Icon"]);
+			fTargetIcon:SetPushedTexture(target["Icon"]);
+			fTargetCaption:SetText(CHA_FormatPlayerName(target["Name"]));
+
+
+			--	PLAYER FRAME: Each frame can have up to CHA_FRAME_MAXPLAYERS tanks assigned.
+			--	Same player frames are used by both Tanks, Healers and Decursers
+			local roleTarget = roleTemplate["Targets"][index];
+
+			local posX = playerOffset;
+			local posY = 0;
+			for playerIndex = 1, CHA_FRAME_MAXPLAYERS, 1 do
+				local player = roleTarget["Players"] and roleTarget["Players"][playerIndex];
+				if player then
+					local color = CHA_ClassMatrix[player["Class"]]["COLOR"];
+					local fPlayerButtonName = string.format("playerbutton_%d_%d", index, playerIndex);
+					local fPlayerButton = _G[fPlayerButtonName];
+					_G[fPlayerButtonName.."Caption"]:SetText(CHA_FormatPlayerName(player["Name"]));
+					_G[fPlayerButtonName.."BG"]:SetVertexColor( color[1]/255, color[2]/255, color[3]/255 );
+					fPlayerButton:Show();
+				else
+					local fPlayerButtonName = string.format("playerbutton_%d_%d", index, playerIndex);
+					local fPlayerButton = _G[fPlayerButtonName];
+					_G[fPlayerButtonName.."Caption"]:SetText("");
+					_G[fPlayerButtonName.."Caption"]:SetTextColor(1, 1, 1);
+					fPlayerButton:Hide();
+				end;
+			end;
+
 			fTarget:Show();
 		else
 			fTarget:Hide();
 		end;
 	end;
+end;
+
+function CHA_FormatPlayerName(playerName)
+	--local _, _, name = string.find(playerName, "([%S]*-%S)%S*");
+	local _, _, name, realm = string.find(playerName, "([%S]*)-(%S)%S*");
+	if not name then
+		return playerName; 
+	end;
+
+	name = string.format("%s:%s", realm, name);
+
+	return name;
 end;
 
 function CHA_TargetDropdownMenu_MoveUp()
@@ -1120,9 +1370,9 @@ function CHA_TargetDropdownMenu_MoveUp()
 end;
 
 function CHA_TargetDropdownMenu_MoveDown()
-	local template = CHA_GetActiveRoleTemplate();
-	if template and template["TARGETS"] then
-		if CHA_CurrentTargetIndex < table.getn(template["TARGETS"]) then
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if roleTemplate and roleTemplate["Targets"] then
+		if CHA_CurrentTargetIndex < table.getn(roleTemplate["Targets"]) then
 			CHA_SwapTargets(CHA_CurrentTargetIndex, CHA_CurrentTargetIndex + 1);
 			CHA_UpdateTargetFrames();
 		end;
@@ -1130,35 +1380,35 @@ function CHA_TargetDropdownMenu_MoveDown()
 end;
 
 function CHA_TargetDropdownMenu_Rename()
-	local template = CHA_GetActiveRoleTemplate();
-	if template and template["TARGETS"] and template["TARGETS"][CHA_CurrentTargetIndex] then
-		local targetName = template["TARGETS"][CHA_CurrentTargetIndex]["NAME"];
-		StaticPopup_Show("CHA_DIALOG_RENAMETARGET", templateName);
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if roleTemplate and roleTemplate["Targets"] and roleTemplate["Targets"][CHA_CurrentTargetIndex] then
+		local targetName = roleTemplate["Targets"][CHA_CurrentTargetIndex]["Name"];
+		StaticPopup_Show("CHA_DIALOG_RENAMETARGET", targetName);
 	end;
 end;
 
 function CHA_RenameTarget_OK(oldTargetName, newTargetName)
-	local template = CHA_GetActiveRoleTemplate();
-	if template and template["TARGETS"] and template["TARGETS"][CHA_CurrentTargetIndex] then
-		template["TARGETS"][CHA_CurrentTargetIndex]["NAME"] = newTargetName;
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if roleTemplate and roleTemplate["Targets"] and roleTemplate["Targets"][CHA_CurrentTargetIndex] then
+		roleTemplate["Targets"][CHA_CurrentTargetIndex]["Name"] = newTargetName;
 		CHA_UpdateTargetFrames();
 	end;
 end;
 
 function CHA_TargetDropdownMenu_Delete()
-	local template = CHA_GetActiveRoleTemplate();
-	if template and template["TARGETS"] and template["TARGETS"][CHA_CurrentTargetIndex] then
-		local targetName = template["TARGETS"][CHA_CurrentTargetIndex]["NAME"];
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if roleTemplate and roleTemplate["Targets"] and roleTemplate["Targets"][CHA_CurrentTargetIndex] then
+		local targetName = roleTemplate["Targets"][CHA_CurrentTargetIndex]["Name"];
 
 		DIGAM_ShowConfirmation(string.format("Really remove the target '%s'?", targetName), CHA_TargetDropdownMenu_Delete_OK);
 	end;
 end;
 
 function CHA_TargetDropdownMenu_Delete_OK()
-	local template = CHA_GetActiveRoleTemplate();
-	if template and template["TARGETS"] and template["TARGETS"][CHA_CurrentTargetIndex] then
-		template["TARGETS"][CHA_CurrentTargetIndex] = nil;
-		template["TARGETS"] = DIGAM_RenumberTable(template["TARGETS"]);
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if roleTemplate and roleTemplate["Targets"] and roleTemplate["Targets"][CHA_CurrentTargetIndex] then
+		roleTemplate["Targets"][CHA_CurrentTargetIndex] = nil;
+		roleTemplate["Targets"] = DIGAM_RenumberTable(roleTemplate["Targets"]);
 
 		CHA_UpdateTargetFrames();
 	end;
@@ -1167,11 +1417,11 @@ end;
 
 --	Swap targets (Tanks are not swapped with them!)
 function CHA_SwapTargets(firstIndex)
-	local template = CHA_GetActiveRoleTemplate();
-	if template and template["TARGETS"] then
-		local targetA = template["TARGETS"][firstIndex];
-		template["TARGETS"][firstIndex] = template["TARGETS"][firstIndex + 1];
-		template["TARGETS"][firstIndex + 1] = targetA;
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if roleTemplate and roleTemplate["Targets"] then
+		local targetA = roleTemplate["Targets"][firstIndex];
+		roleTemplate["Targets"][firstIndex] = roleTemplate["Targets"][firstIndex + 1];
+		roleTemplate["Targets"][firstIndex + 1] = targetA;
 	end;
 end;
 
@@ -1287,12 +1537,11 @@ end;
 
 --	Update class icons based on the current template + role:
 function CHA_UpdateClassIcons()
-	local template = CHA_GetActiveTemplate();
-	local roleName = CHA_RoleMatrix[CHA_ActiveRole];
+	local roleTemplate = CHA_GetActiveRoleTemplate();
 
 	local templateMask = CHA_ROLE_NONE;
-	if template and roleName and template[roleName] then
-		templateMask = template[roleName]["ROLEMASK"];
+	if roleTemplate then
+		templateMask = roleTemplate["Mask"];
 	end;
 
 	for className, classInfo in next, CHA_ClassMatrix do
@@ -1354,7 +1603,14 @@ function CHA_GetActiveRoleTemplate()
 	local template = CHA_GetActiveTemplate();
 	if not template then return nil; end;
 
-	return template[roleName];
+	return template["Roles"][roleName];
+end;
+
+function CHA_GetActiveTargetTemplate()
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if not roleTemplate then return nil; end;
+	
+	return roleTemplate["Targets"]
 end;
 
 --	Add a new Template to the template array
@@ -1363,21 +1619,23 @@ function CHA_CreateTemplate(templateName)
 	if templateCount < CHA_TEMPLATES_MAX then
 		templateCount = templateCount + 1;
 		CHA_Templates[templateCount] = {
-			["NAME"] = templateName,
-			["Tanks"] = {
-				["ROLEMASK"] = CHA_ROLE_DEFAULT_TANK,
-				["TARGETS"] = { },	-- NAME=name, ICON=icon, MASK=mask
-				["ASSIGNS"] = { },
-			},
-			["Heals"] = {
-				["ROLEMASK"] = CHA_ROLE_DEFAULT_HEAL,
-				["TARGETS"] = { },
-				["ASSIGNS"] = { },
-			},
-			["Decurses"] = {
-				["ROLEMASK"] = CHA_ROLE_DEFAULT_DECURSE,
-				["TARGETS"] = { },
-				["ASSIGNS"] = { },
+			["TemplateName"] = templateName,
+			["Roles"] = {
+				["Tanks"] = { 
+					["Caption"] = "Tanks", 
+					["Mask"] = CHA_ROLE_DEFAULT_TANK,
+					["Targets"] = {	},
+				},
+				["Heals"] = { 
+					["Caption"] = "Heals", 
+					["Mask"] = CHA_ROLE_DEFAULT_HEAL,
+					["Targets"] = { },
+				},
+				["Decurses"] = { 
+					["Caption"] = "Decurses", 
+					["Mask"] = CHA_ROLE_DEFAULT_DECURSE,
+					["Targets"] = { },
+				},
 			},
 		};
 	end;
@@ -1453,14 +1711,14 @@ function CHA_UpdateTemplates()
 		local caption = _G[string.format("template_%dText", n)];
 
 		if n <= templateCount then
-			if CHA_Templates[n]["NAME"] == CHA_ActiveTemplate then
+			if CHA_Templates[n]["TemplateName"] == CHA_ActiveTemplate then
 				textColor = CHA_COLOR_SELECTED;
 			else
 				textColor = CHA_COLOR_UNSELECTED;
 			end;
 			
 			caption:SetTextColor(textColor[1], textColor[2], textColor[3]);
-			caption:SetText(CHA_Templates[n]["NAME"]);
+			caption:SetText(CHA_Templates[n]["TemplateName"]);
 			button:Show();
 		else
 			button:Hide();
@@ -1481,7 +1739,7 @@ end;
 --	Return (index, template) by name, nil if none was found.
 function CHA_GetTemplateByName(templateName)
 	for n=1, table.getn(CHA_Templates), 1 do
-		if CHA_Templates[n]["NAME"] == templateName then
+		if CHA_Templates[n]["TemplateName"] == templateName then
 			return n, CHA_Templates[n];
 		end;
 	end;
@@ -1501,25 +1759,106 @@ end;
 function CHA_ProcessConfiguredTemplateData(workTemplates)
 	CHA_Templates = { };
 
+	--[[
+	The array containing the template setup is a huge table.
+	We are reading data into a work table and then creating data in.the-fly to make
+	sure data is consistent.
+
+	CHA_Templates = {
+		["TemplateName"] = "Molten Core",
+		["Roles"] = {
+			["Tanks/Heals/Decurses"] = {
+				["Caption"] = "Tanks/Heals/Decurses",
+				["Mask"] = 769,
+				["Targets"] = 
+				{
+					{
+						["Mask"] = 65536,
+						["Name"] = "Skull",
+						["Icon"] = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8",
+						["Players"] = 
+						{
+							{
+								["Class"] = "WARRIOR",
+								["Mask"] = 256,
+								["Name"] = "Donald-Firemaw",
+								["Icon"] = 626008,
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	--]]
+
+	--	//Templates
 	if type(workTemplates) == "table" then
 		for key, template in next, workTemplates do
-			local templateName = template["NAME"];
-			if templateName then
-				--	This creates the template with default setup data:
-				local tpl = CHA_Templates[CHA_CreateTemplate(templateName)];
-
-				--	Read tank/healer/decursers from template and overwrite defaults if available:
-				for roleMask, roleName in next, CHA_RoleMatrix do
-					if template[roleName] and template[roleName]["ROLEMASK"] then
-						tpl[roleName]["ROLEMASK"] = template[roleName]["ROLEMASK"];
-					end;
-				end;
-			end;
+			CHA_ImportTemplateData(template);
 		end;
 	end;
 
 	if table.getn(CHA_Templates) == 0 then
 		CHA_CreateDefaultTemplates();
+	end;
+end;
+
+function CHA_ImportTemplateData(template)
+	local templateName = template["TemplateName"];
+	if not templateName then return; end;
+
+	if not template["Roles"] then return; end;
+	
+	--	This creates the template with default setup data:
+	local tpl = CHA_Templates[CHA_CreateTemplate(templateName)];
+
+	--	Read tank/healer/decursers from template and overwrite defaults if available.
+	for roleMask, roleName in next, CHA_RoleMatrix do
+		local roleTemplate = template["Roles"][roleName];
+
+		if roleTemplate then
+			if roleTemplate["Mask"] and type(roleTemplate["Mask"]) == "string" then
+				tpl["Roles"][roleName]["Mask"] = roleTemplate["Mask"];
+			end;
+
+			--	This will import last used targets.
+			--	Players might even not be in the raid anymore. We will handle that later!
+			local roleTargets = roleTemplate["Targets"]; 
+			if roleTargets then
+				if type(roleTargets) == "table" and table.getn(roleTargets) > 0 then
+
+					--//Templates/Roles/<role>/Targets/<targetIndex>
+					for targetIndex, roleTarget in next, roleTargets do
+						local tMask = roleTarget["Mask"];
+						local tName = roleTarget["Name"];
+						local tIcon = roleTarget["Icon"];
+						if tMask and tName and tIcon then
+							--CHA_Echo(string.format("Importing target: %s,%s,%s", tMask or "nil", tName or "nil", tIcon or "nil"));
+
+							local tPlayers = { };
+							local rolePlayers = roleTarget["Players"];
+
+							if type(rolePlayers) == "table" and table.getn(rolePlayers) > 0 then
+								--//Templates/Roles/<role>/Targets/<targetIndex>/Players/<playerIndex>
+								for playerIndex, rolePlayer in next, rolePlayers do
+									local pClass = rolePlayer["Class"];
+									local pMask = rolePlayer["Mask"];
+									local pName = rolePlayer["Name"];
+									local pIcon = rolePlayer["Icon"];
+
+									if pClass and pMask and pName and pIcon then
+										tinsert(tPlayers, { ["Class"] = pClass, ["Mask"] = pMask, ["Name"] = pName, ["Icon"] = pIcon });
+									end;
+								end;
+							end;
+
+							tinsert(tpl["Roles"][roleName]["Targets"], { ["Mask"] = tMask, ["Name"] = tName, ["Icon"] = tIcon, ["Players"] = tPlayers });
+						end;
+					end;
+				end;
+			end;
+		end;
 	end;
 end;
 
@@ -1627,8 +1966,4 @@ function CHA_OnLoad()
 
 	C_ChatInfo.RegisterAddonMessagePrefix(CHA_MESSAGE_PREFIX);
 end;
-
-
-
-
 
