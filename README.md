@@ -19,6 +19,14 @@ Ragnaros might only require one tank, but you also need Melee healers, so in thi
 When your assignments are ready, you can right-click the minimap icon to post the assignments to Raid chat.
 
 
+## 2. Version 2.x?
+The original addon code did not work after patch 1.13.4 / 2.5.1, and required some heavy refactoring to make it work again.
+Instead the addon has been rewritten almost from scratch. The UI is close to the original version, but in general there are added more love into maintaining existing templates: you can for example just move a player up/down (previous/next tank) instead of first removing and then adding.
 
-## 2. About CHA.
+<img src="https://github.com/Sentilix/ClassicHealingAssignments/blob/CHA-2.0/Images/mainframe-2-0-0-a1-healers.JPG?raw=true" />
+
+Version 2.0 is still in early alpha release. It works in "single user mode" (which basically means it only announces instructions locally).
+
+
+## 3. About CHA.
 This addon is a port of Vanilla Healing Assignments, originally made by Renew @ Vanillagaming.org
