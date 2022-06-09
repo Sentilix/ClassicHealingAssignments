@@ -517,7 +517,6 @@
 		</Scripts>
 	</Frame>
 
-	
 	<!-- Dummy event frame -->
 	<Frame name="CHAEventFrame">
 		<Scripts>

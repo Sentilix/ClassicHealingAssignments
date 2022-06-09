@@ -7,48 +7,19 @@
 --
 --	Version 1.x by Renew, Mimma.
 --	Version 2.x coded from scratch by Mimma
-
-
-	Templates:
-	The array containing the template setup is a huge table.
-	We are reading data into a work table and then creating data in.the-fly to make
-	sure data is consistent.
-
-	CHA_Templates = {
-		["TemplateName"] = "Molten Core",
-		["Roles"] = {
-			["Tanks/Heals/Decurses"] = {
-				["Caption"] = "Tanks/Heals/Decurses",
-				["Mask"] = 769,
-				["Targets"] = 
-				{
-					{
-						["Mask"] = 65536,
-						["Name"] = "Skull",
-						["Icon"] = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8",
-						["Players"] = 
-						{
-							{
-								["Class"] = "WARRIOR",
-								["Mask"] = 256,
-								["Name"] = "Donald-Firemaw",
-								["Icon"] = 626008,
-							},
-						},
-					},
-				},
-			},
-		},
-	},
 --]]
 
---	Addon constants:
-local CHA_ADDON_NAME						= "ClassicHealingAssignments";
-local CHAT_END								= "|r";
-local COLOUR_BEGINMARK						= "|c80";
-local COLOUR_CHAT							= COLOUR_BEGINMARK.."40A0F8"
-local COLOUR_INTRO							= COLOUR_BEGINMARK.."B0F0F0"
-local CHA_MESSAGE_PREFIX					= "CHAv2";
+
+local A = DigamAddonLib;
+A.Initialize({
+	["ADDONNAME"]		= "ClassicHealingAssignments",
+	["SHORTNAME"]		= "CHA",
+	["PREFIX"]			= "CHAv2",
+	["NORMALCHATCOLOR"]	= "40A0F8",
+	["HOTCHATCOLOR"]	= "B0F0F0",
+});
+
+
 local CHA_TEMPLATES_MAX						= 15;	-- room for max 15 templates. This is a limitation in the UI design.
 local CHA_COLOR_SELECTED					= {1.0, 1.0, 1.0};
 local CHA_COLOR_UNSELECTED					= {1.0, 0.8, 0.0};
@@ -238,7 +209,6 @@ local CHA_ROLE_DEFAULT_DECURSE				= CHA_CLASS_DRUID + CHA_CLASS_MAGE;
 
 --	Local variables:
 local CHA_CurrentVersion					= 0;
-local CHA_Expansionlevel					= 0;
 local CHA_UpdateMessageShown				= false;
 local CHA_IconMoving						= false;
 local CHA_CurrentTemplateIndex				= 0;
@@ -270,15 +240,43 @@ local CHA_MinimapX							= 0;
 local CHA_MinimapY							= 0;
 local CHA_Templates							= { };
 --[[
-	Template: a table of template objects with:
-		"NAME": Unique name of the template
-		"Tanks/Heals/Decurses" = {
-			"ROLEMASK": bitmask for classes assigned for Tanking/healing/decursing
-		}
+	Templates:
+	The array containing the template setup is a huge table.
+	We are reading data into a work table and then creating data in.the-fly to make
+	sure data is consistent.
+
+	CHA_Templates = {
+		["templatename"] = "Molten Core",
+		["roles"] = {
+			["tank|heal|decurse"] = {
+				["caption"] = "Tanks/Heals/Decurses",
+				["mask"] = 769,
+				["targets"] = 
+				{
+					{
+						["name"] = "{Skull}",
+						["mask"] = 65536,
+						["text"] = "Skull",
+						["icon"] = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8",
+						["players"] = 
+						{
+							{
+								["name"] = "Donald-Firemaw",
+								["text"] = "F:Donald",
+								["mask"] = 256,
+								["icon"] = 626008,
+								["class"] = "WARRIOR",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
 --]]
+
 local CHA_WhisperHeal						= true;
 local CHA_WhisperRepost						= true;
-
 
 --	Backdrops:
 CHA_BACKDROP_LOGO = {
@@ -617,7 +615,7 @@ SlashCmdList["CHA_CHA"] = function(msg)
 	elseif option == "VERSION" then
 		SlashCmdList["CHA_VERSION"]();
 	else
-		CHA_Echo(string.format("Unknown command: %s", option));
+		A.Echo(string.format("Unknown command: %s", option));
 	end
 end
 
@@ -637,10 +635,10 @@ end
 --	Added in: 2.0.0
 SLASH_CHA_VERSION1 = "/chaversion"
 SlashCmdList["CHA_VERSION"] = function(msg)
-	if IsInRaid() or DIGAM_IsInParty() then
+	if IsInRaid() or A.IsInParty() then
 		CHA_SendAddonMessage("TX_VERSION##");
 	else
-		CHA_Echo(string.format("%s is using ClassicHealingAssignments version %s", GetUnitName("player", true), GetAddOnMetadata(CHA_ADDON_NAME, "Version")));
+		A.Echo(string.format("%s is using ClassicHealingAssignments version %s", GetUnitName("player", true), GetAddOnMetadata(CHA_ADDON_NAME, "Version")));
 	end
 end
 
@@ -651,13 +649,13 @@ end
 --
 SLASH_CHA_HELP1 = "/chahelp"
 SlashCmdList["CHA_HELP"] = function(msg)
-	CHA_Echo(string.format("ClassicHealingAssignments version %s options:", GetAddOnMetadata(CHA_ADDON_NAME, "Version")));
-	CHA_Echo("Syntax:");
-	CHA_Echo("    /cha [command]");
-	CHA_Echo("Where commands can be:");
-	CHA_Echo("    Config       (default) Open the configuration dialogue.");
-	CHA_Echo("    Version      Request version info from all clients.");
-	CHA_Echo("    Help         This help.");
+	A.Echo(string.format("ClassicHealingAssignments version %s options:", GetAddOnMetadata(CHA_ADDON_NAME, "Version")));
+	A.Echo("Syntax:");
+	A.Echo("    /cha [command]");
+	A.Echo("Where commands can be:");
+	A.Echo("    Config       (default) Open the configuration dialogue.");
+	A.Echo("    Version      Request version info from all clients.");
+	A.Echo("    Help         This help.");
 end
 
 
@@ -668,35 +666,23 @@ end
 --]]
 
 --	Print out a message locally.
-function CHA_Echo(msg)
-	if msg then
-		DEFAULT_CHAT_FRAME:AddMessage(COLOUR_CHAT.."-[".. COLOUR_INTRO.."CHA".. COLOUR_CHAT .."]- ".. msg .. CHAT_END);
-	end
-end
+--function CHA_Echo(msg)
+--	if msg then
+--		DEFAULT_CHAT_FRAME:AddMessage(COLOUR_CHAT.."-[".. COLOUR_INTRO.."CHA".. COLOUR_CHAT .."]- ".. msg .. CHAT_END);
+--	end
+--end
 
---	Convert the version number to an integer (if possible).
---	Returns 0 if not possible (like Alpha and Beta versions)
-local function CHA_CalculateVersion(versionString)
-	local _, _, major, minor, patch = string.find(versionString, "([^\.]*)\.([^\.]*)\.([^\.]*)");
-	local version = 0;
-
-	if (tonumber(major) and tonumber(minor) and tonumber(patch)) then
-		version = major * 100 + minor;
-	end
-	
-	return version;
-end
 
 --	Check if there is a newer version available in the raid.
 local function CHA_CheckIsNewVersion(versionstring)
-	local incomingVersion = CHA_CalculateVersion( versionstring );
+	local incomingVersion = A.CalculateVersion( versionstring );
 
 	if (CHA_CurrentVersion > 0 and incomingVersion > 0) then
 		if incomingVersion > CHA_CurrentVersion then
 			if not CHA_UpdateMessageShown then
 				CHA_UpdateMessageShown = true;
-				CHA_Echo(string.format("NOTE: A newer version of ".. COLOUR_INTRO .."ClassicHealingAssignments"..COLOUR_CHAT.."! is available (version %s)!", versionstring));
-				CHA_Echo("You can download latest version from https://www.curseforge.com/ or https://github.com/Sentilix/ClassicHealingAssignments.");
+				A.Echo(string.format("NOTE: A newer version of ".. COLOUR_INTRO .."ClassicHealingAssignments"..COLOUR_CHAT.."! is available (version %s)!", versionstring));
+				A.Echo("You can download latest version from https://www.curseforge.com/ or https://github.com/Sentilix/ClassicHealingAssignments.");
 			end
 		end	
 	end
@@ -720,6 +706,10 @@ end;
 --	Post-initialization:
 --	Performaned when the OnLoad event is fired.
 local function CHA_PostInitialization()
+	DigamAddonLib.RefreshChannelList();
+
+	A.PrintAll(A.Chat.Channels);
+
 	CHA_ReadConfigurationSettings();
 	CHA_UpdateUI();
 end;
@@ -789,13 +779,13 @@ function CHA_InitializeClassMatrix()
 	end;
 
 	local paladinRole = CHA_ROLE_TANK + CHA_ROLE_HEAL;
-	if CHA_Expansionlevel == 1 then
+	if A.Properties.ExpansionLevel == 1 then
 		--	Sorry, paladins cannot tank in Classic!
 		paladinRole = CHA_ROLE_HEAL;
 	end;
 
 	for className, classInfo in next, CHA_CLASS_MATRIX_MASTER do
-		if not classInfo[expacKey] or classInfo[expacKey] <= CHA_Expansionlevel then
+		if not classInfo[expacKey] or classInfo[expacKey] <= A.Properties.ExpansionLevel then
 			if className == "PALADIN" then
 				classInfo["role"] = paladinRole;
 			end;
@@ -810,7 +800,7 @@ function CHA_CreateDefaultTemplates()
 
 	CHA_CreateTemplate("Default");
 
-	if CHA_Expansionlevel == 1 then
+	if A.Properties.ExpansionLevel == 1 then
 		CHA_CreateTemplate("Molten Core");
 		CHA_CreateTemplate("Onyxia's Lair");
 		CHA_CreateTemplate("Blackwing Lair");
@@ -819,7 +809,7 @@ function CHA_CreateDefaultTemplates()
 		CHA_CreateTemplate("20 man");
 	end;
 
-	if CHA_Expansionlevel == 2 then
+	if A.Properties.ExpansionLevel == 2 then
 		CHA_CreateTemplate("Karazhan");
 		CHA_CreateTemplate("Serpentshrine Cavern");
 		CHA_CreateTemplate("The Eye");
@@ -855,14 +845,32 @@ function CHA_OpenConfigurationDialogue()
 end;
 
 --	Close the configuration dialogue.
---	TODO: Should we force-close all open popups here? Probably ...
 function CHA_CloseConfigurationDialogue()
+	CHA_ForceClosePopups();
 	CHAMainFrame:Hide();
 	CHA_SetOption(CHA_KEY_Templates, CHA_Templates);
+
+	CHA_UpdateRoleButtons();
+end;
+
+--	Close all popups. Used to avoid open popups with data for
+--	a window which was later changed.
+function CHA_ForceClosePopups()
+	StaticPopup_Hide("CHA_DIALOG_ADDTEMPLATE");
+	StaticPopup_Hide("CHA_DIALOG_RENAMETARGET");
+	StaticPopup_Hide("DIGAM_DIALOG_CONFIRMATION");
+	StaticPopup_Hide("DIGAM_DIALOG_ERROR");
+
+	HideDropDownMenu(1, nil, CHA_TemplateDropdownMenu, "cursor", 3, -3);
+	HideDropDownMenu(1, nil, CHA_TemplateDropdownMenu, "cursor", 3, -3);
+	HideDropDownMenu(1, nil, CHA_SymbolTargetDropdownMenu, "cursor", 3, -3);
+	HideDropDownMenu(1, nil, CHA_PlayerDropdownMenu, "cursor", 3, -3);
+	HideDropDownMenu(1, nil, CHA_AssignedDropdownMenu, "cursor", 3, -3);
 end;
 
 --	Change to Tank configuration page
 function CHA_ShowTankConfiguration()
+	CHA_ForceClosePopups();
 	CHA_ActiveRole = CHA_ROLE_TANK;
 	CHA_SetOption(CHA_KEY_ActiveRole, CHA_ActiveRole);
 	CHA_UpdateUI();
@@ -870,6 +878,7 @@ end;
 
 --	Change to Healer configuration page
 function CHA_ShowHealerConfiguration()
+	CHA_ForceClosePopups();
 	CHA_ActiveRole = CHA_ROLE_HEAL;
 	CHA_SetOption(CHA_KEY_ActiveRole, CHA_ActiveRole);
 	CHA_UpdateUI();
@@ -877,6 +886,7 @@ end;
 
 --	Change to Decurser configuration page
 function CHA_ShowDecurseConfiguration()
+	CHA_ForceClosePopups();
 	CHA_ActiveRole = CHA_ROLE_DECURSE;
 	CHA_SetOption(CHA_KEY_ActiveRole, CHA_ActiveRole);
 	CHA_UpdateUI();
@@ -890,7 +900,6 @@ end;
 
 --	Update the three role buttons, so the current role is disabled.
 --	Also, the backdrop on the template frame is changed.
---	TODO: CHA_UpdateRoleCounter is called, but this isn't really used for anything yet.
 function CHA_UpdateRoleButtons()
  	CHA_UpdateRoleCounter();
 
@@ -1024,8 +1033,11 @@ function CHA_UpdateClassIcons()
 		end;
 	end;
 
-	--	TODO: Use "caption" on template
-	CHARoleCaption:SetText(CHA_RoleMatrix[CHA_ActiveRole]);
+	local roleName = "(none)";
+	if roleTemplate then 
+		roleName = roleTemplate["caption"]; 
+	end;
+	CHARoleCaption:SetText(roleName);
 end;
 
 --	Update Template buttons:
@@ -1092,6 +1104,7 @@ function CHA_ClassIconOnClick(sender)
 	roleTemplate["mask"] = bit.bxor(roleTemplate["mask"], classInfo["mask"]);
 
 	CHA_UpdateClassIcons();
+	CHA_UpdateRoleCounter();
 end;
 
 --	Called when "Add Target" button on role page is clicked.
@@ -1173,7 +1186,7 @@ end;
 function CHA_TemplateDropdownMenu_Delete()
 	local template = CHA_GetTemplateById(CHA_CurrentTemplateIndex);
 
-	DIGAM_ShowConfirmation(string.format("Really delete the template '%s'?", template["templatename"]), CHA_TemplateDropdownMenu_Delete_OK);
+	A.ShowConfirmation(string.format("Really delete the template '%s'?", template["templatename"]), CHA_TemplateDropdownMenu_Delete_OK);
 end;
 
 --	Called when the OK button on the Template:Delete popup was clicked.
@@ -1187,7 +1200,7 @@ function CHA_TemplateDropdownMenu_Delete_OK()
 	end;
 
 	CHA_Templates[CHA_CurrentTemplateIndex] = nil;
-	CHA_Templates = DIGAM_RenumberTable(CHA_Templates);
+	CHA_Templates = A.RenumberTable(CHA_Templates);
 
 	CHA_UpdateUI();
 end;
@@ -1199,17 +1212,23 @@ function CHA_AddTemplateOnClick()
 end;
 
 --	Called when the main "announcement" button is clicked.
---	Left-click: config dialogue is opened.
---	Right-click: Announcement is made.
---	TODO: Can we use CTRL+Click for announcements instead of Right-click?
+--	CTRL+left click: A public announcement is made.
+--	CTRL+right click: A private (locally) announcement is made for testing.
+--	Left/right-click: config dialogue is opened.
 function CHA_AnnouncementButtonOnClick(sender)
 	local buttonType = GetMouseButtonClicked();
 
-	if buttonType == "LeftButton" then
-		CHA_OpenConfigurationDialogue();
+	--	CTRL key: announce something
+	if IsControlKeyDown() then
+		if buttonType == "LeftButton" then
+			CHA_PublicAnnouncement();
+		else
+			CHA_PrivateAnnouncement();
+		end;
 	else
-		CHA_AnnounceAssignments();
+		CHA_OpenConfigurationDialogue();
 	end;
+
 end;
 
 --	Called when the Target button is clicked.
@@ -1255,6 +1274,7 @@ function CHA_PlayerDropdownClick(sender, playerInfo)
 	tinsert(roleTarget["players"], playerInfo);
 
 	CHA_UpdateTargetFrames();
+	CHA_UpdateRoleCounter();
 end;
 
 --	Called when Assigned Player:MoveUp is clicked:
@@ -1290,10 +1310,11 @@ function CHA_AssignedDropdownMenu_Delete()
 
 	if roleTarget["players"][CHA_CurrentPlayerIndex] then
 		roleTarget["players"][CHA_CurrentPlayerIndex] = nil;
-		roleTarget["players"] = DIGAM_RenumberTable(roleTarget["players"]);
+		roleTarget["players"] = A.RenumberTable(roleTarget["players"]);
 	end;
 
 	CHA_UpdateTargetFrames();
+	CHA_UpdateRoleCounter();
 end;
 
 --	Called when Target:MoveUp dropdown option is seleted:
@@ -1345,7 +1366,7 @@ function CHA_TargetDropdownMenu_Delete()
 	if roleTemplate and roleTemplate["targets"][CHA_CurrentTargetIndex] then
 		local targetName = roleTemplate["targets"][CHA_CurrentTargetIndex]["text"];
 
-		DIGAM_ShowConfirmation(string.format("Really remove the target '%s'?", targetName or ""), CHA_TargetDropdownMenu_Delete_OK);
+		A.ShowConfirmation(string.format("Really remove the target '%s'?", targetName or ""), CHA_TargetDropdownMenu_Delete_OK);
 	end;
 end;
 
@@ -1355,9 +1376,10 @@ function CHA_TargetDropdownMenu_Delete_OK()
 	local roleTemplate = CHA_GetActiveRoleTemplate();
 	if roleTemplate and roleTemplate["targets"][CHA_CurrentTargetIndex] then
 		roleTemplate["targets"][CHA_CurrentTargetIndex] = nil;
-		roleTemplate["targets"] = DIGAM_RenumberTable(roleTemplate["targets"]);
+		roleTemplate["targets"] = A.RenumberTable(roleTemplate["targets"]);
 
 		CHA_UpdateTargetFrames();
+		CHA_UpdateRoleCounter();
 	end;
 end;
 
@@ -1401,7 +1423,7 @@ function CHA_AddTemplate_OK(templateName)
 	if not CHA_GetTemplateByName(templateName) then
 		CHA_CreateTemplate(templateName);
 	else
-		DIGAM_ShowError("A template with that name already exists.");
+		A.ShowError("A template with that name already exists.");
 	end;
 
 	CHA_UpdateUI();
@@ -1412,13 +1434,13 @@ end;
 --	Clone: A new template with the new name is added below the old template.
 function CHA_RenameTemplate_OK(oldTemplateName, newTemplateName)
 	if CHA_GetTemplateByName(newTemplateName) then
-		DIGAM_ShowError("A template with that name already exists.");
+		A.ShowError("A template with that name already exists.");
 		return;
 	end;
 
 	local index, template = CHA_GetTemplateByName(oldTemplateName);
 	if not index then
-		DIGAM_ShowError(string.format("The template '%s' was not found.", oldTemplateName));
+		A.ShowError(string.format("The template '%s' was not found.", oldTemplateName));
 		return;
 	end;
 
@@ -1434,7 +1456,7 @@ function CHA_RenameTemplate_OK(oldTemplateName, newTemplateName)
 		--	Clone template to new (keep existing)
 		local newIndex = CHA_CreateTemplate(newTemplateName);
 
-		local template = DIGAM_CloneTable(CHA_Templates[index]);
+		local template = A.CloneTable(CHA_Templates[index]);
 		template["templatename"] = newTemplateName;
 		CHA_Templates[newIndex] = template;
 
@@ -1758,7 +1780,7 @@ function CHA_MoveAssignedPlayer(playerIndex, startTargetIndex, endTargetIndex)
 		tinsert(destTarget["players"], sourceTarget["players"][playerIndex]);
 
 		sourceTarget["players"][playerIndex] = nil;
-		sourceTarget["players"] = DIGAM_RenumberTable(sourceTarget["players"]);
+		sourceTarget["players"] = A.RenumberTable(sourceTarget["players"]);
 
 		CHA_UpdateTargetFrames();
 	end;
@@ -1866,8 +1888,8 @@ function CHA_GetPlayersInRoster()
 			unitid = "raid"..n;
 			if not UnitName(unitid) then break; end;
 			
-			fullName = DIGAM_GetPlayerAndRealm(unitid);
-			className = DIGAM_UnitClass(unitid);
+			fullName = A.GetPlayerAndRealm(unitid);
+			className = A.UnitClass(unitid);
 			classInfo = CHA_ClassMatrix[className];
 
 			tinsert(players, { 
@@ -1879,15 +1901,15 @@ function CHA_GetPlayersInRoster()
 			});
 		end;
 
-	elseif DIGAM_IsInParty() then
+	elseif A.IsInParty() then
 		for n = 1, GetNumGroupMembers(), 1 do
 			unitid = "party"..n;
 			if not UnitName(unitid) then
 				unitid = "player";
 			end;
 
-			fullName = DIGAM_GetPlayerAndRealm(unitid);
-			className = DIGAM_UnitClass(unitid);		
+			fullName = A.GetPlayerAndRealm(unitid);
+			className = A.UnitClass(unitid);		
 			classInfo = CHA_ClassMatrix[className];
 
 			tinsert(players, {
@@ -1901,8 +1923,8 @@ function CHA_GetPlayersInRoster()
 	else
 		--	SOLO play, somewhat usefull when testing
 		unitid = "player";
-		fullName = DIGAM_GetPlayerAndRealm(unitid);
-		className = DIGAM_UnitClass(unitid);
+		fullName = A.GetPlayerAndRealm(unitid);
+		className = A.UnitClass(unitid);
 		classInfo = CHA_ClassMatrix[className];
 
 		tinsert(players, {
@@ -1943,25 +1965,6 @@ end;
 
 
 
---[[
-	Communication functions
---]]
-
---	Send a message using the Addon channel.
-function CHA_SendAddonMessage(message)
-	local memberCount = GetNumGroupMembers();
-	if memberCount > 0 then
-		local channel = nil;
-		if IsInRaid() then
-			channel = "RAID";
-		elseif Thaliz_IsInParty() then
-			channel = "PARTY";
-		end;
-		C_ChatInfo.SendAddonMessage(CHA_MESSAGE_PREFIX, message, channel);
-	end;
-end
-
-
 
 --[[
 	CHA business logic
@@ -1969,33 +1972,59 @@ end
 
 --	TODO: This counter needs some re-thinking! :-<
 function CHA_UpdateRoleCounter()
-	local numTanks = 0;
-	local numHealers = 0;
-	local numDecursers = 0;
+	local numPlayers = 0;
+	local numAssigned = 0;
 
-	local Class = ""
-	for i = 1, GetNumGroupMembers() do
-		class = DIGAM_UnitClass("raid"..i)
-		--	TODO: Count using Class Matrix instead!
-		if Class == "WARRIOR" or Class == "DRUID" then 
-			numTanks = numTanks + 1;
-		end
+	local roleMask = 0;
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if roleTemplate then
+		roleMask = roleTemplate["mask"];
+	end;
 
-		if Class == "PRIEST" or Class == "DRUID" or Class == "SHAMAN" or Class == "PALADIN" then 
-			numHealers = numHealers + 1;
-		end
+	local groupType, groupCount;
+	if GetNumGroupMembers() > 0 then
+		if IsInRaid() then
+			groupType = "raid";
+		else
+			groupType = "party";
+		end;
 
-		if Class == "MAGE" or Class == "DRUID" then 
-			numDecursers = numDecursers + 1;
+		for i = 1, GetNumGroupMembers() do
+			unitid = groupType..i;
+			local className = A.UnitClass(unitid);
+			if not className then
+				unitid = "player";
+				className = A.UnitClass(unitid);
+			end;
+
+			local classInfo = CHA_ClassMatrix[className];
+			if bit.band(classInfo["mask"], roleMask) > 0 then
+				numPlayers = numPlayers + 1;
+			end;
 		end
-	end
+	else
+		local classInfo = CHA_ClassMatrix[A.UnitClass("player")];
+		if bit.band(classInfo["mask"], roleMask) > 0 then
+			numPlayers = 1;
+		end;
+	end;
+	
+	local roleTarget = CHA_GetActiveTargetTemplate();
+	if roleTarget then
+		for k, target in next, roleTarget do
+			if target["players"] then
+				numAssigned = numAssigned + table.getn(target["players"]);
+			end;
+		end;
+	end;
+
 
 	if CHA_ActiveRole == CHA_ROLE_TANK then
-		CHAHealerCountCaption:SetText(string.format("Tanks: %s", numTanks or "?"));
+		CHAHealerCountCaption:SetText(string.format("Tanks: %s/%s", numAssigned, numPlayers));
 	elseif CHA_ActiveRole == CHA_ROLE_HEAL then
-		CHAHealerCountCaption:SetText(string.format("Healers: %s", numHealers or "?"));
+		CHAHealerCountCaption:SetText(string.format("Healers: %s/%s", numAssigned, numPlayers));
 	else -- Decurser:
-		CHAHealerCountCaption:SetText(string.format("Decursers: %s", numDecursers or "?"));
+		CHAHealerCountCaption:SetText(string.format("Decursers: %s/%s", numAssigned, numPlayers));
 	end;
 end
 
@@ -2176,8 +2205,36 @@ end;
 	Announce functionality
 --]]
 
---	Shout it out!
-function CHA_AnnounceAssignments()
+--	Shout it out in public!
+function CHA_PublicAnnouncement()
+	local announcements = CHA_GenerateAnnouncements();
+	if not announcements then
+		A.Echo("There are no announcements for this role available.");
+		return;
+	end;
+
+	--	TODO: use configured channel for output
+	for n = 1, table.getn(announcements), 1 do
+		print(announcements[n]);
+	end;
+end;
+
+--	Shout it out locally (test your announcement!)
+function CHA_PrivateAnnouncement()
+	local announcements = CHA_GenerateAnnouncements();
+	if not announcements then
+		A.Echo("There are no announcements for this role available.");
+		return;
+	end;
+
+	for n = 1, table.getn(announcements), 1 do
+		A.Echo(announcements[n]);
+	end;
+end;
+
+--	Generate list of announcement lines
+function CHA_GenerateAnnouncements()
+	local announcements = { };
 	local roleTargets = CHA_GetActiveTargetTemplate();
 	local targetCount = table.getn(roleTargets or { });
 	if targetCount == 0 then
@@ -2187,15 +2244,11 @@ function CHA_AnnounceAssignments()
 	--	TODO: Configure texts based on Role:
 	local announcementTexts = {
 		[CHA_ROLE_TANK] = "--!!!-- TANK Assignments:",
-		[CHA_ROLE_HEAL] = "--+++-- HEAL Assignments",
+		[CHA_ROLE_HEAL] = "--\\/\\/-- HEAL Assignments",
 		[CHA_ROLE_DECURSE] = "--/\\/\\-- DECURSE Assignments",
 	};
-	local text = announcementTexts[CHA_ActiveRole];
+	tinsert(announcements, announcementTexts[CHA_ActiveRole]);
 
-
-	--	TODO: Configure target output. Currently we write locally, but
-	--	that is soon to be changed!
-	CHA_Echo(text);
 
 	for tIndex, target in next, roleTargets do
 		local tankName = target["text"];
@@ -2214,9 +2267,10 @@ function CHA_AnnounceAssignments()
 			assigned = assigned .. player["text"];
 		end;
 
-		CHA_Echo(string.format("%s: %s", tankName, assigned));
+		tinsert(announcements, string.format("%s: %s", tankName, assigned));
 	end;
 
+	return announcements;
 end;
 
 
@@ -2224,10 +2278,9 @@ end;
 	Event handlers
 --]]
 function CHA_OnEvent(self, event, ...)
-
 	if event == "ADDON_LOADED" then
 		local addonname = ...;
-		if addonname == CHA_ADDON_NAME then
+		if addonname == A.Properties.AddonName then
 			CHA_PostInitialization();
 		end;
 
@@ -2240,12 +2293,14 @@ function CHA_OnEvent(self, event, ...)
 		local _, _, cmd, message, recipient = string.find(msg, "([^#]*)#([^#]*)#([^#]*)");	
 		
 		if not (recipient == "") then
-			if not (recipient == DIGAM_GetPlayerName(UnitName("player"))) then
+			--	TODO: HANDLE REALM!
+			if not (recipient == UnitName("player")) then
 				return
 			end
 		end
 
-		sender = DIGAM_GetPlayerName(sender);
+		--	TODO: HANDLE REALM!
+		--sender = A.GetPlayerAndRealm(sender);
 
 		if cmd == "TX_VERSION" then
 			CHA_HandleTXVersion(message,sender);
@@ -2281,7 +2336,8 @@ function CHA_OnEvent(self, event, ...)
 
 	elseif event == "CHAT_MSG_WHISPER" then
 		local arg1, arg2 = ...;
-		local sender = DIGAM_GetPlayerName(arg2);
+		--	TODO: HANDLE REALM
+		local sender = arg2;
 
 		--if arg1 == "!heal" or arg1 == "heal" then
 		--	HealingAsssignments:AnswerAssignments(sender)
@@ -2298,18 +2354,16 @@ function CHA_HandleTXVersion(message, sender)
 end;
 
 function CHA_HandleRXVersion(message, sender)
-	CHA_Echo(string.format("%s is using Classic Healing Assignments version %s", sender, message))
+	A.Echo(string.format("%s is using Classic Healing Assignments version %s", sender, message))
 end;
 
 
 function CHA_OnLoad()
-	CHA_Expansionlevel = 1 * GetAddOnMetadata(CHA_ADDON_NAME, "X-Expansion-Level");
-	CHA_CurrentVersion = CHA_CalculateVersion(GetAddOnMetadata(CHA_ADDON_NAME, "Version") );
+	CHA_CurrentVersion = A.CalculateVersion();
 
-	CHA_Echo(string.format("Version %s by %s", GetAddOnMetadata(CHA_ADDON_NAME, "Version"), GetAddOnMetadata(CHA_ADDON_NAME, "Author")));
-	CHA_Echo(string.format("Type %s/cha%s to configure the addon.", COLOUR_INTRO, COLOUR_CHAT));
+	A.Echo(string.format("Type %s/cha%s to configure the addon.", A.Chat.ChatColorHot, A.Chat.ChatColorNormal));
 
-	CHAHeadlineCaption:SetText(string.format("Classic Healing Assignments - version %s", GetAddOnMetadata(CHA_ADDON_NAME, "Version")));
+	CHAHeadlineCaption:SetText(string.format("Classic Healing Assignments - version %s", A.Properties.Version));
 --	CHAVersionCaption:SetText(string.format("Classic Healing Assignments version %s by %s", GetAddOnMetadata(CHA_ADDON_NAME, "Version"), GetAddOnMetadata(CHA_ADDON_NAME, "Author")));
 
 	CHA_PreInitialization();
@@ -2320,6 +2374,7 @@ function CHA_OnLoad()
 	--CHAEventFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 	--CHAEventFrame:RegisterEvent("CHAT_MSG_ADDON")
 
-	C_ChatInfo.RegisterAddonMessagePrefix(CHA_MESSAGE_PREFIX);
+	C_ChatInfo.RegisterAddonMessagePrefix(A.Properties.Prefix);
 end;
+
 

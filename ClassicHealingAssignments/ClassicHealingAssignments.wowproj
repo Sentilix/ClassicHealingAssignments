@@ -17,7 +17,7 @@
     <Content Include="ClassicHealingAssignments-Classic.toc">
       <SubType>TableOfContents</SubType>
     </Content>
-    <Content Include="DigamCommon.lua">
+    <Content Include="DigamAddonLib.lua">
       <SubType>Code</SubType>
     </Content>
     <Content Include="HealingAssignments.lua">
