@@ -59,7 +59,7 @@
 		<Size>
 			<AbsDimension x="16" y="16" />
 		</Size>
-		<NormalTexture file="Interface\PaperDoll\UI-Backpack-EmptySlot" />
+		<NormalTexture file="Interface\PaperDoll\UI-Backpack-EmptySlot"></NormalTexture>
 		<Scripts>
 			<OnLoad>
 				self:RegisterForClicks("LeftButtonDown", "RightButtonDown");
@@ -121,40 +121,7 @@
 		</NormalTexture>
 	</Button>
 
-	<!-- Minimap icon -->
-	<!--<Frame name="CHAIconFrame" parent="UIParent" toplevel="true" inherits="BackdropTemplate" frameStrata="LOW">
-		<KeyValues>
-			<KeyValue key="backdropInfo" value="CHA_BACKDROP_ICON" type="global"/>
-			<KeyValue key="backdropColor" value="BLACK" type="global"/>
-			<KeyValue key="backdropBorderColor" value="WHITE" type="global"/>
-		</KeyValues>
-
-		<Size>
-			<AbsDimension x="24" y="24" />
-		</Size>
-		<Anchors>
-			<Anchor point="CENTER">
-				<Offset>
-					<AbsDimension x="0" y="0" />
-				</Offset>
-			</Anchor>
-		</Anchors>
-		
-		<Scripts>
-			<OnLoad inherit="prepend">
-				self:SetMovable(true);
-				self:SetUserPlaced(true);
-				self:RegisterForDrag("LeftButton");
-			</OnLoad>
-			<OnDragStart>
-				self:StartMoving();
-			</OnDragStart>
-			<OnDragStop>
-				self:StopMovingOrSizing();
-			</OnDragStop>
-		</Scripts>
-	</Frame>-->
-
+	<!-- Main button: Announcements and Config -->
 	<Button name="CHAAnnounceButton" inherits="SecureActionButtonTemplate" parent="UIParent" toplevel="true" hidden="false" frameStrata="LOW" movable="true">
 		<Size>
 			<AbsDimension x="32" y="32" />
@@ -252,6 +219,69 @@
 					</Layer>
 				</Layers>
 			</Button>
+			<!-- "Clean up" button -->
+			<Button name="$parentKickDisconnectsButton" inherits="ActionButtonTemplate" frameStrata="HIGH">
+				<Size>
+					<AbsDimension x="16" y="16" />
+				</Size>
+				<NormalTexture file="Interface\Icons\ability_kick" />
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="CHAMainFrame">
+						<Offset>
+							<AbsDimension x="308" y="-105" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						CHA_KickDisconnectsOnClick();
+					</OnClick>
+				</Scripts>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="CHAMainFrameKickDisconnectsButtonCaption" inherits="GameFontNormal" text="Clean up">
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="CHAMainFrameKickDisconnectsButton">
+									<Offset>
+										<AbsDimension x="30" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<Color r="0.9" g="0.9" b="0.9" />
+						</FontString>
+					</Layer>
+				</Layers>
+			</Button>
+			<!-- Config: Announcement channel dropdown -->
+			<Button name="$parentChannelDropDown" inherits="UIDropDownMenuTemplate" frameStrata="HIGH">
+				<Size>
+					<AbsDimension x="200" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="310" y="-70"/>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						UIDropDownMenu_Initialize(self, CHA_ChannelDropDown_Initialize);
+					</OnLoad>
+				</Scripts>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="$parentCaption" inherits="GameFontNormal" text="Announce in">
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="-118" y="3"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<Color r="0.9" g="0.9" b="0.9" />
+						</FontString>
+					</Layer>
+				</Layers>
+			</Button>
 
 			<!-- 6 x background frames: -->
 			<Frame name="$parentTopleft" parent="CHAMainFrame" inherits="FrameBackgroundTemplate">
@@ -277,6 +307,17 @@
 								</Anchor>
 							</Anchors>
 							<Color r="0.9" g="0.9" b="0.9" />
+						</FontString>
+						<FontString name="CHABottomlineCaption" inherits="GameFontNormal" text="Classic Healing Assignments version x.y by z" justifyH="CENTER">
+							<Size x="600" y="18" />
+							<Anchors>
+								<Anchor point="BOTTOM" relativeTo="CHAMainFrame">
+									<Offset>
+										<AbsDimension x="84" y="35"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<Color r="0.3" g="0.3" b="0.3" />
 						</FontString>
 						<FontString name="CHARoleCaption" inherits="GameFontNormal" font="Fonts\FRIZQT__.TTF" text="">
 							<Anchors>
@@ -526,9 +567,6 @@
 			<OnEvent>
 				CHA_OnEvent(self, event, ...);
 			</OnEvent>
-			<OnUpdate>
-				CHA_OnTimer(elapsed);
-			</OnUpdate>
 		</Scripts>
 	</Frame>
 </Ui>

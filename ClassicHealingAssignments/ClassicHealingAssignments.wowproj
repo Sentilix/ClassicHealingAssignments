@@ -30,21 +30,9 @@
     <Content Include="Media\Icon.tga" />
     <Content Include="Media\IconMouseOver.tga" />
     <Content Include="Media\logo-square.tga" />
-    <Content Include="Modules\Database.lua">
-      <SubType>Code</SubType>
-    </Content>
-    <Content Include="Modules\Posting.lua">
-      <SubType>Code</SubType>
-    </Content>
-    <Content Include="Modules\Sync.lua">
-      <SubType>Code</SubType>
-    </Content>
-    <Content Include="renewOriginal.lua">
-      <SubType>Code</SubType>
-    </Content>
+    <Content Include="Readme.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Modules" />
     <Folder Include="Media" />
   </ItemGroup>
   <Import Project="$(DevEnvDir)\Extensions\Tools\MSBuild\AddonStudio\Wow\3.0\WowAddonStudio.targets" />

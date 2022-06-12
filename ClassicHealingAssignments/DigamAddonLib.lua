@@ -4,6 +4,19 @@ local DIGAM_CHAT_END						= "|r";
 local DIGAM_DEFAULT_ColorNormal				= "40A0F8"
 local DIGAM_DEFAULT_ColorHot				= "B0F0F0"
 
+local RAID_CHANNEL							= "RAID"
+local YELL_CHANNEL							= "YELL"
+local SAY_CHANNEL							= "SAY"
+local WARN_CHANNEL							= "RAID_WARNING"
+local GUILD_CHANNEL							= "GUILD"
+
+
+DIGAM_CHANNEL_RAID							= { ["id"] = "r", ["mask"] = 0x0001, ["name"] = "Raid", ["channel"] = "RAID", };
+DIGAM_CHANNEL_RAIDWARNING					= { ["id"] ="rw", ["mask"] = 0x0002, ["name"] = "Raid warning", ["channel"] = "RAID_WARNING", };
+DIGAM_CHANNEL_PARTY							= { ["id"] = "p", ["mask"] = 0x0004, ["name"] = "Party", ["channel"] = "PARTY", };
+DIGAM_CHANNEL_CUSTOM						= { ["id"] = "?", ["mask"] = 0x0008, ["name"] = "(Custom)", ["channel"] = "CUSTOM", };
+
+
 DigamAddonLib = CreateFrame("Frame"); 
 
 DigamAddonLib.Properties = {
@@ -21,8 +34,6 @@ DigamAddonLib.Chat = {
 }
 
 function DigamAddonLib.Initialize(addonSettings)
-print(addonSettings.AddonName);
-
 	DigamAddonLib.Properties.AddonName = addonSettings["ADDONNAME"] or "Unnamed";
 	DigamAddonLib.Properties.ShortName = addonSettings["SHORTNAME"] or DigamAddonLib.Properties.AddonName;
 	DigamAddonLib.Properties.Prefix = addonSettings["PREFIX"] or DigamAddonLib.Properties.ShortName;
@@ -50,6 +61,29 @@ function DigamAddonLib.Echo(message)
 		);
 		DEFAULT_CHAT_FRAME:AddMessage(message);
 	end
+end;
+
+function DigamAddonLib.GetChannelInfo(channelName)
+	for key, channel in next, DigamAddonLib.Chat.Channels do
+		if channel["name"] == channelName then
+			return channel;
+		end;
+	end;
+
+	return nil;
+end;
+
+function DigamAddonLib.EchoByName(channelName, message)
+	local channel = DigamAddonLib.GetChannelInfo(channelName);
+	if message and channel then
+		if bit.band(channel["mask"], 0x07) > 0 then
+			--	r, rw, p:
+			SendChatMessage(message, channel["channel"]);
+		else
+			--	Custom channel, like a Healer channel etc:
+			SendChatMessage(message, "CHANNEL", nil, tonumber(channel["channel"]));
+		end;
+	end;
 end;
 
 
@@ -207,6 +241,43 @@ function DigamAddonLib.UnitClass(unitid)
 	return classname;
 end;
 
+function DigamAddonLib.GetUnitidFromName(playerName)
+	local thisRealm = DigamAddonLib.GetMyRealm()
+
+	if IsInRaid() then
+		for n = 1, 40, 1 do
+			local unitid = "raid"..n;
+			local unitname, realm = UnitName(unitid);
+			if not unitname then return nil; end;
+			if not realm or realm == "" then realm = thisRealm; end;
+			
+			unitname = unitname.."-".. realm;
+			if playerName == unitname then
+				return unitid;
+			end;
+		end;
+	elseif GetNumGroupMembers() > 0 then
+		for n = 1, GetNumGroupMembers(), 1 do
+			local unitid = "party"..n;
+			local unitname, realm = UnitName(unitid);
+			if not unitname then unitname = "player"; end;
+
+			if not realm or realm == "" then realm = thisRealm; end;
+			
+			unitname = unitname.."-".. realm;
+			if playerName == unitname then
+				return unitid;
+			end;
+		end;
+	else
+		--	Solo:
+		return "player";
+	end;
+
+
+	return nil;
+end;
+
 
 
 --[[
@@ -241,14 +312,17 @@ end;
 --
 
 --	Updates the channel list (excuding General, Trade, Defense, LFG etc)
-function DigamAddonLib.RefreshChannelList()
+--	TRUE if group type check should be ignored; i.e. allow /rw in party
+function DigamAddonLib.RefreshChannelList(skipGroupTypeCheck)
 	local channels = { };
 
-	if IsInRaid() then
-		tinsert(channels, { ["id"]="r", ["name"]="Raid" });
-		tinsert(channels, { ["id"]="rw", ["name"]="RaidWarning" });
-	elseif GetNumGroupMembers() > 0 then
-		tinsert(channels, { ["id"]="p", ["name"]="Party" });
+	if skipGroupTypeCheck or IsInRaid() then
+		tinsert(channels, DIGAM_CHANNEL_RAID);
+		tinsert(channels, DIGAM_CHANNEL_RAIDWARNING); 
+	end;
+	
+	if skipGroupTypeCheck or (not IsInRaid() and GetNumGroupMembers() > 0) then
+		tinsert(channels, DIGAM_CHANNEL_PARTY);
 	end;
 
 	local publicChannels = { GetChatWindowChannels(DEFAULT_CHAT_FRAME:GetID()) };
@@ -262,7 +336,12 @@ function DigamAddonLib.RefreshChannelList()
 		if publicChannels[n+1] == 0 and publicChannels[n] ~= "LookingForGroup" then
 			local channelID, channelName = GetChannelName(publicChannels[n]);
 			if channelID then
-				tinsert(channels, { ["id"]=tostring(channelID), ["name"]=channelName });
+				tinsert(channels, {
+					["id"] = tostring(channelID),
+					["mask"] = DIGAM_CHANNEL_CUSTOM["mask"],
+					["name"] = channelName,
+					["channel"] = tostring(channelID),
+				});
 			end;
 		end;
 	end;
@@ -292,5 +371,3 @@ function DigamAddonLib.SendAddonMessage(message)
 		C_ChatInfo.SendAddonMessage(DigamAddonLib.Properties.Prefix, message, channel);
 	end;
 end
-
-

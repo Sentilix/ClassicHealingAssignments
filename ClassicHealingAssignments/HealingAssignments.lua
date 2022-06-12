@@ -24,6 +24,7 @@ local CHA_TEMPLATES_MAX						= 15;	-- room for max 15 templates. This is a limit
 local CHA_COLOR_SELECTED					= {1.0, 1.0, 1.0};
 local CHA_COLOR_UNSELECTED					= {1.0, 0.8, 0.0};
 local CHA_ALPHA_ENABLED						= 1.0;
+local CHA_ALPHA_DIMMED						= 0.7;
 local CHA_ALPHA_DISABLED					= 0.3;
 
 local CHA_CLASS_DRUID						= 0x000001;
@@ -215,17 +216,19 @@ local CHA_CurrentTemplateIndex				= 0;
 local CHA_CurrentTemplateOperation			= "";
 local CHA_CurrentTargetIndex				= 0;
 local CHA_CurrentPlayerIndex				= 0;
+local CHA_LocalPlayerName					= "";
 
 --	Persisted options:
 CHA_PersistedData							= { };
 
 local CHA_KEY_ActiveTemplate				= "ActiveTemplate";
 local CHA_KEY_ActiveRole					= "ActiveRole";
-local CHA_KEY_Templates						= "Templates";
 local CHA_KEY_AnnounceButtonPosX			= "AnnounceButton.X";
 local CHA_KEY_AnnounceButtonPosY			= "AnnounceButton.Y";
 local CHA_KEY_AnnounceButtonSize			= "AnnounceButton.Size";
 local CHA_KEY_AnnounceButtonVisible			= "AnnounceButton.Visible";
+local CHA_KEY_AnnouncementChannel			= "Announcement.Channel";
+local CHA_KEY_Templates						= "Templates";
 
 local CHA_DEFAULT_ActiveTemplate			= nil;
 local CHA_DEFAULT_ActiveRole				= CHA_ROLE_TANK;
@@ -236,6 +239,7 @@ local CHA_ActiveTemplate					= CHA_DEFAULT_ActiveTemplate;
 local CHA_ActiveRole						= CHA_DEFAULT_ActiveRole;
 local CHA_AnnounceButtonSize				= CHA_DEFAULT_AnnounceButtonSize;
 local CHA_AnnounceButtonVisible				= CHA_DEFAULT_AnnounceButtonVisible;
+local CHA_AnnouncementChannel				= "";		-- Set runtime
 local CHA_MinimapX							= 0;
 local CHA_MinimapY							= 0;
 local CHA_Templates							= { };
@@ -457,7 +461,7 @@ UIDropDownMenu_Initialize(CHA_TargetDropdownMenu, function(self, level, menuList
 	UIDropDownMenu_AddButton(info)
 
 	info = UIDropDownMenu_CreateInfo()
-	info.text = "Delete target";
+	info.text = "Remove target";
 	info.func = CHA_TargetDropdownMenu_Delete;
 	info.notCheckable = true;
 	UIDropDownMenu_AddButton(info)
@@ -510,7 +514,7 @@ UIDropDownMenu_Initialize(CHA_AssignedDropdownMenu, function(self, level, menuLi
 	UIDropDownMenu_AddButton(info)
 
 	info = UIDropDownMenu_CreateInfo()
-	info.text = "Delete target";
+	info.text = "Remove player";
 	info.func = CHA_AssignedDropdownMenu_Delete;
 	info.notCheckable = true;
 	UIDropDownMenu_AddButton(info)
@@ -636,7 +640,7 @@ end
 SLASH_CHA_VERSION1 = "/chaversion"
 SlashCmdList["CHA_VERSION"] = function(msg)
 	if IsInRaid() or A.IsInParty() then
-		CHA_SendAddonMessage("TX_VERSION##");
+		A.SendAddonMessage("TX_VERSION##");
 	else
 		A.Echo(string.format("%s is using ClassicHealingAssignments version %s", GetUnitName("player", true), GetAddOnMetadata(CHA_ADDON_NAME, "Version")));
 	end
@@ -665,14 +669,6 @@ end
 	Helper functions
 --]]
 
---	Print out a message locally.
---function CHA_Echo(msg)
---	if msg then
---		DEFAULT_CHAT_FRAME:AddMessage(COLOUR_CHAT.."-[".. COLOUR_INTRO.."CHA".. COLOUR_CHAT .."]- ".. msg .. CHAT_END);
---	end
---end
-
-
 --	Check if there is a newer version available in the raid.
 local function CHA_CheckIsNewVersion(versionstring)
 	local incomingVersion = A.CalculateVersion( versionstring );
@@ -698,6 +694,7 @@ end
 --	Performed before WOW have finished initalizing
 local function CHA_PreInitialization()
 	CHA_Templates = { };
+	CHA_LocalPlayerName = A.GetPlayerAndRealm("player");
 
 	CHA_InitializeClassMatrix();
 	CHA_InitializeUI();
@@ -706,10 +703,6 @@ end;
 --	Post-initialization:
 --	Performaned when the OnLoad event is fired.
 local function CHA_PostInitialization()
-	DigamAddonLib.RefreshChannelList();
-
-	A.PrintAll(A.Chat.Channels);
-
 	CHA_ReadConfigurationSettings();
 	CHA_UpdateUI();
 end;
@@ -728,6 +721,11 @@ function CHA_ReadConfigurationSettings()
 	--	Templates: These are processed in the Template code:
 	CHA_ProcessConfiguredTemplateData(CHA_GetOption(CHA_KEY_Templates, nil));
 	CHA_SetOption(CHA_KEY_Templates, CHA_Templates);
+
+	--	Announcement channel:
+	CHA_ProcessConfiguredAnnouncementChannel(CHA_GetOption(CHA_KEY_AnnouncementChannel, 0));
+	CHA_SetOption(CHA_KEY_AnnouncementChannel, CHA_AnnouncementChannel);
+	
 
 end;
 
@@ -940,7 +938,7 @@ function CHA_UpdateRoleButtons()
 	if targetCount > 0 then
 		CHAAnnounceButton:SetAlpha(CHA_ALPHA_ENABLED);
 	else
-		CHAAnnounceButton:SetAlpha(CHA_ALPHA_DISABLED);
+		CHAAnnounceButton:SetAlpha(CHA_ALPHA_DIMMED);
 	end;
 end;
 
@@ -986,7 +984,7 @@ function CHA_UpdateTargetFrames()
 			--	PLAYER FRAME: Each frame can have up to CHA_FRAME_MAXPLAYERS tanks assigned.
 			--	Same player frames are used by both Tanks, Healers and Decursers
 			local roleTarget = roleTemplate["targets"][index];
-
+			local alpha = CHA_ALPHA_ENABLED;
 			local posX = playerOffset;
 			local posY = 0;
 			for playerIndex = 1, CHA_FRAME_MAXPLAYERS, 1 do
@@ -997,6 +995,14 @@ function CHA_UpdateTargetFrames()
 					local fPlayerButton = _G[fPlayerButtonName];
 					_G[fPlayerButtonName.."Caption"]:SetText(CHA_FormatPlayerName(player["text"]));
 					_G[fPlayerButtonName.."BG"]:SetVertexColor( color[1]/255, color[2]/255, color[3]/255 );
+
+					local unitid = A.GetUnitidFromName(player["name"]);
+					if unitid and UnitIsConnected(unitid) then
+						alpha = CHA_ALPHA_ENABLED;
+					else
+						alpha = CHA_ALPHA_DISABLED;
+					end;
+					fPlayerButton:SetAlpha(alpha);
 					fPlayerButton:Show();
 				else
 					local fPlayerButtonName = string.format("playerbutton_%d_%d", index, playerIndex);
@@ -1403,6 +1409,43 @@ function CHA_TargetOnClick(sender)
 	end;
 end;
 
+--	Called when user clicks the CLEAN UP button:
+function CHA_KickDisconnectsOnClick()
+	A.ShowConfirmation("Do you want to kick all disconnected characters and characters not in the raid?", CHA_KickDisconnects_OK);
+end;
+
+--	Cleanup the assignments by removing all characters not in the raid or disconnected characters.
+function CHA_KickDisconnects_OK()
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if not roleTemplate or not roleTemplate["targets"] then return; end;
+
+	--	Iterate over all targets, then players in each target:
+	local unitid;
+	for targetIndex, target in next, roleTemplate["targets"] do
+		if target["players"] then
+			for playerIndex, player in next, target["players"] do
+				unitid = A.GetUnitidFromName(player["name"]);
+		
+				if not unitid or not UnitIsConnected(unitid) then
+					target["players"][playerIndex] = nil;
+					target["players"] = A.RenumberTable(target["players"]);
+				end;
+			end;
+		end;
+
+		if bit.band(target["mask"], CHA_TARGET_PLAYERS) > 0 then
+			--	This is a player: kick unless online and in raid!
+			unitid = A.GetUnitidFromName(target["name"]);
+		
+			if not unitid or not UnitIsConnected(unitid) then
+				roleTemplate["targets"][targetIndex] = nil;
+				roleTemplate["targets"] = A.RenumberTable(roleTemplate["targets"]);
+			end;
+		end;
+	end;
+
+	CHA_UpdateUI();
+end;
 
 
 --[[
@@ -1615,6 +1658,7 @@ function CHA_InitializeUI()
 	CHA_CreateClassIcons();
 	CHA_CreateTemplateButtons();
 	CHA_CreateTargetFrames();
+	CHA_InitializeOptions();
 
 	CHA_UpdateUI();
 end;
@@ -1731,6 +1775,45 @@ function CHA_PlayerDropdown_Initialize()
 	end
 end;
 
+--	Initalize the announcement channel dropdown box
+function CHA_ChannelDropDown_Initialize()
+	A.RefreshChannelList(true);
+
+	for channelIndex = 1, table.getn(A.Chat.Channels), 1 do
+		local info = UIDropDownMenu_CreateInfo();
+		info.notCheckable = true;
+		info.text       = string.format("/%s - %s", A.Chat.Channels[channelIndex]["id"], A.Chat.Channels[channelIndex]["name"]);
+		info.func       = function() CHA_ChannelDropDown_OnClick(this, A.Chat.Channels[channelIndex]) end;
+		UIDropDownMenu_AddButton(info);
+	end
+end;
+
+--	Called when a chat channel is selected.
+function CHA_ChannelDropDown_OnClick(sender, channelInfo)
+	local caption = string.format("/%s - %s", channelInfo["id"], channelInfo["name"]);
+
+	CHA_AnnouncementChannel = channelInfo["name"];
+	CHA_UpdateChannelDropDownText();
+
+	CHA_SetOption(CHA_KEY_AnnouncementChannel, CHA_AnnouncementChannel);
+end;
+
+--	Update the caption on the dropdown control:
+function CHA_UpdateChannelDropDownText()
+	local channel = A.GetChannelInfo(CHA_AnnouncementChannel);
+	if channel then
+		local caption = string.format("/%s - %s", channel["id"], channel["name"]);
+		UIDropDownMenu_SetText(CHAMainFrameChannelDropDown, caption);
+	end;
+end;
+
+--	Initalize UI config options with some value. It might be updated later once 
+--	configuration is read.
+function CHA_InitializeOptions()
+	CHA_ChannelDropDown_Initialize();
+	CHA_ChannelDropDown_OnClick(this, A.Chat.Channels[1]);
+end;
+
 --	Create (initialize) the template buttons. 
 --	All buttons are disabled to start with.
 function CHA_CreateTemplateButtons()
@@ -1750,6 +1833,18 @@ function CHA_CreateTemplateButtons()
 		button:Hide();
 		buttonY = buttonY - lineHeight;
 	end;
+end;
+
+--	Check the configured channel and use thatif set.
+--	Defaults to RAID.
+function CHA_ProcessConfiguredAnnouncementChannel(configuredChannel)
+	CHA_AnnouncementChannel = DIGAM_CHANNEL_RAID["name"];
+
+	if configuredChannel and A.GetChannelInfo(configuredChannel) then
+		CHA_AnnouncementChannel = configuredChannel;
+	end;
+
+	CHA_UpdateChannelDropDownText();
 end;
 
 
@@ -2215,7 +2310,7 @@ function CHA_PublicAnnouncement()
 
 	--	TODO: use configured channel for output
 	for n = 1, table.getn(announcements), 1 do
-		print(announcements[n]);
+		A.EchoByName(CHA_AnnouncementChannel, announcements[n]);
 	end;
 end;
 
@@ -2241,7 +2336,6 @@ function CHA_GenerateAnnouncements()
 		return;
 	end;
 	
-	--	TODO: Configure texts based on Role:
 	local announcementTexts = {
 		[CHA_ROLE_TANK] = "--!!!-- TANK Assignments:",
 		[CHA_ROLE_HEAL] = "--\\/\\/-- HEAL Assignments",
@@ -2267,11 +2361,26 @@ function CHA_GenerateAnnouncements()
 			assigned = assigned .. player["text"];
 		end;
 
-		tinsert(announcements, string.format("%s: %s", tankName, assigned));
+		tinsert(announcements, string.format("%s <== %s", tankName, assigned));
 	end;
 
 	return announcements;
 end;
+
+
+--[[
+	Addon communication
+--]]
+
+function CHA_HandleTXVersion(message, sender)
+	A.SendAddonMessage("RX_VERSION#".. A.Properties.Version .."#"..sender)
+end;
+
+function CHA_HandleRXVersion(message, sender)
+	A.Echo(string.format("%s is using Classic Healing Assignments version %s", sender, message))
+end;
+
+
 
 
 --[[
@@ -2284,95 +2393,48 @@ function CHA_OnEvent(self, event, ...)
 			CHA_PostInitialization();
 		end;
 
+	elseif event == "UNIT_CONNECTION" then
+		CHA_UpdateRoleButtons();
+		CHA_UpdateTargetFrames();
+
 	elseif event == "CHAT_MSG_ADDON" then
 		local prefix, msg, channel, sender = ...;
-		if prefix ~= CHA_MESSAGE_PREFIX then	
+		if prefix ~= A.Properties.Prefix then	
 			return;
 		end;
 
+		--	Note: sender+recipient contains both name+realm of who sended message.
 		local _, _, cmd, message, recipient = string.find(msg, "([^#]*)#([^#]*)#([^#]*)");	
-		
+
 		if not (recipient == "") then
-			--	TODO: HANDLE REALM!
-			if not (recipient == UnitName("player")) then
+			if not (recipient == CHA_LocalPlayerName) then
 				return
 			end
 		end
 
-		--	TODO: HANDLE REALM!
-		--sender = A.GetPlayerAndRealm(sender);
-
 		if cmd == "TX_VERSION" then
-			CHA_HandleTXVersion(message,sender);
+			CHA_HandleTXVersion(message, sender);
+
 		elseif cmd == "RX_VERSION" then
-			CHA_HandleRXVersion(message,sender);
+			CHA_HandleRXVersion(message, sender);
 		end;
-			
-		--local arg1, arg2, _, arg4 = ...;
-		--if HealingAsssignments.Mainframe.SyncCheckbox:GetChecked() == 1 and string.sub(arg1, 1, 3) == prefix and arg4 ~= UnitName("player") then
-		--	print("SYNC")
-		--	local TemplateNum = tonumber(string.sub(arg1, 5,6))
-		--	local TemplateName = string.sub(arg1, 8)
-		--	local NameArray = CHAstrsplit(arg2,"#")
-		--	HealingAsssignments.Syncframe:Receive(arg4,TemplateNum,TemplateName,NameArray)
-		--elseif HealingAsssignments.Mainframe.SyncCheckbox:GetChecked() == 1 and arg1 == "CHTrigger" and arg2 == "trigger" then 
-		--	HealingAsssignments.Syncframe:Send()
-		--end
-	
-	elseif event == "GROUP_ROSTER_UPDATE" then
-		--HealingAsssignments:SetNumberOfHealers()
-		--HealingAsssignments:UpdateRaidDataBase()
-
-	elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
-		--local timestamp, type, hideCaster, sourceGUID, sourceName, sourceFlags, sourceFlags2, destGUID, destName, destFlags, destFlags2 = CombatLogGetCurrentEventInfo()
-		--if not (UnitInRaid(destName) or UnitInParty(destName)) then 
-		--	return 
-		--end
-		--if type == "UNIT_DIED" and not AuraUtil.FindAuraByName("Feign Death", destName) then
-		--	if HealingAsssignments.Mainframe.DeathWarningCheckbox:GetChecked() then
-		--		HealingAsssignments:PostDeathWarning(destName) -- Name dies.
-		--	end
-		--end
-
-	elseif event == "CHAT_MSG_WHISPER" then
-		local arg1, arg2 = ...;
-		--	TODO: HANDLE REALM
-		local sender = arg2;
-
-		--if arg1 == "!heal" or arg1 == "heal" then
-		--	HealingAsssignments:AnswerAssignments(sender)
-		--end
 	end;
 end
-
-function CHA_OnTimer(elapsed)
-end;
-
-function CHA_HandleTXVersion(message, sender)
-	local version = GetAddOnMetadata(CHA_ADDON_NAME, "Version")	
-	C_ChatInfo.SendAddonMessage(CHA_MESSAGE_PREFIX, "RX_VERSION#"..version.."#"..sender, "RAID");
-end;
-
-function CHA_HandleRXVersion(message, sender)
-	A.Echo(string.format("%s is using Classic Healing Assignments version %s", sender, message))
-end;
 
 
 function CHA_OnLoad()
 	CHA_CurrentVersion = A.CalculateVersion();
 
-	A.Echo(string.format("Type %s/cha%s to configure the addon.", A.Chat.ChatColorHot, A.Chat.ChatColorNormal));
+	A.Echo(string.format("Type %s/cha%s to configure the addon, or click the [+] button.", A.Chat.ChatColorHot, A.Chat.ChatColorNormal));
 
 	CHAHeadlineCaption:SetText(string.format("Classic Healing Assignments - version %s", A.Properties.Version));
---	CHAVersionCaption:SetText(string.format("Classic Healing Assignments version %s by %s", GetAddOnMetadata(CHA_ADDON_NAME, "Version"), GetAddOnMetadata(CHA_ADDON_NAME, "Author")));
+	CHABottomlineCaption:SetText(string.format("Classic Healing Assignments version %s by %s", A.Properties.Version, A.Properties.Author));
 
 	CHA_PreInitialization();
 
-	CHAEventFrame:RegisterEvent("ADDON_LOADED")
-	--CHAEventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
-	--CHAEventFrame:RegisterEvent("CHAT_MSG_WHISPER")
-	--CHAEventFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-	--CHAEventFrame:RegisterEvent("CHAT_MSG_ADDON")
+	CHAEventFrame:RegisterEvent("ADDON_LOADED");
+	CHAEventFrame:RegisterEvent("UNIT_CONNECTION");
+    CHAEventFrame:RegisterEvent("CHAT_MSG_ADDON");
 
 	C_ChatInfo.RegisterAddonMessagePrefix(A.Properties.Prefix);
 end;
