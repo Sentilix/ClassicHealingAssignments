@@ -25,8 +25,6 @@ Instead the addon has been rewritten almost from scratch. The UI is close to the
 
 <img src="https://github.com/Sentilix/ClassicHealingAssignments/blob/CHA-2.0/Images/mainframe-2-0-0-a1-healers.JPG?raw=true" />
 
-Version 2.0 is still in early alpha release. It works in "single user mode" (which basically means it only announces instructions locally).
-
 
 ## 3. About CHA.
 This addon is a port of Vanilla Healing Assignments, originally made by Renew @ Vanillagaming.org
