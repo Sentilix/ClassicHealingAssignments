@@ -121,6 +121,20 @@
 		</NormalTexture>
 	</Button>
 
+	<!-- Editbox template for text changes -->
+	<EditBox name="EditBoxTextTemplate" inherits="BackdropTemplate" letters="120" virtual="true">
+		<KeyValues>
+			<KeyValue key="backdropInfo" value="CHA_BACKDROP_EDITBOX" type="global"/>
+		</KeyValues>
+		<Size>
+			<AbsDimension x="360" y="20"/>
+		</Size>
+		<FontString inherits="GameFontNormal">
+			<Color r="0.9" g="0.9" b="0.9" />
+		</FontString>
+	</EditBox>
+
+
 	<!-- Main button: Announcements and Config -->
 	<Button name="CHAAnnounceButton" inherits="SecureActionButtonTemplate" parent="UIParent" toplevel="true" hidden="false" frameStrata="LOW" movable="true">
 		<Size>
@@ -154,7 +168,7 @@
 			</OnClick>
 		</Scripts>
 	</Button>
-
+	
 	<!-- Main config frame -->
 	<Frame name="CHAMainFrame" parent="UIParent" toplevel="true" inherits="BackdropTemplate" frameStrata="MEDIUM" hidden="true">
 		<Size>
@@ -242,6 +256,39 @@
 						<FontString name="CHAMainFrameKickDisconnectsButtonCaption" inherits="GameFontNormal" text="Clean up">
 							<Anchors>
 								<Anchor point="LEFT" relativeTo="CHAMainFrameKickDisconnectsButton">
+									<Offset>
+										<AbsDimension x="30" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<Color r="0.9" g="0.9" b="0.9" />
+						</FontString>
+					</Layer>
+				</Layers>
+			</Button>
+			<!-- "Texts" button -->
+			<Button name="$parentChangeTextsButton" inherits="ActionButtonTemplate" frameStrata="HIGH">
+				<Size>
+					<AbsDimension x="16" y="16" />
+				</Size>
+				<NormalTexture file="Interface\Icons\Inv_misc_note_06" />
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="CHAMainFrame">
+						<Offset>
+							<AbsDimension x="424" y="-105" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						CHA_ChangeTextsOnClick();
+					</OnClick>
+				</Scripts>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="CHAMainFrameChangeTextsButtonButtonCaption" inherits="GameFontNormal" text="Change Texts">
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="CHAMainFrameChangeTextsButton">
 									<Offset>
 										<AbsDimension x="30" y="0"/>
 									</Offset>
@@ -556,6 +603,107 @@
 				self:StopMovingOrSizing()
 			</OnDragStop>
 		</Scripts>
+	</Frame>
+
+	<!-- Text management frame -->
+	<Frame name="CHATextFrame" parent="UIParent" inherits="BackdropTemplate" toplevel="true" hidden="true" frameStrata="HIGH">
+		<KeyValues>
+			<KeyValue key="backdropInfo" value="BACKDROP_DARK_DIALOG_32_32" type="global"/>
+			<KeyValue key="backdropColor" value="BLACK" type="global"/>
+			<KeyValue key="backdropBorderColor" value="WHITE" type="global"/>
+		</KeyValues>
+		<Size>
+			<AbsDimension x="500" y="200" />
+		</Size>
+		<Anchors>
+			<Anchor point="TOP" relativeTo="CHAMainFrame">
+				<Offset x="0" y="-100" />
+			</Anchor>
+		</Anchors>
+		<Frames>			
+			<!-- Editbox 1: headline -->
+			<EditBox name="$parentHeadline" inherits="EditBoxTextTemplate" hidden="false">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="120" y="-30"/>
+					</Anchor>
+				</Anchors>
+			</EditBox>
+			<!-- Editbox 2: contentline -->
+			<EditBox name="$parentContentLine" inherits="EditBoxTextTemplate" hidden="false">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="120" y="-62"/>
+					</Anchor>
+				</Anchors>
+			</EditBox>
+			<!-- Editbox 3: Bottomline -->
+			<EditBox name="$parentBottomLine" inherits="EditBoxTextTemplate" hidden="false">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="120" y="-126"/>
+					</Anchor>
+				</Anchors>
+			</EditBox>
+
+			<!-- Close button -->
+			<Button name="CloseProfileButton" inherits="UIPanelButtonTemplate" text="Close">
+				<Size>
+					<AbsDimension x="100" y="23" />
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset x="0" y="15" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>CHA_CloseTextConfigDialogue();</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+
+		<Layers>
+			<Layer>
+				<!-- Text 1: Headline -->
+				<FontString inherits="GameFontNormal" text="Headline">
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="CHATextFrameHeadline">
+							<Offset x="-100" y="0"/>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<!-- Text 2: Assignment line + Explanation -->
+				<FontString inherits="GameFontNormal" text="Assignments">
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="CHATextFrameContentLine">
+							<Offset x="-100" y="0"/>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontNormal" text="Use {TARGET} for the target / tank.">
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="CHATextFrameContentLine">
+							<Offset x="0" y="-20"/>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontNormal" text="Use {ASSIGNMENTS} for assigned players.">
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="CHATextFrameContentLine">
+							<Offset x="0" y="-40"/>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<!-- Text 3: Bottom line -->
+				<FontString inherits="GameFontNormal" text="Bottom line">
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="CHATextFrameBottomLine">
+							<Offset x="-100" y="0"/>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
 	</Frame>
 
 	<!-- Dummy event frame -->

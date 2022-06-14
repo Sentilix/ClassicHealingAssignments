@@ -19,6 +19,11 @@ DIGAM_CHANNEL_CUSTOM						= { ["id"] = "?", ["mask"] = 0x0008, ["name"] = "(Cust
 
 DigamAddonLib = CreateFrame("Frame"); 
 
+DigamAddonLib.Debug = {
+	IsDebugBuild	= false,
+	BuildVersion	= 3,
+};
+
 DigamAddonLib.Properties = {
 	AddonName		= "",
 	ShortName		= "",
@@ -45,6 +50,9 @@ function DigamAddonLib.Initialize(addonSettings)
 	DigamAddonLib.Properties.ExpansionLevel = tonumber(GetAddOnMetadata(DigamAddonLib.Properties.AddonName, "X-Expansion-Level"));
 	
 	DigamAddonLib.Echo(string.format("Version %s by %s", DigamAddonLib.Properties.Version or "nil", DigamAddonLib.Properties.Author or "nil"));
+	if DigamAddonLib.Debug.IsDebugBuild then
+		DigamAddonLib.Echo(string.format("Using DigamAddonLib build %s.", DigamAddonLib.Debug.BuildVersion));
+	end;
 
 	C_ChatInfo.RegisterAddonMessagePrefix(DigamAddonLib.Properties.Prefix);
 end;

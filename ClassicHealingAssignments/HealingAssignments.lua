@@ -255,6 +255,9 @@ local CHA_Templates							= { };
 			["tank|heal|decurse"] = {
 				["caption"] = "Tanks/Heals/Decurses",
 				["mask"] = 769,
+				["headline"] = "### Tank/Healer/Decurse assignments:",
+				["contentline"] = "### {TARGET} <== {ASSIGNMENTS}",
+				["bottomline"] = "### All other healers: Heal the raid.",
 				["targets"] = 
 				{
 					{
@@ -333,6 +336,10 @@ CHA_BACKDROP_DECURSE = {
 	edgeSize = 0,
 	tileEdge = true,
 }
+CHA_BACKDROP_EDITBOX = {
+	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+	tileEdge = true,
+};
 
 StaticPopupDialogs["CHA_DIALOG_ADDTEMPLATE"] = {
 	text = "Name of template:",
@@ -710,10 +717,6 @@ end;
 --	Read all configuration options, and fill in with defaults if not present.
 --	Therefore value is written back immediately:
 function CHA_ReadConfigurationSettings()
-	--	Current active template:
-	CHA_ActiveTemplate = CHA_GetOption(CHA_KEY_ActiveTemplate, CHA_DEFAULT_ActiveTemplate);
-	CHA_SetOption(CHA_KEY_ActiveTemplate, CHA_ActiveTemplate);
-
 	--	Current active role:
 	CHA_ActiveRole = CHA_GetOption(CHA_KEY_ActiveRole, CHA_DEFAULT_ActiveRole);
 	CHA_SetOption(CHA_KEY_ActiveRole, CHA_ActiveRole);
@@ -721,6 +724,18 @@ function CHA_ReadConfigurationSettings()
 	--	Templates: These are processed in the Template code:
 	CHA_ProcessConfiguredTemplateData(CHA_GetOption(CHA_KEY_Templates, nil));
 	CHA_SetOption(CHA_KEY_Templates, CHA_Templates);
+
+	--	Current active template:
+	CHA_ActiveTemplate = CHA_GetOption(CHA_KEY_ActiveTemplate, CHA_DEFAULT_ActiveTemplate);
+	if not CHA_ActiveTemplate or not CHA_GetActiveTemplate() then
+		--	No active template found. Select first available:
+		if table.getn(CHA_Templates) > 0 then
+			CHA_ActiveTemplate = CHA_Templates[1]["templatename"];
+		else
+			CHA_ActiveTemplate = CHA_DEFAULT_ActiveTemplate;
+		end;
+	end;
+	CHA_SetOption(CHA_KEY_ActiveTemplate, CHA_ActiveTemplate);
 
 	--	Announcement channel:
 	CHA_ProcessConfiguredAnnouncementChannel(CHA_GetOption(CHA_KEY_AnnouncementChannel, 0));
@@ -834,6 +849,7 @@ function CHA_UpdateUI()
 	CHA_UpdateRoleButtons();
 	CHA_UpdateTemplates();
 	CHA_UpdateTargetFrames();
+	CHA_UpdateAnnouncementTexts();
 end;
 
 --	Open the configuration dialogue.
@@ -844,6 +860,7 @@ end;
 
 --	Close the configuration dialogue.
 function CHA_CloseConfigurationDialogue()
+	CHA_CloseTextConfigDialogue();
 	CHA_ForceClosePopups();
 	CHAMainFrame:Hide();
 	CHA_SetOption(CHA_KEY_Templates, CHA_Templates);
@@ -864,6 +881,24 @@ function CHA_ForceClosePopups()
 	HideDropDownMenu(1, nil, CHA_SymbolTargetDropdownMenu, "cursor", 3, -3);
 	HideDropDownMenu(1, nil, CHA_PlayerDropdownMenu, "cursor", 3, -3);
 	HideDropDownMenu(1, nil, CHA_AssignedDropdownMenu, "cursor", 3, -3);
+end;
+
+function CHA_OpenTextConfigDialogue()
+	CHA_UpdateAnnouncementTexts();
+	CHA_ForceClosePopups();
+	CHATextFrame:Show();
+end;
+
+function CHA_CloseTextConfigDialogue()
+	CHATextFrame:Hide();
+
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if roleTemplate then
+		roleTemplate["headline"] = CHATextFrameHeadline:GetText();
+		roleTemplate["contentline"] = CHATextFrameContentLine:GetText();
+		roleTemplate["bottomline"] = CHATextFrameBottomLine:GetText();
+	end;
+
 end;
 
 --	Change to Tank configuration page
@@ -1086,6 +1121,23 @@ function CHA_UpdateTemplates()
 	else
 		CHAMainFrameAddTemplateButton:Disable();
 	end;
+end;
+
+function CHA_UpdateAnnouncementTexts()
+	local headline = "";
+	local content = "";
+	local bottom = "";
+
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if roleTemplate then
+		headline = roleTemplate["headline"] or "";
+		content = roleTemplate["contentline"] or "";
+		bottom = roleTemplate["bottomline"] or "";
+	end;
+
+	CHATextFrameHeadline:SetText(headline);
+	CHATextFrameContentLine:SetText(content);
+	CHATextFrameBottomLine:SetText(bottom);
 end;
 
 
@@ -1446,6 +1498,13 @@ function CHA_KickDisconnects_OK()
 
 	CHA_UpdateUI();
 end;
+
+--	Called when user clicks the ChangeText button:
+--	The text configuration window opens.
+function CHA_ChangeTextsOnClick()
+	CHA_OpenTextConfigDialogue();
+end;
+
 
 
 --[[
@@ -2167,16 +2226,25 @@ function CHA_CreateTemplate(templateName)
 			["roles"] = {
 				["tank"] = { 
 					["caption"] = "Tanks",
+					["headline"] = "---/\\/\\--- TANK Assignments:",
+					["contentline"] = "--- {TARGET} <== {ASSIGNMENTS}",
+					["bottomline"] = "",
 					["mask"] = CHA_ROLE_DEFAULT_TANK,
 					["targets"] = {	},
 				},
 				["heal"] = { 
 					["caption"] = "Heals", 
+					["headline"] = "---\\/\\/--- HEALER Assignments:",
+					["contentline"] = "--- {TARGET} <== {ASSIGNMENTS}",
+					["bottomline"] = "--- All other healers: Heal the raid.",
 					["mask"] = CHA_ROLE_DEFAULT_HEAL,
 					["targets"] = { },
 				},
 				["decurse"] = { 
 					["caption"] = "Decurses", 
+					["headline"] = "---!!!--- DECURSE Assignments:",
+					["contentline"] = "--- {TARGET} <== {ASSIGNMENTS}",
+					["bottomline"] = "--- All others: decurse raid.",
 					["mask"] = CHA_ROLE_DEFAULT_DECURSE,
 					["targets"] = { },
 				},
@@ -2237,9 +2305,26 @@ function CHA_ImportTemplateData(template)
 		local roleTemplate = template["roles"][roleName];
 
 		if roleTemplate then
+			if roleTemplate["caption"] and type(roleTemplate["caption"]) == "string" then
+				tpl["roles"][roleName]["caption"] = roleTemplate["caption"];
+			end;
+
+			if roleTemplate["headline"] and type(roleTemplate["headline"]) == "string" then
+				tpl["roles"][roleName]["headline"] = roleTemplate["headline"];
+			end;
+
+			if roleTemplate["contentline"] and type(roleTemplate["contentline"]) == "string" then
+				tpl["roles"][roleName]["contentline"] = roleTemplate["contentline"];
+			end;
+
+			if roleTemplate["bottomline"] and type(roleTemplate["bottomline"]) == "string" then
+				tpl["roles"][roleName]["bottomline"] = roleTemplate["bottomline"];
+			end;
+
 			if roleTemplate["mask"] and type(roleTemplate["mask"]) == "string" then
 				tpl["roles"][roleName]["mask"] = roleTemplate["mask"];
 			end;
+
 
 			--	This will import last used targets.
 			--	Players might even not be in the raid anymore. We will handle that later!
@@ -2302,13 +2387,17 @@ end;
 
 --	Shout it out in public!
 function CHA_PublicAnnouncement()
+	if GetNumGroupMembers() == 0 then
+		--	Only works in Party and Raid mode, sorry!
+		return;
+	end;
+
 	local announcements = CHA_GenerateAnnouncements();
 	if not announcements then
 		A.Echo("There are no announcements for this role available.");
 		return;
 	end;
 
-	--	TODO: use configured channel for output
 	for n = 1, table.getn(announcements), 1 do
 		A.EchoByName(CHA_AnnouncementChannel, announcements[n]);
 	end;
@@ -2330,21 +2419,28 @@ end;
 --	Generate list of announcement lines
 function CHA_GenerateAnnouncements()
 	local announcements = { };
-	local roleTargets = CHA_GetActiveTargetTemplate();
-	local targetCount = table.getn(roleTargets or { });
+
+	local roleTemplate = CHA_GetActiveRoleTemplate();
+	if not roleTemplate then
+		return;
+	end;
+
+	--local roleTargets = CHA_GetActiveTargetTemplate();
+	local targetCount = table.getn(roleTemplate["targets"] or { });
 	if targetCount == 0 then
 		return;
 	end;
-	
-	local announcementTexts = {
-		[CHA_ROLE_TANK] = "--!!!-- TANK Assignments:",
-		[CHA_ROLE_HEAL] = "--\\/\\/-- HEAL Assignments",
-		[CHA_ROLE_DECURSE] = "--/\\/\\-- DECURSE Assignments",
-	};
-	tinsert(announcements, announcementTexts[CHA_ActiveRole]);
 
 
-	for tIndex, target in next, roleTargets do
+	local headline = CHATextFrameHeadline:GetText();
+	local content = CHATextFrameContentLine:GetText();
+	local bottom = CHATextFrameBottomLine:GetText();
+
+	if headline ~= "" then
+		tinsert(announcements, headline);
+	end;
+
+	for tIndex, target in next, roleTemplate["targets"] do
 		local tankName = target["text"];
 		if bit.band(target["mask"], CHA_TARGET_RAIDICON) > 0 then
 			--	Raid icons must be rendered using their icon, which is stored as the "name" property.
@@ -2361,8 +2457,17 @@ function CHA_GenerateAnnouncements()
 			assigned = assigned .. player["text"];
 		end;
 
-		tinsert(announcements, string.format("%s <== %s", tankName, assigned));
+		local assignments = content;
+		assignments = string.gsub(assignments, "{TARGET}", tankName);
+		assignments = string.gsub(assignments, "{ASSIGNMENTS}", assigned);
+
+		tinsert(announcements, assignments);
 	end;
+
+	if bottom ~= "" then
+		tinsert(announcements, bottom);
+	end;
+
 
 	return announcements;
 end;
@@ -2420,6 +2525,7 @@ function CHA_OnEvent(self, event, ...)
 		end;
 	end;
 end
+
 
 
 function CHA_OnLoad()

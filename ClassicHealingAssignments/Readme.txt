@@ -116,6 +116,11 @@ This addon is a port of Vanilla Healing Assignments, originally made by Renew @ 
 
 
 
+Version 2.0.0-alpha2
+--------------------
+* Added configurable texts per role.
+
+
 Version 2.0.0-alpha1
 --------------------
 * First working version:
