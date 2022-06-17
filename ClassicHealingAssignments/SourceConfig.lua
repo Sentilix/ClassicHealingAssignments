@@ -55,6 +55,8 @@ function CHA_SourceCheckboxOnClick(sender)
 		mask = CHA_RESOURCE_GROUP;
 	elseif checkboxName == "CHASourceFrameCBCustom" then
 		mask = CHA_RESOURCE_CUSTOM;
+	else
+		return;
 	end;
 
 	if _G[checkboxName]:GetChecked() then

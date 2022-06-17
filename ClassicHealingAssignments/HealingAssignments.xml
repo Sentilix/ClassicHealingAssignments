@@ -219,7 +219,7 @@
 					</Layer>
 				</Layers>
 			</Button>
-			<!-- "Clean up" button -->
+			<!-- "Clean up" button (leaves Unassigned up)-->
 			<Button name="$parentKickDisconnectsButton" inherits="ActionButtonTemplate" frameStrata="HIGH">
 				<Size>
 					<AbsDimension x="16" y="16" />
@@ -242,6 +242,39 @@
 						<FontString name="CHAMainFrameKickDisconnectsButtonCaption" inherits="GameFontNormal" text="Clean up">
 							<Anchors>
 								<Anchor point="LEFT" relativeTo="CHAMainFrameKickDisconnectsButton">
+									<Offset>
+										<AbsDimension x="30" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<Color r="0.9" g="0.9" b="0.9" />
+						</FontString>
+					</Layer>
+				</Layers>
+			</Button>
+			<!-- "Reset" button (resets everything) -->
+			<Button name="$parentResetAllButton" inherits="ActionButtonTemplate" frameStrata="HIGH">
+				<Size>
+					<AbsDimension x="16" y="16" />
+				</Size>
+				<NormalTexture file="Interface\Icons\spell_holy_searinglightpriest" />
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="CHAMainFrame">
+						<Offset>
+							<AbsDimension x="424" y="-105" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						CHA_ResetAllOnClick();
+					</OnClick>
+				</Scripts>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="CHAMainFrameKickDisconnectsButtonCaption" inherits="GameFontNormal" text="Reset all">
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="CHAMainFrameResetAllButton">
 									<Offset>
 										<AbsDimension x="30" y="0"/>
 									</Offset>
@@ -299,6 +332,17 @@
 							</Anchors>
 							<Color r="0.9" g="0.9" b="0.9" />
 							<FontHeight val="32" />
+						</FontString>
+						<FontString name="$parentHelp" inherits="GameFontNormal" font="Fonts\FRIZQT__.TTF" text="CTRL+Leftclick: announcement to Party/Raid - CTRL+Rightclick: test announcement locally">
+							<Anchors>
+								<Anchor point="TOP" relativeTo="CHAMainFrame">
+									<Offset>
+										<AbsDimension x="80" y="-86"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<Color r="0.9" g="0.9" b="0.9" />
+							<FontHeight val="12" />
 						</FontString>
 					</Layer>
 				</Layers>
@@ -393,7 +437,7 @@
 			<!-- Template frame: -->
 			<Frame name="$parentTemplates" parent="CHAMainFrame" inherits="FrameBackgroundTemplate" frameStrata="MEDIUM">
 				<KeyValues>
-					<KeyValue key="backdropInfo" value="CHA_BACKDROP_TARGET" type="global"/>
+					<KeyValue key="backdropInfo" value="CHA_BACKDROP_HEALER" type="global"/>
 				</KeyValues>
 				<Size>
 					<AbsDimension x="160" y="307" />
@@ -509,7 +553,7 @@
 			<KeyValue key="backdropBorderColor" value="WHITE" type="global"/>
 		</KeyValues>
 		<Size>
-			<AbsDimension x="500" y="270" />
+			<AbsDimension x="500" y="300" />
 		</Size>
 		<Anchors>
 			<Anchor point="TOP" relativeTo="CHAMainFrame">
@@ -541,6 +585,27 @@
 					</Anchor>
 				</Anchors>
 			</EditBox>
+			<!-- Editbox 4: Whisperline -->
+			<EditBox name="$parentWhisperLine" inherits="EditBoxTextTemplate" hidden="false">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="120" y="-182"/>
+					</Anchor>
+				</Anchors>
+			</EditBox>
+			<!-- Include Whisper line? -->
+			<CheckButton name="$parentCBWhisper" inherits="OptionsCheckButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="90" y="-180"/>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						CHA_WhisperCheckboxOnClick(self);
+					</OnClick>
+				</Scripts>
+			</CheckButton>
 
 			<!-- Config: Announcement channel dropdown -->
 			<Button name="$parentChannelDropDown" inherits="UIDropDownMenuTemplate" frameStrata="HIGH">
@@ -549,7 +614,7 @@
 				</Size>
 				<Anchors>
 					<Anchor point="TOPLEFT">
-						<Offset x="100" y="-180"/>
+						<Offset x="100" y="-214"/>
 					</Anchor>
 				</Anchors>
 				<Scripts>

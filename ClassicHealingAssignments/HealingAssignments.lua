@@ -253,7 +253,7 @@ local CHA_DEFAULT_AnnounceButtonVisible		= true;
 local CHA_ActiveTemplate					= CHA_DEFAULT_ActiveTemplate;
 local CHA_AnnounceButtonSize				= CHA_DEFAULT_AnnounceButtonSize;
 local CHA_AnnounceButtonVisible				= CHA_DEFAULT_AnnounceButtonVisible;
-local CHA_AnnouncementChannel				= "";		-- Set runtime
+local CHA_AnnouncementChannel				= "";
 local CHA_MinimapX							= 0;
 local CHA_MinimapY							= 0;
 local CHA_Templates							= { };
@@ -270,6 +270,8 @@ local CHA_Templates							= { };
 		["headlinetext"] = "### Healer assignments:",
 		["contenttext"] = "### {TARGET} <== {ASSIGNMENTS}",
 		["bottomtext"] = "### All other healers: Heal the raid.",
+		["whispertext"] = "### Whisper me Repeat (TODO)",
+		["showwhispertext"] = false,
 		["targets"] = 
 		{
 			{
@@ -328,11 +330,6 @@ CHA_BACKDROP_BOTTOMRIGHT = {
 	edgeSize = 0,
 	tileEdge = true,
 };
-CHA_BACKDROP_TARGET = {
-	bgFile = "Interface\\TalentFrame\\WarriorProtection-Topleft",
-	edgeSize = 0,
-	tileEdge = true,
-}
 CHA_BACKDROP_HEALER = {
 	bgFile = "Interface\\TalentFrame\\PriestHoly-Topleft",
 	edgeSize = 0,
@@ -528,7 +525,7 @@ UIDropDownMenu_Initialize(CHA_HealerOptionsMenu, function(self, level, menuList)
 	UIDropDownMenu_AddButton(info)
 
 	info = UIDropDownMenu_CreateInfo()
-	info.text = "Rename";
+	info.text = "Rename healer";
 	info.func = CHA_HealerOptionsMenu_Rename;
 	info.notCheckable = true;
 	UIDropDownMenu_AddButton(info)
@@ -667,7 +664,7 @@ SlashCmdList["CHA_VERSION"] = function(msg)
 	if IsInRaid() or A.IsInParty() then
 		A.SendAddonMessage("TX_VERSION##");
 	else
-		A.Echo(string.format("%s is using ClassicHealingAssignments version %s", GetUnitName("player", true), GetAddOnMetadata(CHA_ADDON_NAME, "Version")));
+		A.Echo(string.format("%s is using ClassicHealingAssignments version %s", CHA_LocalPlayerName, A.Properties.Version));
 	end
 end
 
@@ -678,7 +675,7 @@ end
 --
 SLASH_CHA_HELP1 = "/chahelp"
 SlashCmdList["CHA_HELP"] = function(msg)
-	A.Echo(string.format("ClassicHealingAssignments version %s options:", GetAddOnMetadata(CHA_ADDON_NAME, "Version")));
+	A.Echo(string.format("ClassicHealingAssignments version %s options:", A.Properties.Version));
 	A.Echo("Syntax:");
 	A.Echo("    /cha [command]");
 	A.Echo("Where commands can be:");
@@ -828,6 +825,16 @@ function CHA_InitializeClassMatrix()
 	end;
 end;
 
+--	Return resource (a player or symbol) with the current mask value.
+function CHA_GetResourceByMask(mask)
+	for _, resource in next, CHA_ResourceMatrix do
+		if resource["mask"] == mask then
+			return resource;
+		end;
+	end;
+	return nil;
+end;
+
 --	initialize profile names.
 function CHA_CreateDefaultTemplates()
 	CHA_Templates = { };
@@ -867,6 +874,7 @@ end;
 
 --	Main UI update functionality
 function CHA_UpdateUI()
+	CHA_UpdateHealerCounter();
 	CHA_UpdateAnnounceButton();
 	CHA_UpdateTemplates();
 	CHA_UpdateResourceFrames();
@@ -918,6 +926,7 @@ function CHA_CloseTextConfigDialogue()
 		template["headlinetext"] = CHATextFrameHeadline:GetText();
 		template["contenttext"] = CHATextFrameContentLine:GetText();
 		template["bottomtext"] = CHATextFrameBottomLine:GetText();
+		template["whispertext"] = CHATextFrameWhisperLine:GetText();
 	end;
 end;
 
@@ -964,7 +973,6 @@ function CHA_UpdateHealerMask(sourceMask)
 	end;
 
 	CHA_UpdateUI();
-
 	CHA_SetOption(CHA_KEY_Templates, CHA_Templates);
 end;
 
@@ -1003,6 +1011,7 @@ function CHA_RepositionateButton(self)
 	end;
 end
 
+--	Return the configured color for a resource.
 function CHA_GetResourceColor(resource)
 	local classInfo = CHA_ClassMatrix[resource["class"]];
 	if classInfo then
@@ -1046,34 +1055,27 @@ function CHA_UpdateResourceFrames()
 
 			--	HEALER frames: 
 			--	Each frame can have up to CHA_FRAME_MAXPLAYERS healers assigned.
-			local alpha = CHA_ALPHA_ENABLED;
 			local posX = playerOffset;
 			local posY = 0;
 			for healerIndex = 1, CHA_FRAME_MAXPLAYERS, 1 do
 				local healer = target["healers"] and target["healers"][healerIndex];
 				if healer then
+					local alpha = CHA_ALPHA_ENABLED;
 					local color = CHA_GetResourceColor(healer);
-					--local classInfo = CHA_ClassMatrix[healer["class"]];
-					--local color = CHA_COLOR_RAIDICON;
-					--if classInfo then
-					--	color = classInfo["color"];
-					--end;
-
 					local fHealerButtonName = string.format("healerbutton_%d_%d", index, healerIndex);
 					local fHealerButton = _G[fHealerButtonName];
 					if bit.band(healer["mask"], CHA_RESOURCE_PLAYERS) > 0 then
 						_G[fHealerButtonName.."Caption"]:SetText(CHA_FormatPlayerName(healer["text"]));
+						local unitid = A.GetUnitidFromName(healer["name"]);
+						if not (unitid and UnitIsConnected(unitid)) then
+							alpha = CHA_ALPHA_DISABLED;
+						end;
 					else
 						_G[fHealerButtonName.."Caption"]:SetText(healer["text"]);
 					end;
+
 					_G[fHealerButtonName.."BG"]:SetVertexColor( color[1]/255, color[2]/255, color[3]/255 );
 
-					local unitid = A.GetUnitidFromName(healer["name"]);
-					if unitid and UnitIsConnected(unitid) then
-						alpha = CHA_ALPHA_ENABLED;
-					else
-						alpha = CHA_ALPHA_DISABLED;
-					end;
 					fHealerButton:SetAlpha(alpha);
 					fHealerButton:Show();
 				else
@@ -1126,7 +1128,8 @@ function CHA_UpdateTemplates()
 		buttonY = buttonY - lineHeight;
 	end;
 
-	--	Support up to <CHA_TEMPLATES_MAX> templates, after that button is disabled:
+	--	Support up to <CHA_TEMPLATES_MAX> templates.
+	--	Disable button if limit is exceeded.
 	if templateCount < CHA_TEMPLATES_MAX then
 		CHAMainFrameAddTemplateButton:Enable();
 	else
@@ -1139,17 +1142,29 @@ function CHA_UpdateAnnouncementTexts()
 	local headline = "";
 	local content = "";
 	local bottom = "";
+	local whisper = "";
+	local showWhisper = false;
 
 	local template = CHA_GetActiveTemplate();
 	if template then
 		headline = template["headlinetext"] or "";
 		content = template["contenttext"] or "";
 		bottom = template["bottomtext"] or "";
+		whisper = template["whispertext"] or "";
+
+		showWhisper = template["showwhispertext"];
 	end;
 
 	CHATextFrameHeadline:SetText(headline);
 	CHATextFrameContentLine:SetText(content);
 	CHATextFrameBottomLine:SetText(bottom);
+	CHATextFrameWhisperLine:SetText(whisper);
+
+	if showWhisper then
+		CHATextFrameCBWhisper:SetChecked(1);
+	else
+		CHATextFrameCBWhisper:SetChecked();
+	end;
 end;
 
 
@@ -1182,7 +1197,7 @@ function CHA_TargetDropdownClick(self, resource)
 			end;
 		end;
 	elseif CHA_TargetDropdownMenu_Operation == "ADD" then
-		CHA_CreateTarget(target);
+		CHA_CreateTarget(resource);
 	end;	
 
 	CHA_UpdateResourceFrames();
@@ -1600,6 +1615,10 @@ function CHA_KickDisconnectsOnClick()
 	A.ShowConfirmation("Do you want to kick all disconnected characters and characters not in the raid?", CHA_KickDisconnects_OK);
 end;
 
+function CHA_ResetAllOnClick()
+	A.ShowConfirmation("Do you want to reset (delete) all targets and healers for this template?", CHA_ResetAll_OK);
+end;
+
 --	Cleanup the assignments by removing all characters not in the raid or disconnected characters.
 function CHA_KickDisconnects_OK()
 	local template = CHA_GetActiveTemplate();
@@ -1635,11 +1654,35 @@ function CHA_KickDisconnects_OK()
 	CHA_UpdateUI();
 end;
 
+--	Reset current template: all targets and healers are wiped!
+function CHA_ResetAll_OK()
+	local template = CHA_GetActiveTemplate();
+	if template then
+		template["targets"] = { };
+	end;
+
+	CHA_UpdateUI();
+end;
+
 --	Called when user clicks the ChangeText button:
 --	The text configuration window opens.
 function CHA_ChangeTextsOnClick()
 	CHA_OpenTextConfigDialogue();
 end;
+
+--	Called when user clicks the Include Whisper checkbox.
+function CHA_WhisperCheckboxOnClick()
+	local template = CHA_GetActiveTemplate();
+	if template then
+		template["showwhispertext"] = CHATextFrameCBWhisper:GetChecked();
+
+		--	TODO: Implement!
+		if CHATextFrameCBWhisper:GetChecked() then
+			A.Echo("Note! Whisper handling has not yet been implemented.");
+		end;
+	end;
+end;
+
 
 
 
@@ -2189,9 +2232,11 @@ function CHA_CreateTemplate(templateName)
 
 		CHA_Templates[templateCount] = {
 			["templatename"]	= templateName,
-			["headlinetext"]	= "---\\/\\/--- HEALER Assignments:",
-			["contenttext"]		= "--- {TARGET} <== {ASSIGNMENTS}",
-			["bottomtext"]		= "--- All other healers: Heal the raid.",
+			["headlinetext"]	= "__/\\___/\\__ HEALER Assignments :",
+			["contenttext"]		= " * {TARGET} -==- {ASSIGNMENTS}",
+			["bottomtext"]		= "All other healers: Heal the raid.",
+			["whispertext"]		= "Whisper me Repeat to re-send assignments.",
+			["showwhispertext"] = false,
 			["targetmask"]		= CHA_MASK_TARGET_DEFAULT,
 			["healermask"]		= CHA_MASK_HEALER_DEFAULT,
 			["targets"]			= { },
@@ -2255,6 +2300,14 @@ function CHA_ImportTemplateData(template)
 
 	if template["bottomtext"] and type(template["bottomtext"]) == "string" then
 		tpl["bottomtext"] = template["bottomtext"];
+	end;
+
+	if template["whispertext"] and type(template["whispertext"]) == "string" then
+		tpl["whispertext"] = template["whispertext"];
+	end;
+
+	if template["showwhispertext"] and type(template["showwhispertext"]) == "boolean" then
+		tpl["showwhispertext"] = template["showwhispertext"];
 	end;
 
 	if template["targetmask"] and type(template["targetmask"]) == "number" then
@@ -2364,10 +2417,11 @@ function CHA_GenerateAnnouncements()
 		return;
 	end;
 
-
 	local headline = CHATextFrameHeadline:GetText();
 	local content = CHATextFrameContentLine:GetText();
 	local bottom = CHATextFrameBottomLine:GetText();
+	local whisper = CHATextFrameWhisperLine:GetText();
+	local showWhisper = CHATextFrameCBWhisper:GetChecked();
 
 	if headline ~= "" then
 		tinsert(announcements, headline);
@@ -2409,6 +2463,10 @@ function CHA_GenerateAnnouncements()
 
 	if bottom ~= "" then
 		tinsert(announcements, bottom);
+	end;
+
+	if showWhisper and whisper ~= "" then
+		tinsert(announcements, whisper);
 	end;
 
 	return announcements;
