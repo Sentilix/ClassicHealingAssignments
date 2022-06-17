@@ -3,11 +3,13 @@
 ## Author: Mimma @ <EU-Pyrewood Village>, Zeroinitiative2
 ## X-Originally By: Renew @ vanillagaming.org for the 1.12 client.
 ## X-Expansion-Level: 2
-## Version: 2.0.0-alpha2
+## Version: 2.0.0-alpha3
 ## Notes: Addon for Healing Assignments
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
 ## SavedVariables: CHA_PersistedData
 
 DigamAddonLib.lua
+Common.lua
+SourceConfig.xml
 HealingAssignments.lua

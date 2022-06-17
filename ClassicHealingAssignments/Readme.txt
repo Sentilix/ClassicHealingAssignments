@@ -116,6 +116,12 @@ This addon is a port of Vanilla Healing Assignments, originally made by Renew @ 
 
 
 
+Version 2.0.0-alpha3
+--------------------
+* Removed Roles (Tank, Healer, Decurser): The overall role idea did not work out as expected.
+  Instead only Healing Assignments are supported (back to the roots I guess).
+
+
 Version 2.0.0-alpha2
 --------------------
 * Added configurable texts per role.

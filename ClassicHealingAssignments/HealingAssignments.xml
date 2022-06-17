@@ -53,24 +53,8 @@
 			<Color r="0.0" g="0.0" b="0.5" a="0.5"/>
 		</NormalTexture>
 	</Button>
-
-	<!-- Frame template for one class button -->
-	<Button name="CHAClassButtonTemplate" inherits="ActionButtonTemplate" frameStrata="HIGH" hidden="false" virtual="true">
-		<Size>
-			<AbsDimension x="16" y="16" />
-		</Size>
-		<NormalTexture file="Interface\PaperDoll\UI-Backpack-EmptySlot"></NormalTexture>
-		<Scripts>
-			<OnLoad>
-				self:RegisterForClicks("LeftButtonDown", "RightButtonDown");
-			</OnLoad>
-			<OnClick>
-				CHA_ClassIconOnClick(self);
-			</OnClick>
-		</Scripts>
-	</Button>
 	
-	<!-- Frame template for one target button -->
+	<!-- Frame template for one target ("tank") button -->
 	<Button name="CHATargetButtonTemplate" inherits="ActionButtonTemplate" frameStrata="HIGH" hidden="false" virtual="true">
 		<Size>
 			<AbsDimension x="16" y="16" />
@@ -79,7 +63,7 @@
 		<Scripts>
 			<OnClick>
 				PlaySound(882, "Master")
-				CHA_TargetOnClick(self)
+				CHA_TargetButtonOnClick(self)
 			</OnClick>
 			<OnLoad>
 				self:RegisterForClicks("LeftButtonDown", "RightButtonDown");
@@ -87,7 +71,7 @@
 		</Scripts>
 	</Button>
 
-	<!-- Frame template for one player button -->
+	<!-- Frame template for one healer button -->
 	<Button name="CHAPlayerButtonTemplate" hidden="true" frameStrata="HIGH" virtual="true">
 		<Size>
 			<AbsDimension x="90" y="17" />
@@ -111,9 +95,12 @@
 			</Layer>
 		</Layers>
 		<Scripts>
+			<OnLoad>
+				self:RegisterForClicks("LeftButtonDown", "RightButtonDown");
+			</OnLoad>
 			<OnClick>
 				PlaySound(882, "Master")
-				CHA_PlayerButtonOnClick(self)
+				CHA_HealerButtonOnClick(self)
 			</OnClick>
 		</Scripts>
 		<NormalTexture name="$parentBG">
@@ -133,7 +120,6 @@
 			<Color r="0.9" g="0.9" b="0.9" />
 		</FontString>
 	</EditBox>
-
 
 	<!-- Main button: Announcements and Config -->
 	<Button name="CHAAnnounceButton" inherits="SecureActionButtonTemplate" parent="UIParent" toplevel="true" hidden="false" frameStrata="LOW" movable="true">
@@ -180,7 +166,7 @@
 					<AbsDimension x="0" y="0" />
 				</Offset>
 			</Anchor>
-		</Anchors>		
+		</Anchors>
 		<Frames>
 			<Frame name="$parentIcon" parent="CHAMainFrame" inherits="BackdropTemplate" frameStrata="LOW">
 				<KeyValues>
@@ -201,7 +187,7 @@
 			</Frame>
 
 			<!-- "Add Target" button -->
-			<Button name="$parentSymbolTargetButton" inherits="ActionButtonTemplate" frameStrata="HIGH">
+			<Button name="$parentAddTargetButton" inherits="ActionButtonTemplate" frameStrata="HIGH">
 				<Size>
 					<AbsDimension x="16" y="16" />
 				</Size>
@@ -215,7 +201,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						CHA_AddSymbolTargetOnClick();
+						CHA_AddTargetOnClick();
 					</OnClick>
 				</Scripts>
 				<Layers>
@@ -266,69 +252,6 @@
 					</Layer>
 				</Layers>
 			</Button>
-			<!-- "Texts" button -->
-			<Button name="$parentChangeTextsButton" inherits="ActionButtonTemplate" frameStrata="HIGH">
-				<Size>
-					<AbsDimension x="16" y="16" />
-				</Size>
-				<NormalTexture file="Interface\Icons\Inv_misc_note_06" />
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="CHAMainFrame">
-						<Offset>
-							<AbsDimension x="424" y="-105" />
-						</Offset>
-					</Anchor>
-				</Anchors>
-				<Scripts>
-					<OnClick>
-						CHA_ChangeTextsOnClick();
-					</OnClick>
-				</Scripts>
-				<Layers>
-					<Layer level="ARTWORK">
-						<FontString name="CHAMainFrameChangeTextsButtonButtonCaption" inherits="GameFontNormal" text="Change Texts">
-							<Anchors>
-								<Anchor point="LEFT" relativeTo="CHAMainFrameChangeTextsButton">
-									<Offset>
-										<AbsDimension x="30" y="0"/>
-									</Offset>
-								</Anchor>
-							</Anchors>
-							<Color r="0.9" g="0.9" b="0.9" />
-						</FontString>
-					</Layer>
-				</Layers>
-			</Button>
-			<!-- Config: Announcement channel dropdown -->
-			<Button name="$parentChannelDropDown" inherits="UIDropDownMenuTemplate" frameStrata="HIGH">
-				<Size>
-					<AbsDimension x="200" y="20"/>
-				</Size>
-				<Anchors>
-					<Anchor point="TOPLEFT">
-						<Offset x="310" y="-70"/>
-					</Anchor>
-				</Anchors>
-				<Scripts>
-					<OnLoad>
-						UIDropDownMenu_Initialize(self, CHA_ChannelDropDown_Initialize);
-					</OnLoad>
-				</Scripts>
-				<Layers>
-					<Layer level="ARTWORK">
-						<FontString name="$parentCaption" inherits="GameFontNormal" text="Announce in">
-							<Anchors>
-								<Anchor point="LEFT" relativeTo="$parent">
-									<Offset>
-										<AbsDimension x="-118" y="3"/>
-									</Offset>
-								</Anchor>
-							</Anchors>
-							<Color r="0.9" g="0.9" b="0.9" />
-						</FontString>
-					</Layer>
-				</Layers>
-			</Button>
 
 			<!-- 6 x background frames: -->
 			<Frame name="$parentTopleft" parent="CHAMainFrame" inherits="FrameBackgroundTemplate">
@@ -366,15 +289,15 @@
 							</Anchors>
 							<Color r="0.3" g="0.3" b="0.3" />
 						</FontString>
-						<FontString name="CHARoleCaption" inherits="GameFontNormal" font="Fonts\FRIZQT__.TTF" text="">
+						<FontString name="$parentTitle" inherits="GameFontNormal" font="Fonts\FRIZQT__.TTF" text="Classic Healing Assignments">
 							<Anchors>
-								<Anchor point="TOPLEFT" relativeTo="$parent">
+								<Anchor point="TOP" relativeTo="CHAMainFrame">
 									<Offset>
-										<AbsDimension x="80" y="-40"/>
+										<AbsDimension x="0" y="-40"/>
 									</Offset>
 								</Anchor>
 							</Anchors>
-							<Color r="1" g="1" b="1" />
+							<Color r="0.9" g="0.9" b="0.9" />
 							<FontHeight val="32" />
 						</FontString>
 					</Layer>
@@ -454,33 +377,6 @@
 				</Anchors>
 			</Frame>
 
-			<!-- Class frame: room for class icons -->
-			<Frame name="$parentClasses" parent="CHAMainFrame">
-				<Size>
-					<AbsDimension x="324" y="18" />
-				</Size>
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="CHAMainFrame">
-						<Offset>
-							<AbsDimension x="190" y="-413" />
-						</Offset>
-					</Anchor>
-				</Anchors>
-				<Layers>
-					<Layer level="ARTWORK">
-						<FontString name="$parentClassesCaption" inherits="GameFontNormal" text="Class Filter:">
-							<Anchors>
-								<Anchor point="TOPLEFT" relativeTo="$parent">
-									<Offset>
-										<AbsDimension x="0" y="-4"/>
-									</Offset>
-								</Anchor>
-							</Anchors>
-						</FontString>
-					</Layer>
-				</Layers>
-			</Frame>
-
 			<!-- Target outer frame: -->
 			<Frame name="CHAMainFrameTargets" parent="CHAMainFrame" inherits="FrameBackgroundTemplate" frameStrata="MEDIUM">
 				<Size>
@@ -497,7 +393,7 @@
 			<!-- Template frame: -->
 			<Frame name="$parentTemplates" parent="CHAMainFrame" inherits="FrameBackgroundTemplate" frameStrata="MEDIUM">
 				<KeyValues>
-					<KeyValue key="backdropInfo" value="CHA_BACKDROP_TANK" type="global"/>
+					<KeyValue key="backdropInfo" value="CHA_BACKDROP_TARGET" type="global"/>
 				</KeyValues>
 				<Size>
 					<AbsDimension x="160" y="307" />
@@ -550,7 +446,7 @@
 					</Anchor>
 				</Anchors>
 				<Scripts>
-					<OnClick>CHA_ShowTankConfiguration();</OnClick>
+					<OnClick>CHA_ShowTargetConfiguration();</OnClick>
 				</Scripts>
 			</Button>
 			<!-- "Healer" button -->
@@ -567,8 +463,8 @@
 					<OnClick>CHA_ShowHealerConfiguration();</OnClick>
 				</Scripts>
 			</Button>
-			<!-- "Decurse" button -->
-			<Button name="$parentDecurseButton" inherits="UIPanelButtonTemplate" text="Decursers" frameStrata="HIGH">
+			<!-- "Texts" button -->
+			<Button name="$parentDecurseButton" inherits="UIPanelButtonTemplate" text="Texts" frameStrata="HIGH">
 				<Size>
 					<AbsDimension x="78" y="22" />
 				</Size>
@@ -578,7 +474,7 @@
 					</Anchor>
 				</Anchors>
 				<Scripts>
-					<OnClick>CHA_ShowDecurseConfiguration();</OnClick>
+					<OnClick>CHA_ChangeTextsOnClick();</OnClick>
 				</Scripts>
 			</Button>
 		</Frames>
@@ -613,7 +509,7 @@
 			<KeyValue key="backdropBorderColor" value="WHITE" type="global"/>
 		</KeyValues>
 		<Size>
-			<AbsDimension x="500" y="200" />
+			<AbsDimension x="500" y="270" />
 		</Size>
 		<Anchors>
 			<Anchor point="TOP" relativeTo="CHAMainFrame">
@@ -625,7 +521,7 @@
 			<EditBox name="$parentHeadline" inherits="EditBoxTextTemplate" hidden="false">
 				<Anchors>
 					<Anchor point="TOPLEFT">
-						<Offset x="120" y="-30"/>
+						<Offset x="120" y="-50"/>
 					</Anchor>
 				</Anchors>
 			</EditBox>
@@ -633,7 +529,7 @@
 			<EditBox name="$parentContentLine" inherits="EditBoxTextTemplate" hidden="false">
 				<Anchors>
 					<Anchor point="TOPLEFT">
-						<Offset x="120" y="-62"/>
+						<Offset x="120" y="-84"/>
 					</Anchor>
 				</Anchors>
 			</EditBox>
@@ -641,10 +537,40 @@
 			<EditBox name="$parentBottomLine" inherits="EditBoxTextTemplate" hidden="false">
 				<Anchors>
 					<Anchor point="TOPLEFT">
-						<Offset x="120" y="-126"/>
+						<Offset x="120" y="-148"/>
 					</Anchor>
 				</Anchors>
 			</EditBox>
+
+			<!-- Config: Announcement channel dropdown -->
+			<Button name="$parentChannelDropDown" inherits="UIDropDownMenuTemplate" frameStrata="HIGH">
+				<Size>
+					<AbsDimension x="200" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="100" y="-180"/>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						UIDropDownMenu_Initialize(self, CHA_ChannelDropDown_Initialize);
+					</OnLoad>
+				</Scripts>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="$parentCaption" inherits="GameFontNormal" text="Announce in">
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="-80" y="3"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Button>
 
 			<!-- Close button -->
 			<Button name="CloseProfileButton" inherits="UIPanelButtonTemplate" text="Close">
@@ -664,6 +590,16 @@
 
 		<Layers>
 			<Layer>
+				<!-- Top: Main title -->
+				<FontString inherits="GameFontNormal" text="Classic Healing Announcements" font="Fonts\FRIZQT__.TTF">
+					<Anchors>
+						<Anchor point="TOP" relativeTo="CHATextFrame">
+							<Offset x="0" y="-10"/>
+						</Anchor>
+					</Anchors>
+					<Color r="0.9" g="0.9" b="0.9" />
+					<FontHeight val="20" />
+				</FontString>
 				<!-- Text 1: Headline -->
 				<FontString inherits="GameFontNormal" text="Headline">
 					<Anchors>
@@ -686,6 +622,7 @@
 							<Offset x="0" y="-20"/>
 						</Anchor>
 					</Anchors>
+					<Color r="0.9" g="0.9" b="0.9" />
 				</FontString>
 				<FontString inherits="GameFontNormal" text="Use {ASSIGNMENTS} for assigned players.">
 					<Anchors>
@@ -693,6 +630,7 @@
 							<Offset x="0" y="-40"/>
 						</Anchor>
 					</Anchors>
+					<Color r="0.9" g="0.9" b="0.9" />
 				</FontString>
 				<!-- Text 3: Bottom line -->
 				<FontString inherits="GameFontNormal" text="Bottom line">

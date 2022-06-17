@@ -1,0 +1,166 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<Script file="SourceConfig.lua" />
+
+	<!-- Frame template for one class button -->
+	<Button name="CHAClassButtonTemplate" inherits="ActionButtonTemplate" frameStrata="HIGH" hidden="false" virtual="true">
+		<Size>
+			<AbsDimension x="16" y="16" />
+		</Size>
+		<NormalTexture file="Interface\PaperDoll\UI-Backpack-EmptySlot"></NormalTexture>
+		<Scripts>
+			<OnLoad>
+				self:RegisterForClicks("LeftButtonDown", "RightButtonDown");
+			</OnLoad>
+			<OnClick>
+				CHA_SourceClassIconOnClick(self);
+			</OnClick>
+		</Scripts>
+	</Button>
+
+	<!-- Main Source configuration frame -->
+	<Frame name="CHASourceFrame" parent="UIParent" toplevel="true" inherits="BackdropTemplate" frameStrata="HIGH" hidden="true">
+		<KeyValues>
+			<KeyValue key="backdropInfo" value="BACKDROP_DARK_DIALOG_32_32" type="global"/>
+			<KeyValue key="backdropColor" value="BLACK" type="global"/>
+			<KeyValue key="backdropBorderColor" value="WHITE" type="global"/>
+		</KeyValues>
+		<Size>
+			<AbsDimension x="400" y="250" />
+		</Size>
+		<Anchors>
+			<Anchor point="BOTTOMLEFT">
+				<Offset>
+					<AbsDimension x="100" y="-150" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Frames>
+			<!-- Class frame: room for class icons -->
+			<Frame name="$parentClasses" parent="CHASourceFrame">
+				<Size>
+					<AbsDimension x="324" y="18" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="CHASourceFrame">
+						<Offset>
+							<AbsDimension x="20" y="-50" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="$parentClassesCaption" inherits="GameFontNormal" text="Class Filter:">
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="-4"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<Color r="0.9" g="0.9" b="0.9" />
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<!-- Include raid icons? -->
+			<CheckButton name="$parentCBRaidicons" inherits="OptionsCheckButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="96" y="-80"/>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						_G[self:GetName().."Text"]:SetText("Include Raid icons")
+						_G[self:GetName().."Text"]:SetTextColor( 0.9, 0.9, 0.9 );
+					</OnLoad>
+					<OnClick>
+						CHA_SourceCheckboxOnClick(self);
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<!-- Include Directions? -->
+			<CheckButton name="$parentCBDirections" inherits="OptionsCheckButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="96" y="-110"/>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						_G[self:GetName().."Text"]:SetText("Include Directions")
+						_G[self:GetName().."Text"]:SetTextColor( 0.9, 0.9, 0.9 );
+					</OnLoad>
+					<OnClick>
+						CHA_SourceCheckboxOnClick(self);
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<!-- Include Groups? -->
+			<CheckButton name="$parentCBGroups" inherits="OptionsCheckButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="96" y="-140"/>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						_G[self:GetName().."Text"]:SetText("Include Groups")
+						_G[self:GetName().."Text"]:SetTextColor( 0.9, 0.9, 0.9 );
+					</OnLoad>
+					<OnClick>
+						CHA_SourceCheckboxOnClick(self);
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<!-- Include Custom? -->
+			<CheckButton name="$parentCBCustom" inherits="OptionsCheckButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="96" y="-170"/>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						_G[self:GetName().."Text"]:SetText("Include Custom labels")
+						_G[self:GetName().."Text"]:SetTextColor( 0.9, 0.9, 0.9 );
+					</OnLoad>
+					<OnClick>
+						CHA_SourceCheckboxOnClick(self);
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+
+
+			<!-- OK button -->
+			<Button name="CloseProfileButton" inherits="UIPanelButtonTemplate" text="OK">
+				<Size>
+					<AbsDimension x="100" y="23" />
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset x="-60" y="15" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>CHA_CloseSourceConfigDialogue(this, true);</OnClick>
+				</Scripts>
+			</Button>
+			<!-- Cancel button -->
+			<Button name="CloseProfileButton" inherits="UIPanelButtonTemplate" text="Cancel">
+				<Size>
+					<AbsDimension x="100" y="23" />
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset x="60" y="15" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>CHA_CloseSourceConfigDialogue(this);</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		
+	</Frame>
+</Ui>

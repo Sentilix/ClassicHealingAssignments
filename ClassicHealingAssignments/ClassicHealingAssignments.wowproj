@@ -17,6 +17,9 @@
     <Content Include="ClassicHealingAssignments-Classic.toc">
       <SubType>TableOfContents</SubType>
     </Content>
+    <Content Include="Common.lua">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="DigamAddonLib.lua">
       <SubType>Code</SubType>
     </Content>
@@ -31,6 +34,13 @@
     <Content Include="Media\IconMouseOver.tga" />
     <Content Include="Media\logo-square.tga" />
     <Content Include="Readme.txt" />
+    <Content Include="SourceConfig.lua">
+      <SubType>Code</SubType>
+      <DependentUpon>SourceConfig.xml</DependentUpon>
+    </Content>
+    <Content Include="SourceConfig.xml">
+      <SubType>Frame</SubType>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Media" />
