@@ -34,6 +34,21 @@
 				</Offset>
 			</Anchor>
 		</Anchors>
+		<Layers>
+			<Layer>
+				<!-- Top: Main title -->
+				<FontString name="$parentTitle" inherits="GameFontNormal" text="Resource Configuration" font="Fonts\FRIZQT__.TTF">
+					<Anchors>
+						<Anchor point="TOP" relativeTo="CHASourceFrame">
+							<Offset x="0" y="-15"/>
+						</Anchor>
+					</Anchors>
+					<Color r="0.9" g="0.9" b="0.9" />
+					<FontHeight val="20" />
+				</FontString>
+			</Layer>
+		</Layers>
+
 		<Frames>
 			<!-- Class frame: room for class icons -->
 			<Frame name="$parentClasses" parent="CHASourceFrame">

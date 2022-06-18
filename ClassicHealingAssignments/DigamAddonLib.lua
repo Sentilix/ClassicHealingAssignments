@@ -1,3 +1,17 @@
+--[[
+--	Digam Addon Library
+--	-------------------
+--	Author: Mimma
+--	File:   DigamAddonLib.lua
+--	Desc:	Addon helper classes
+--
+--	First attempt to isolate common functionality into a separate file for 
+--	easy reuse in other addons.
+--]]
+
+
+local DIGAM_IsDebugBuild					= false;
+local DIGAM_BuildVersion					= 4;
 
 local DIGAM_COLOR_BEGIN						= "|c80";
 local DIGAM_CHAT_END						= "|r";
@@ -10,7 +24,6 @@ local SAY_CHANNEL							= "SAY"
 local WARN_CHANNEL							= "RAID_WARNING"
 local GUILD_CHANNEL							= "GUILD"
 
-
 DIGAM_CHANNEL_RAID							= { ["id"] = "r", ["mask"] = 0x0001, ["name"] = "Raid", ["channel"] = "RAID", };
 DIGAM_CHANNEL_RAIDWARNING					= { ["id"] ="rw", ["mask"] = 0x0002, ["name"] = "Raid warning", ["channel"] = "RAID_WARNING", };
 DIGAM_CHANNEL_PARTY							= { ["id"] = "p", ["mask"] = 0x0004, ["name"] = "Party", ["channel"] = "PARTY", };
@@ -19,51 +32,57 @@ DIGAM_CHANNEL_CUSTOM						= { ["id"] = "?", ["mask"] = 0x0008, ["name"] = "(Cust
 
 DigamAddonLib = CreateFrame("Frame"); 
 
-DigamAddonLib.Debug = {
-	IsDebugBuild	= false,
-	BuildVersion	= 3,
-};
+function DigamAddonLib:new(addonSettings)
+	local _addonName = addonSettings["ADDONNAME"] or "Unnamed";
+	local _addonShortName = addonSettings["SHORTNAME"] or _addonName;
+	local _addonPrefix = addonSettings["PREFIX"] or _addonShortName;
+	local _addonVersion = GetAddOnMetadata(_addonName, "Version") or 0;
 
-DigamAddonLib.Properties = {
-	AddonName		= "",
-	ShortName		= "",
-	Prefix			= "",
-	Version			= "",
-	Author			= "",
-	ExpansionLevel	= 0,
-};
-DigamAddonLib.Chat = {
-	ChatColorNormal	= DIGAM_DEFAULT_ColorNormal,
-	ChatColorHot	= DIGAM_DEFAULT_ColorHot,
-	Channels		= { },
-}
+	local parent = {
+		addonName = _addonName,
+		addonShortName = _addonShortName,
+		addonPrefix = _addonPrefix,
+		addonVersion = _addonVersion,
+		addonAuthor = GetAddOnMetadata(_addonName, "Author") or "",
+		addonExpansionLevel = tonumber(GetAddOnMetadata(_addonName, "X-Expansion-Level")),
 
-function DigamAddonLib.Initialize(addonSettings)
-	DigamAddonLib.Properties.AddonName = addonSettings["ADDONNAME"] or "Unnamed";
-	DigamAddonLib.Properties.ShortName = addonSettings["SHORTNAME"] or DigamAddonLib.Properties.AddonName;
-	DigamAddonLib.Properties.Prefix = addonSettings["PREFIX"] or DigamAddonLib.Properties.ShortName;
-	DigamAddonLib.Chat.ChatColorNormal = DIGAM_COLOR_BEGIN .. (addonSettings["NORMALCHATCOLOR"] or DIGAM_DEFAULT_ColorNormal);
-	DigamAddonLib.Chat.ChatColorHot = DIGAM_COLOR_BEGIN..(addonSettings["HOTCHATCOLOR"] or DIGAM_DEFAULT_ColorHot);
+		chatColorNormal = DIGAM_COLOR_BEGIN .. (addonSettings["NORMALCHATCOLOR"] or DIGAM_DEFAULT_ColorNormal),
+		chatColorHot = DIGAM_COLOR_BEGIN..(addonSettings["HOTCHATCOLOR"] or DIGAM_DEFAULT_ColorHot),
+		chatChannels = { },
 
-	DigamAddonLib.Properties.Version = GetAddOnMetadata(DigamAddonLib.Properties.AddonName, "Version");
-	DigamAddonLib.Properties.Author = GetAddOnMetadata(DigamAddonLib.Properties.AddonName, "Author");
-	DigamAddonLib.Properties.ExpansionLevel = tonumber(GetAddOnMetadata(DigamAddonLib.Properties.AddonName, "X-Expansion-Level"));
-	
-	DigamAddonLib.Echo(string.format("Version %s by %s", DigamAddonLib.Properties.Version or "nil", DigamAddonLib.Properties.Author or "nil"));
-	if DigamAddonLib.Debug.IsDebugBuild then
-		DigamAddonLib.Echo(string.format("Using DigamAddonLib build %s.", DigamAddonLib.Debug.BuildVersion));
-	end;
+		isDebugBuild = DIGAM_IsDebugBuild,
+		buildVersion = DIGAM_BuildVersion,
+	};
 
-	C_ChatInfo.RegisterAddonMessagePrefix(DigamAddonLib.Properties.Prefix);
+	setmetatable(parent, self);
+	self.__index = self;
+
+	parent:initialize();
+
+	return parent;
 end;
 
-function DigamAddonLib.Echo(message)
+function DigamAddonLib:initialize()
+	self:echo(string.format("Version %s by %s", self.addonVersion or "nil", self.addonAuthor or "nil"));
+	if self.isDebugBuild then
+		self:echo(string.format("Using DigamAddonLib build %s.", self.buildVersion));
+	end;
+
+	C_ChatInfo.RegisterAddonMessagePrefix(self.addonPrefix);
+end;
+
+
+
+--
+--	ECHO Functions
+--
+function DigamAddonLib:echo(message)
 	if message then
 		message = string.format("%s-[%s%s%s]- %s%s", 
-			DigamAddonLib.Chat.ChatColorNormal, 
-			DigamAddonLib.Chat.ChatColorHot, 
-			DigamAddonLib.Properties.ShortName, 
-			DigamAddonLib.Chat.ChatColorNormal, 
+			self.chatColorNormal, 
+			self.chatColorHot, 
+			self.addonShortName, 
+			self.chatColorNormal, 
 			message, 
 			DIGAM_CHAT_END
 		);
@@ -71,18 +90,8 @@ function DigamAddonLib.Echo(message)
 	end
 end;
 
-function DigamAddonLib.GetChannelInfo(channelName)
-	for key, channel in next, DigamAddonLib.Chat.Channels do
-		if channel["name"] == channelName then
-			return channel;
-		end;
-	end;
-
-	return nil;
-end;
-
-function DigamAddonLib.EchoByName(channelName, message)
-	local channel = DigamAddonLib.GetChannelInfo(channelName);
+function DigamAddonLib:channelEcho(channelName, message)
+	local channel = self:getChannelInfo(channelName);
 	if message and channel then
 		if bit.band(channel["mask"], 0x07) > 0 then
 			--	r, rw, p:
@@ -94,51 +103,7 @@ function DigamAddonLib.EchoByName(channelName, message)
 	end;
 end;
 
-
-StaticPopupDialogs["DIGAM_DIALOG_ERROR"] = {
-	text = "%s",
-	button1 = "OK",
-	timeout = 0,
-	whileDead = true,
-	hideOnEscape = true,
-	preferredIndex = 3,
-}
-
-StaticPopupDialogs["DIGAM_DIALOG_CONFIRMATION"] = {
-	text = "%s",
-	button1 = "OK",
-	button2 = "Cancel",
-	timeout = 0,
-	whileDead = true,
-	hideOnEscape = true,
-	preferredIndex = 3,
-	OnAccept = function(self, data, data2) DigamAddonLib.ShowConfirmation_Ok(); end,
-	OnCancel = function(self, data, data2) DigamAddonLib.ShowConfirmation_Cancel(); end,
-}
-
---	Convert the version number to an integer (if possible).
---	Returns 0 if not possible (like Alpha and Beta versions)
-function DigamAddonLib.CalculateVersion(versionString)
-	if not versionString then
-		versionString = DigamAddonLib.Properties.Version;
-	end;
-	
-	local _, _, major, minor, patch = string.find(versionString, "([^\.]*)\.([^\.]*)\.([^\.]*)");
-	local version = 0;
-
-	if (tonumber(major) and tonumber(minor) and tonumber(patch)) then
-		version = major * 100 + minor;
-	end
-	
-	return version;
-end
-
-
-
---
---	ECHO Functions
---
-function DigamAddonLib.PrintAll(object, name, level)
+function DigamAddonLib:printAll(object, name, level)
 	if not name then name = ""; end;
 	if not level then level = 0; end;
 
@@ -165,24 +130,72 @@ function DigamAddonLib.PrintAll(object, name, level)
 		print(string.format("%s%s => {", indent, name));
 
 		for key, value in next, object do
-			DigamAddonLib.PrintAll(value, key, level + 1);
+			self:printAll(value, key, level + 1);
 		end;
 
 		print(string.format("%s}", indent));
 	end;
 end;
 
+function DigamAddonLib:getChannelInfo(channelName)
+	for key, channel in next, self.chatChannels do
+		if channel["name"] == channelName then
+			return channel;
+		end;
+	end;
+	return nil;
+end;
+
+StaticPopupDialogs["DIGAM_DIALOG_ERROR"] = {
+	text = "%s",
+	button1 = "OK",
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
+}
+
+StaticPopupDialogs["DIGAM_DIALOG_CONFIRMATION"] = {
+	text = "%s",
+	button1 = "OK",
+	button2 = "Cancel",
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
+	OnAccept = function(self, data, data2) DigamAddonLib.ShowConfirmation_Ok(); end,
+	OnCancel = function(self, data, data2) DigamAddonLib.ShowConfirmation_Cancel(); end,
+}
+
+--	Convert the version number to an integer (if possible).
+--	Returns 0 if not possible (like Alpha and Beta versions)
+function DigamAddonLib:calculateVersion(versionString)
+	if not versionString then
+		versionString = self.addonVersion;
+	end;
+	
+	local _, _, major, minor, patch = string.find(versionString, "([^\.]*)\.([^\.]*)\.([^\.]*)");
+	local version = 0;
+
+	if (tonumber(major) and tonumber(minor) and tonumber(patch)) then
+		version = major * 100 + minor;
+	end
+	
+	return version;
+end
+
+
 
 --
 --	UI helpers
 --
-function DigamAddonLib.ShowError(errorMessage)
+function DigamAddonLib:showError(errorMessage)
 	StaticPopup_Show("DIGAM_DIALOG_ERROR", errorMessage);
 end;
 
 DigamAddonLib.FunctionOk = nil;
 DigamAddonLib.FunctionCancel = nil;
-function DigamAddonLib.ShowConfirmation(confirmationMessage, functionOk, functionCancel)
+function DigamAddonLib:showConfirmation(confirmationMessage, functionOk, functionCancel)
 	DigamAddonLib.FunctionOk = functionOk;
 	DigamAddonLib.FunctionCancel = functionCancel;
 	StaticPopup_Show("DIGAM_DIALOG_CONFIRMATION", confirmationMessage);
@@ -202,31 +215,26 @@ end;
 
 
 
-
 --
 --	WoW helpers
 --
-function DigamAddonLib.StripRealmName(nameAndRealm)
+function DigamAddonLib:stripRealmName(nameAndRealm)
 	local _, _, name = string.find(nameAndRealm, "([^-]*)-%s*");
-	if not name then
-		name = nameAndRealm;
-	end;
-
-	return name;
+	return name or nameAndRealm;
 end;
 
-function DigamAddonLib.GetPlayerAndRealm(unitid)
+function DigamAddonLib:getPlayerAndRealm(unitid)
 	local playername, realmname = UnitName(unitid);
 	if not playername then return nil; end;
 
 	if not realmname or realmname == "" then
-		realmname = DigamAddonLib.GetMyRealm();
+		realmname = self:getMyRealm();
 	end;
 
 	return playername.."-".. realmname;
 end;
 
-function DigamAddonLib.GetMyRealm()
+function DigamAddonLib:getMyRealm()
 	local realmname = GetRealmName();
 	
 	if string.find(realmname, " ") then
@@ -237,20 +245,20 @@ function DigamAddonLib.GetMyRealm()
 	return realmname;
 end;
 
-function DigamAddonLib.IsInParty()
+function DigamAddonLib:isInParty()
 	if not IsInRaid() then
 		return ( GetNumGroupMembers() > 0 );
 	end
 	return false
 end
 
-function DigamAddonLib.UnitClass(unitid)
+function DigamAddonLib:unitClass(unitid)
 	local _, classname = UnitClass(unitid);
 	return classname;
 end;
 
-function DigamAddonLib.GetUnitidFromName(playerName)
-	local thisRealm = DigamAddonLib.GetMyRealm()
+function DigamAddonLib:getUnitidFromName(playerName)
+	local thisRealm = self:getMyRealm()
 
 	if IsInRaid() then
 		for n = 1, 40, 1 do
@@ -268,11 +276,15 @@ function DigamAddonLib.GetUnitidFromName(playerName)
 		for n = 1, GetNumGroupMembers(), 1 do
 			local unitid = "party"..n;
 			local unitname, realm = UnitName(unitid);
-			if not unitname then unitname = "player"; end;
+			if not unitname then 
+				unitid = "player"; 
+				unitname, realm = UnitName(unitid);
+			end;
 
 			if not realm or realm == "" then realm = thisRealm; end;
 			
 			unitname = unitname.."-".. realm;
+
 			if playerName == unitname then
 				return unitid;
 			end;
@@ -282,36 +294,34 @@ function DigamAddonLib.GetUnitidFromName(playerName)
 		return "player";
 	end;
 
-
 	return nil;
 end;
 
 
 
---[[
-	Table functions
---]]
-function DigamAddonLib.RenumberTable(table)
+--
+--	Table functions
+--
+function DigamAddonLib:renumberTable(table)
 	local newTable = { };
 
-	for key, value in pairs(table) do
+	for _, value in pairs(table) do
 		tinsert(newTable, value);
 	end;
 	
 	return newTable;
 end;
 
-function DigamAddonLib.CloneTable(sourceTable)
+function DigamAddonLib:cloneTable(sourceTable)
 	if type(sourceTable) ~= "table" then return sourceTable; end;
 
 	local t = { };
 	for k, v in pairs(sourceTable) do
-		t[k] = DigamAddonLib.CloneTable(v);
+		t[k] = self:cloneTable(v);
 	end;
 
-	return setmetatable(t, DigamAddonLib.CloneTable(getmetatable(sourceTable)));
+	return setmetatable(t, self:cloneTable(getmetatable(sourceTable)));
 end;
-
 
 
 
@@ -321,7 +331,7 @@ end;
 
 --	Updates the channel list (excuding General, Trade, Defense, LFG etc)
 --	TRUE if group type check should be ignored; i.e. allow /rw in party
-function DigamAddonLib.RefreshChannelList(skipGroupTypeCheck)
+function DigamAddonLib:refreshChannelList(skipGroupTypeCheck)
 	local channels = { };
 
 	if skipGroupTypeCheck or IsInRaid() then
@@ -354,7 +364,7 @@ function DigamAddonLib.RefreshChannelList(skipGroupTypeCheck)
 		end;
 	end;
 
-	DigamAddonLib.Chat.Channels = channels;
+	self.chatChannels = channels;
 end;
 
 
@@ -364,18 +374,18 @@ end;
 --
 
 --	Send a message using the Addon channel.
-function DigamAddonLib.SendAddonMessage(message)
+function DigamAddonLib:sendAddonMessage(message)
 	local memberCount = GetNumGroupMembers();
 	if memberCount > 0 then
 		local channel;
 		if IsInRaid() then
 			channel = "RAID";
-		elseif DigamAddonLib.IsInParty() then
+		elseif self:isInParty() then
 			channel = "PARTY";
 		else 
 			return;
 		end;
 
-		C_ChatInfo.SendAddonMessage(DigamAddonLib.Properties.Prefix, message, channel);
+		C_ChatInfo.SendAddonMessage(self.addonPrefix, message, channel);
 	end;
 end

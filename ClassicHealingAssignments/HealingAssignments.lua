@@ -9,15 +9,14 @@
 --	Version 2.x coded from scratch by Mimma
 --]]
 
-
-local A = DigamAddonLib;
-A.Initialize({
+local addonMetadata = {
 	["ADDONNAME"]		= "ClassicHealingAssignments",
 	["SHORTNAME"]		= "CHA",
 	["PREFIX"]			= "CHAv2",
 	["NORMALCHATCOLOR"]	= "40A0F8",
 	["HOTCHATCOLOR"]	= "B0F0F0",
-});
+};
+local A = DigamAddonLib:new(addonMetadata);
 
 
 local CHA_TEMPLATES_MAX						= 15;	-- room for max 15 templates. This is a limitation in the UI design.
@@ -226,7 +225,6 @@ local CHA_MASK_TARGET_DEFAULT				= CHA_CLASS_DRUID + CHA_CLASS_WARRIOR + CHA_RES
 local CHA_MASK_HEALER_DEFAULT				= CHA_CLASS_DRUID + CHA_CLASS_PALADIN + CHA_CLASS_PRIEST + CHA_CLASS_SHAMAN;
 
 --	Local variables:
-local CHA_CurrentVersion					= 0;
 local CHA_UpdateMessageShown				= false;
 local CHA_IconMoving						= false;
 local CHA_CurrentTemplateIndex				= 0;
@@ -615,7 +613,6 @@ local CHA_CLASS_MATRIX_MASTER = {
 
 
 
-
 --[[
 	Slash commands
 --]]
@@ -641,7 +638,7 @@ SlashCmdList["CHA_CHA"] = function(msg)
 	elseif option == "VERSION" then
 		SlashCmdList["CHA_VERSION"]();
 	else
-		A.Echo(string.format("Unknown command: %s", option));
+		A:echo(string.format("Unknown command: %s", option));
 	end
 end
 
@@ -661,10 +658,10 @@ end
 --	Added in: 2.0.0
 SLASH_CHA_VERSION1 = "/chaversion"
 SlashCmdList["CHA_VERSION"] = function(msg)
-	if IsInRaid() or A.IsInParty() then
-		A.SendAddonMessage("TX_VERSION##");
+	if IsInRaid() or A:isInParty() then
+		A:sendAddonMessage("TX_VERSION##");
 	else
-		A.Echo(string.format("%s is using ClassicHealingAssignments version %s", CHA_LocalPlayerName, A.Properties.Version));
+		A:echo(string.format("%s is using ClassicHealingAssignments version %s", CHA_LocalPlayerName, A.addonVersion));
 	end
 end
 
@@ -675,15 +672,14 @@ end
 --
 SLASH_CHA_HELP1 = "/chahelp"
 SlashCmdList["CHA_HELP"] = function(msg)
-	A.Echo(string.format("ClassicHealingAssignments version %s options:", A.Properties.Version));
-	A.Echo("Syntax:");
-	A.Echo("    /cha [command]");
-	A.Echo("Where commands can be:");
-	A.Echo("    Config       (default) Open the configuration dialogue.");
-	A.Echo("    Version      Request version info from all clients.");
-	A.Echo("    Help         This help.");
+	A:echo(string.format("ClassicHealingAssignments version %s options:", A.addonVersion));
+	A:echo("Syntax:");
+	A:echo("    /cha [command]");
+	A:echo("Where commands can be:");
+	A:echo("    Config       (default) Open the configuration dialogue.");
+	A:echo("    Version      Request version info from all clients.");
+	A:echo("    Help         This help.");
 end
-
 
 
 
@@ -693,14 +689,15 @@ end
 
 --	Check if there is a newer version available in the raid.
 local function CHA_CheckIsNewVersion(versionstring)
-	local incomingVersion = A.CalculateVersion( versionstring );
+	local incomingVersion = A:calculateVersion( versionstring );
+	local addonVersion = A:calculateVersion();
 
-	if (CHA_CurrentVersion > 0 and incomingVersion > 0) then
-		if incomingVersion > CHA_CurrentVersion then
+	if (addonVersion > 0 and incomingVersion > 0) then
+		if incomingVersion > addonVersion then
 			if not CHA_UpdateMessageShown then
 				CHA_UpdateMessageShown = true;
-				A.Echo(string.format("NOTE: A newer version of ".. COLOUR_INTRO .."ClassicHealingAssignments"..COLOUR_CHAT.."! is available (version %s)!", versionstring));
-				A.Echo("You can download latest version from https://www.curseforge.com/ or https://github.com/Sentilix/ClassicHealingAssignments.");
+				A:echo(string.format("NOTE: A newer version of ".. COLOUR_INTRO .."ClassicHealingAssignments"..COLOUR_CHAT.."! is available (version %s)!", versionstring));
+				A:echo("You can download latest version from https://www.curseforge.com/ or https://github.com/Sentilix/ClassicHealingAssignments.");
 			end
 		end	
 	end
@@ -716,12 +713,12 @@ end
 --	Performed before WOW have finished initalizing
 local function CHA_PreInitialization()
 	CHA_Templates = { };
-	CHA_LocalPlayerName = A.GetPlayerAndRealm("player");
-	if A.Properties.ExpansionLevel > 1 then
+	CHA_LocalPlayerName = A:getPlayerAndRealm("player");
+	if A.addonExpansionLevel > 1 then
 		--	TBC: Add Paladin as tank (I don't care what you guys say, paladins cannot tank in classic.)
 		CHA_MASK_TARGET_DEFAULT = bit.bor(CHA_MASK_TARGET_DEFAULT, CHA_CLASS_PALADIN);
 
-		if A.Properties.ExpansionLevel > 2 then
+		if A.addonExpansionLevel > 2 then
 			--	WotLK: Add Deathknight as tank
 			CHA_MASK_TARGET_DEFAULT = bit.bor(CHA_MASK_TARGET_DEFAULT, CHA_CLASS_DEATHKNIGHT);
 		end;
@@ -811,12 +808,12 @@ function CHA_InitializeClassMatrix()
 	end;
 
 	local paladinRole = CHA_ROLE_HEALER;
-	if A.Properties.ExpansionLevel > 1 then
+	if A.addonExpansionLevel > 1 then
 		paladinRole = bit.bor(paladinRole, CHA_ROLE_TANK);
 	end;
 
 	for className, classInfo in next, CHA_CLASS_MATRIX_MASTER do
-		if not classInfo[expacKey] or classInfo[expacKey] <= A.Properties.ExpansionLevel then
+		if not classInfo[expacKey] or classInfo[expacKey] <= A.addonExpansionLevel then
 			if className == "PALADIN" then
 				classInfo["role"] = paladinRole;
 			end;
@@ -841,7 +838,7 @@ function CHA_CreateDefaultTemplates()
 
 	CHA_CreateTemplate("Default");
 
-	if A.Properties.ExpansionLevel == 1 then
+	if A.addonExpansionLevel == 1 then
 		CHA_CreateTemplate("Molten Core");
 		CHA_CreateTemplate("Onyxia's Lair");
 		CHA_CreateTemplate("Blackwing Lair");
@@ -850,7 +847,7 @@ function CHA_CreateDefaultTemplates()
 		CHA_CreateTemplate("20 man");
 	end;
 
-	if A.Properties.ExpansionLevel == 2 then
+	if A.addonExpansionLevel == 2 then
 		CHA_CreateTemplate("Karazhan");
 		CHA_CreateTemplate("Serpentshrine Cavern");
 		CHA_CreateTemplate("The Eye");
@@ -912,12 +909,14 @@ function CHA_ForceClosePopups()
 	HideDropDownMenu(1, nil, CHA_HealerOptionsMenu, "cursor", 3, -3);
 end;
 
+--	Open the text configuation dialogue after making sure all popups are shut down first
 function CHA_OpenTextConfigDialogue()
 	CHA_UpdateAnnouncementTexts();
 	CHA_ForceClosePopups();
 	CHATextFrame:Show();
 end;
 
+--	Close text config dialogue and persist settings.
 function CHA_CloseTextConfigDialogue()
 	CHATextFrame:Hide();
 
@@ -1066,7 +1065,7 @@ function CHA_UpdateResourceFrames()
 					local fHealerButton = _G[fHealerButtonName];
 					if bit.band(healer["mask"], CHA_RESOURCE_PLAYERS) > 0 then
 						_G[fHealerButtonName.."Caption"]:SetText(CHA_FormatPlayerName(healer["text"]));
-						local unitid = A.GetUnitidFromName(healer["name"]);
+						local unitid = A:getUnitidFromName(healer["name"]);
 						if not (unitid and UnitIsConnected(unitid)) then
 							alpha = CHA_ALPHA_DISABLED;
 						end;
@@ -1271,7 +1270,7 @@ end;
 function CHA_TemplateOptionsMenu_Delete()
 	local template = CHA_GetTemplateById(CHA_CurrentTemplateIndex);
 
-	A.ShowConfirmation(string.format("Really delete the template '%s'?", template["templatename"]), CHA_TemplateOptionsMenu_Delete_OK);
+	A:showConfirmation(string.format("Really delete the template '%s'?", template["templatename"]), CHA_TemplateOptionsMenu_Delete_OK);
 end;
 
 --	Called when the OK button on the Template:Delete popup was clicked.
@@ -1285,7 +1284,7 @@ function CHA_TemplateOptionsMenu_Delete_OK()
 	end;
 
 	CHA_Templates[CHA_CurrentTemplateIndex] = nil;
-	CHA_Templates = A.RenumberTable(CHA_Templates);
+	CHA_Templates = A:renumberTable(CHA_Templates);
 
 	CHA_UpdateUI();
 end;
@@ -1474,7 +1473,7 @@ function CHA_HealerOptionsMenu_Delete()
 
 	if target["healers"][CHA_CurrentHealerIndex] then
 		target["healers"][CHA_CurrentHealerIndex] = nil;
-		target["healers"] = A.RenumberTable(target["healers"]);
+		target["healers"] = A:renumberTable(target["healers"]);
 	end;
 
 	CHA_UpdateResourceFrames();
@@ -1536,7 +1535,7 @@ function CHA_TargetOptionsMenu_Unassign()
 	if template and template["targets"][CHA_CurrentTargetIndex] then
 		local target = template["targets"][CHA_CurrentTargetIndex];
 
-		A.ShowConfirmation(string.format("Really unassign the tank '%s'?", target["text"] or ""), CHA_TargetOptionsMenu_Unassign_OK);
+		A:showConfirmation(string.format("Really unassign the tank '%s'?", target["text"] or ""), CHA_TargetOptionsMenu_Unassign_OK);
 	end;
 end;
 
@@ -1571,7 +1570,7 @@ function CHA_TargetOptionsMenu_Delete()
 	if template and template["targets"][CHA_CurrentTargetIndex] then
 		local target = template["targets"][CHA_CurrentTargetIndex];
 
-		A.ShowConfirmation(string.format("Really remove the target '%s'?", target["text"] or ""), CHA_TargetOptionsMenu_Delete_OK);
+		A:showConfirmation(string.format("Really remove the target '%s'?", target["text"] or ""), CHA_TargetOptionsMenu_Delete_OK);
 	end;
 end;
 
@@ -1581,7 +1580,7 @@ function CHA_TargetOptionsMenu_Delete_OK()
 	local template = CHA_GetActiveTemplate();
 	if template and template["targets"][CHA_CurrentTargetIndex] then
 		template["targets"][CHA_CurrentTargetIndex] = nil;
-		template["targets"] = A.RenumberTable(template["targets"]);
+		template["targets"] = A:renumberTable(template["targets"]);
 
 		CHA_UpdateResourceFrames();
 		CHA_UpdateHealerCounter();
@@ -1612,11 +1611,11 @@ end;
 
 --	Called when user clicks the CLEAN UP button:
 function CHA_KickDisconnectsOnClick()
-	A.ShowConfirmation("Do you want to kick all disconnected characters and characters not in the raid?", CHA_KickDisconnects_OK);
+	A:showConfirmation("Do you want to kick all disconnected characters and characters not in the raid?", CHA_KickDisconnects_OK);
 end;
 
 function CHA_ResetAllOnClick()
-	A.ShowConfirmation("Do you want to reset (delete) all targets and healers for this template?", CHA_ResetAll_OK);
+	A:showConfirmation("Do you want to reset (delete) all targets and healers for this template?", CHA_ResetAll_OK);
 end;
 
 --	Cleanup the assignments by removing all characters not in the raid or disconnected characters.
@@ -1630,11 +1629,11 @@ function CHA_KickDisconnects_OK()
 		if target["healers"] then
 			for healerIndex, healer in next, target["healers"] do
 				if bit.band(healer["mask"], CHA_RESOURCE_PLAYERS) > 0 then
-					unitid = A.GetUnitidFromName(healer["name"]);
+					unitid = A:getUnitidFromName(healer["name"]);
 		
 					if not unitid or not UnitIsConnected(unitid) then
 						target["healers"][healerIndex] = nil;
-						target["healers"] = A.RenumberTable(target["healers"]);
+						target["healers"] = A:renumberTable(target["healers"]);
 					end;
 				end;
 			end;
@@ -1642,11 +1641,11 @@ function CHA_KickDisconnects_OK()
 
 		if bit.band(target["mask"], CHA_RESOURCE_PLAYERS) > 0 then
 			--	This is a player: kick unless online and in raid!
-			unitid = A.GetUnitidFromName(target["name"]);
+			unitid = A:getUnitidFromName(target["name"]);
 		
 			if not unitid or not UnitIsConnected(unitid) then
 				template["targets"][targetIndex] = nil;
-				template["targets"] = A.RenumberTable(template["targets"]);
+				template["targets"] = A:renumberTable(template["targets"]);
 			end;
 		end;
 	end;
@@ -1678,7 +1677,7 @@ function CHA_WhisperCheckboxOnClick()
 
 		--	TODO: Implement!
 		if CHATextFrameCBWhisper:GetChecked() then
-			A.Echo("Note! Whisper handling has not yet been implemented.");
+			A:echo("Note! Whisper handling has not yet been implemented.");
 		end;
 	end;
 end;
@@ -1704,7 +1703,7 @@ function CHA_AddTemplate_OK(templateName)
 	if not CHA_GetTemplateByName(templateName) then
 		CHA_CreateTemplate(templateName);
 	else
-		A.ShowError("A template with that name already exists.");
+		A:showError("A template with that name already exists.");
 	end;
 
 	CHA_UpdateUI();
@@ -1715,12 +1714,12 @@ end;
 --	Clone: A new template with the new name is added below the old template.
 function CHA_RenameTemplate_OK(oldTemplateName, newTemplateName)
 	if CHA_GetTemplateByName(newTemplateName) then
-		A.ShowError("A template with that name already exists.");
+		A:showError("A template with that name already exists.");
 		return;
 	end;
 
 	if not CHA_GetTemplateByName(oldTemplateName) then
-		A.ShowError(string.format("The template '%s' was not found.", oldTemplateName));
+		A:showError(string.format("The template '%s' was not found.", oldTemplateName));
 		return;
 	end;
 
@@ -1736,7 +1735,7 @@ function CHA_RenameTemplate_OK(oldTemplateName, newTemplateName)
 		--	Clone template to new (keep existing)
 		local newIndex = CHA_CreateTemplate(newTemplateName);
 
-		local template = A.CloneTable(CHA_Templates[index]);
+		local template = A:cloneTable(CHA_Templates[index]);
 		template["templatename"] = newTemplateName;
 		CHA_Templates[newIndex] = template;
 
@@ -1889,13 +1888,13 @@ end;
 
 --	Initalize the announcement channel dropdown box
 function CHA_ChannelDropDown_Initialize()
-	A.RefreshChannelList(true);
+	A:refreshChannelList(true);
 
-	for channelIndex = 1, table.getn(A.Chat.Channels), 1 do
+	for channelIndex = 1, table.getn(A.chatChannels), 1 do
 		local info = UIDropDownMenu_CreateInfo();
 		info.notCheckable = true;
-		info.text       = string.format("/%s - %s", A.Chat.Channels[channelIndex]["id"], A.Chat.Channels[channelIndex]["name"]);
-		info.func       = function() CHA_ChannelDropDown_OnClick(this, A.Chat.Channels[channelIndex]) end;
+		info.text       = string.format("/%s - %s", A.chatChannels[channelIndex]["id"], A.chatChannels[channelIndex]["name"]);
+		info.func       = function() CHA_ChannelDropDown_OnClick(this, A.chatChannels[channelIndex]) end;
 		UIDropDownMenu_AddButton(info);
 	end
 end;
@@ -1912,7 +1911,7 @@ end;
 
 --	Update the caption on the dropdown control:
 function CHA_UpdateChannelDropDownText()
-	local channel = A.GetChannelInfo(CHA_AnnouncementChannel);
+	local channel = A:getChannelInfo(CHA_AnnouncementChannel);
 	if channel then
 		local caption = string.format("/%s - %s", channel["id"], channel["name"]);
 		UIDropDownMenu_SetText(CHATextFrameChannelDropDown, caption);
@@ -1923,7 +1922,7 @@ end;
 --	configuration is read.
 function CHA_InitializeOptions()
 	CHA_ChannelDropDown_Initialize();
-	CHA_ChannelDropDown_OnClick(this, A.Chat.Channels[1]);
+	CHA_ChannelDropDown_OnClick(this, A.chatChannels[1]);
 end;
 
 --	Create (initialize) the template buttons. 
@@ -1952,7 +1951,7 @@ end;
 function CHA_ProcessConfiguredAnnouncementChannel(configuredChannel)
 	CHA_AnnouncementChannel = DIGAM_CHANNEL_RAID["name"];
 
-	if configuredChannel and A.GetChannelInfo(configuredChannel) then
+	if configuredChannel and A:getChannelInfo(configuredChannel) then
 		CHA_AnnouncementChannel = configuredChannel;
 	end;
 
@@ -1987,7 +1986,7 @@ function CHA_MoveAssignedPlayer(playerIndex, startTargetIndex, endTargetIndex)
 		tinsert(destTarget["healers"], sourceTarget["healers"][playerIndex]);
 
 		sourceTarget["healers"][playerIndex] = nil;
-		sourceTarget["healers"] = A.RenumberTable(sourceTarget["healers"]);
+		sourceTarget["healers"] = A:renumberTable(sourceTarget["healers"]);
 
 		CHA_UpdateResourceFrames();
 	end;
@@ -2077,8 +2076,8 @@ function CHA_GetPlayersInRoster()
 			unitid = "raid"..n;
 			if not UnitName(unitid) then break; end;
 			
-			fullName = A.GetPlayerAndRealm(unitid);
-			className = A.UnitClass(unitid);
+			fullName = A:getPlayerAndRealm(unitid);
+			className = A:unitClass(unitid);
 			classInfo = CHA_ClassMatrix[className];
 
 			tinsert(players, { 
@@ -2090,15 +2089,15 @@ function CHA_GetPlayersInRoster()
 			});
 		end;
 
-	elseif A.IsInParty() then
+	elseif A:isInParty() then
 		for n = 1, GetNumGroupMembers(), 1 do
 			unitid = "party"..n;
 			if not UnitName(unitid) then
 				unitid = "player";
 			end;
 
-			fullName = A.GetPlayerAndRealm(unitid);
-			className = A.UnitClass(unitid);		
+			fullName = A:getPlayerAndRealm(unitid);
+			className = A:unitClass(unitid);		
 			classInfo = CHA_ClassMatrix[className];
 
 			tinsert(players, {
@@ -2112,8 +2111,8 @@ function CHA_GetPlayersInRoster()
 	else
 		--	SOLO play, somewhat usefull when testing
 		unitid = "player";
-		fullName = A.GetPlayerAndRealm(unitid);
-		className = A.UnitClass(unitid);
+		fullName = A:getPlayerAndRealm(unitid);
+		className = A:unitClass(unitid);
 		classInfo = CHA_ClassMatrix[className];
 
 		tinsert(players, {
@@ -2128,7 +2127,7 @@ function CHA_GetPlayersInRoster()
 	return players;
 end;
 
---	Format player name so it is shot but still unique by "compressing" the realm name.
+--	Format player name so it is short but still unique by "compressing" the realm name.
 --	TODO: We need some kind of configurable options here.
 function CHA_FormatPlayerName(playerName)
 	--local _, _, name = string.find(playerName, "([%S]*-%S)%S*");
@@ -2154,11 +2153,12 @@ end;
 
 
 
-
 --[[
 	CHA business logic
 --]]
 
+--	Counts the current # of assigned (human) healers out of the
+--	total # of healer classes in the roster.
 --	TODO: This counter needs some re-thinking! :-<
 function CHA_UpdateHealerCounter()
 	local numPlayers = 0;
@@ -2178,10 +2178,10 @@ function CHA_UpdateHealerCounter()
 
 			for i = 1, GetNumGroupMembers() do
 				unitid = groupType..i;
-				local className = A.UnitClass(unitid);
+				local className = A:unitClass(unitid);
 				if not className then
 					unitid = "player";
-					className = A.UnitClass(unitid);
+					className = A:unitClass(unitid);
 				end;
 
 				local classInfo = CHA_ClassMatrix[className];
@@ -2190,7 +2190,7 @@ function CHA_UpdateHealerCounter()
 				end;
 			end
 		else
-			local classInfo = CHA_ClassMatrix[A.UnitClass("player")];
+			local classInfo = CHA_ClassMatrix[A:unitClass("player")];
 			if bit.band(classInfo["mask"], healerMask) > 0 then
 				numPlayers = 1;
 			end;
@@ -2383,12 +2383,12 @@ function CHA_PublicAnnouncement()
 
 	local announcements = CHA_GenerateAnnouncements();
 	if not announcements then
-		A.Echo("There are no announcements for this role available.");
+		A:echo("There are no announcements for this role available.");
 		return;
 	end;
 
 	for n = 1, table.getn(announcements), 1 do
-		A.EchoByName(CHA_AnnouncementChannel, announcements[n]);
+		A:channelEcho(CHA_AnnouncementChannel, announcements[n]);
 	end;
 end;
 
@@ -2396,12 +2396,12 @@ end;
 function CHA_PrivateAnnouncement()
 	local announcements = CHA_GenerateAnnouncements();
 	if not announcements then
-		A.Echo("There are no announcements for this role available.");
+		A:echo("There are no announcements for this role available.");
 		return;
 	end;
 
 	for n = 1, table.getn(announcements), 1 do
-		A.Echo(announcements[n]);
+		A:echo(announcements[n]);
 	end;
 end;
 
@@ -2473,18 +2473,18 @@ function CHA_GenerateAnnouncements()
 end;
 
 
+
 --[[
 	Addon communication
 --]]
 
 function CHA_HandleTXVersion(message, sender)
-	A.SendAddonMessage("RX_VERSION#".. A.Properties.Version .."#"..sender)
+	A:sendAddonMessage("RX_VERSION#".. A.addonVersion .."#"..sender)
 end;
 
 function CHA_HandleRXVersion(message, sender)
-	A.Echo(string.format("%s is using Classic Healing Assignments version %s", sender, message))
+	A:echo(string.format("%s is using Classic Healing Assignments version %s", sender, message))
 end;
-
 
 
 
@@ -2494,7 +2494,7 @@ end;
 function CHA_OnEvent(self, event, ...)
 	if event == "ADDON_LOADED" then
 		local addonname = ...;
-		if addonname == A.Properties.AddonName then
+		if addonname == A.addonName then
 			CHA_PostInitialization();
 		end;
 
@@ -2503,7 +2503,7 @@ function CHA_OnEvent(self, event, ...)
 
 	elseif event == "CHAT_MSG_ADDON" then
 		local prefix, msg, channel, sender = ...;
-		if prefix ~= A.Properties.Prefix then	
+		if prefix ~= A.addonPrefix then	
 			return;
 		end;
 
@@ -2525,15 +2525,12 @@ function CHA_OnEvent(self, event, ...)
 	end;
 end
 
-
-
+--	Called when program is starting up (doh!)
 function CHA_OnLoad()
-	CHA_CurrentVersion = A.CalculateVersion();
+	A:echo(string.format("Type %s/cha%s to configure the addon, or click the [+] button.", A.chatColorHot, A.chatColorNormal));
 
-	A.Echo(string.format("Type %s/cha%s to configure the addon, or click the [+] button.", A.Chat.ChatColorHot, A.Chat.ChatColorNormal));
-
-	CHAHeadlineCaption:SetText(string.format("Classic Healing Assignments - version %s", A.Properties.Version));
-	CHABottomlineCaption:SetText(string.format("Classic Healing Assignments version %s by %s", A.Properties.Version, A.Properties.Author));
+	CHAHeadlineCaption:SetText(string.format("Classic Healing Assignments - version %s", A.addonVersion));
+	CHABottomlineCaption:SetText(string.format("Classic Healing Assignments version %s by %s", A.addonVersion, A.addonAuthor));
 
 	CHA_PreInitialization();
 
@@ -2541,7 +2538,5 @@ function CHA_OnLoad()
 	CHAEventFrame:RegisterEvent("UNIT_CONNECTION");
     CHAEventFrame:RegisterEvent("CHAT_MSG_ADDON");
 
-	C_ChatInfo.RegisterAddonMessagePrefix(A.Properties.Prefix);
+	C_ChatInfo.RegisterAddonMessagePrefix(A.addonPrefix);
 end;
-
-
