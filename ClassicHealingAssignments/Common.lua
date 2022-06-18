@@ -1,4 +1,10 @@
-
+--[[
+--	ClassicHealingAssignments addon
+--	-------------------------------
+--	Author: Mimma
+--	File:   Common.lua
+--	Desc:	A few global vars we need to define before the main lua file is loaded.
+--]]
 
 CHA_ClassMatrix = { };
 

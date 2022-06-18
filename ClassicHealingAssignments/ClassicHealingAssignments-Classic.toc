@@ -3,7 +3,7 @@
 ## Author: Mimma @ <EU-Pyrewood Village>
 ## X-Originally By: Renew @ vanillagaming.org for the 1.12 client.
 ## X-Expansion-Level: 1
-## Version: 2.0.0-alpha3
+## Version: 2.0.0-alpha4
 ## Notes: Addon for Healing Assignments
 ## DefaultState: Enabled
 ## LoadOnDemand: 0

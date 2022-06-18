@@ -23,6 +23,7 @@ local YELL_CHANNEL							= "YELL"
 local SAY_CHANNEL							= "SAY"
 local WARN_CHANNEL							= "RAID_WARNING"
 local GUILD_CHANNEL							= "GUILD"
+local WHISPER_CHANNEL						= "WHISPER"
 
 DIGAM_CHANNEL_RAID							= { ["id"] = "r", ["mask"] = 0x0001, ["name"] = "Raid", ["channel"] = "RAID", };
 DIGAM_CHANNEL_RAIDWARNING					= { ["id"] ="rw", ["mask"] = 0x0002, ["name"] = "Raid warning", ["channel"] = "RAID_WARNING", };
@@ -90,6 +91,38 @@ function DigamAddonLib:echo(message)
 	end
 end;
 
+function DigamAddonLib:validateChannel(channelName)
+	local channel = self:getChannelInfo(channelName);
+	if channel then
+		if IsInRaid() then
+			--	Raid accepts everything, we even let people post in Party.
+			if not UnitIsGroupAssistant("player") then
+				if bit.band(channel["mask"], DIGAM_CHANNEL_RAIDWARNING["mask"]) > 0 then
+					channel = DIGAM_CHANNEL_RAID;
+				end;
+			end;
+
+		elseif GetNumGroupMembers() > 0 then
+			--	Party: /r and /rw is forced into /p
+			if bit.band(channel["mask"], 0x0003) > 0 then
+				channel = DIGAM_CHANNEL_PARTY;
+			end;
+
+		else
+			--	Solo: /r, /rw and /p is forced into local.
+			if bit.band(channel["mask"], 0x0007) > 0 then
+				--	Solo mode: force local output
+				channel = nil;
+			end;
+		end;
+	end;
+
+	if channel then 
+		return channel["name"];
+	end
+	return nil;
+end;
+
 function DigamAddonLib:channelEcho(channelName, message)
 	local channel = self:getChannelInfo(channelName);
 	if message and channel then
@@ -145,6 +178,15 @@ function DigamAddonLib:getChannelInfo(channelName)
 	end;
 	return nil;
 end;
+
+function DigamAddonLib:sendWhisper(receiver, message)
+	if receiver == self:getPlayerAndRealm("player") then
+		self:echo(message);
+	else
+		SendChatMessage(message, WHISPER_CHANNEL, nil, receiver);
+	end
+end
+
 
 StaticPopupDialogs["DIGAM_DIALOG_ERROR"] = {
 	text = "%s",
@@ -223,6 +265,22 @@ function DigamAddonLib:stripRealmName(nameAndRealm)
 	return name or nameAndRealm;
 end;
 
+function DigamAddonLib:getFullPlayerName(playerName)
+	local _, _, name, realm = string.find(playerName, "([^-]*)-(%S*)");
+	
+	if realm then
+		if string.find(realm, " ") then
+			local _, _, name1, name2 = string.find(realm, "([a-zA-Z]*) ([a-zA-Z]*)");
+			realm = name1 .. name2; 
+		end;
+	else
+		name = playerName;
+		realm = self:getMyRealm();
+	end;
+
+	return name .."-".. realm;
+end;
+
 function DigamAddonLib:getPlayerAndRealm(unitid)
 	local playername, realmname = UnitName(unitid);
 	if not playername then return nil; end;
@@ -258,40 +316,39 @@ function DigamAddonLib:unitClass(unitid)
 end;
 
 function DigamAddonLib:getUnitidFromName(playerName)
-	local thisRealm = self:getMyRealm()
+	local currentRealm = self:getMyRealm()
+	local currentPlayer = self:getPlayerAndRealm("player");
 
+	local unitid, unitname;
 	if IsInRaid() then
 		for n = 1, 40, 1 do
-			local unitid = "raid"..n;
-			local unitname, realm = UnitName(unitid);
+			unitid = "raid"..n;
+			unitname = UnitName(unitid);
 			if not unitname then return nil; end;
-			if not realm or realm == "" then realm = thisRealm; end;
-			
-			unitname = unitname.."-".. realm;
+
+			unitname = self:getPlayerAndRealm(unitid);
 			if playerName == unitname then
 				return unitid;
 			end;
 		end;
 	elseif GetNumGroupMembers() > 0 then
 		for n = 1, GetNumGroupMembers(), 1 do
-			local unitid = "party"..n;
-			local unitname, realm = UnitName(unitid);
+			unitid = "party"..n;
+			unitname = UnitName(unitid);
 			if not unitname then 
 				unitid = "player"; 
-				unitname, realm = UnitName(unitid);
 			end;
-
-			if not realm or realm == "" then realm = thisRealm; end;
-			
-			unitname = unitname.."-".. realm;
-
+		
+			unitname = self:getPlayerAndRealm(unitid);
 			if playerName == unitname then
 				return unitid;
 			end;
 		end;
 	else
 		--	Solo:
-		return "player";
+		if playerName == currentPlayer then
+			return "player";
+		end;
 	end;
 
 	return nil;

@@ -20,8 +20,12 @@ local A = DigamAddonLib:new(addonMetadata);
 
 
 local CHA_TEMPLATES_MAX						= 15;	-- room for max 15 templates. This is a limitation in the UI design.
+local CHA_FRAME_MAXTARGET					= 8;
+local CHA_FRAME_MAXPLAYERS					= 8;	-- Would like at least 10, but there isn't room in the ui :(
+
 local CHA_COLOR_SELECTED					= {1.0, 1.0, 1.0};
 local CHA_COLOR_UNSELECTED					= {1.0, 0.8, 0.0};
+
 local CHA_COLOR_RAIDICON					= { 128, 128,  80 };
 local CHA_COLOR_DIRECTION					= {  80, 128, 128 };
 local CHA_COLOR_CUSTOM						= { 128,  80, 128 };
@@ -212,13 +216,13 @@ local CHA_ResourceMatrix =  {
 		["color"] = CHA_COLOR_GROUP,
 	},
 };
-
-
-local CHA_FRAME_MAXTARGET					= 8;
-local CHA_FRAME_MAXPLAYERS					= 8;	-- Would like at least 10, but there isn't room in the ui :(
 	
 local CHA_ICON_NONE							= "Interface\\AddOns\\ClassicHealingAssignments\\Media\\logo-square";
 local CHA_ICON_READY						= "Interface\\AddOns\\ClassicHealingAssignments\\Media\\logo-square";
+
+local CHA_WHISPER_ME						= "!me";
+local CHA_WHISPER_REPOST					= "!repost";
+local CHA_WHISPER_COMMANDS					= { };
 
 --	Used for defaults on role config page
 local CHA_MASK_TARGET_DEFAULT				= CHA_CLASS_DRUID + CHA_CLASS_WARRIOR + CHA_RESOURCE_DIRECTION + CHA_RESOURCE_RAIDICON;
@@ -268,7 +272,7 @@ local CHA_Templates							= { };
 		["headlinetext"] = "### Healer assignments:",
 		["contenttext"] = "### {TARGET} <== {ASSIGNMENTS}",
 		["bottomtext"] = "### All other healers: Heal the raid.",
-		["whispertext"] = "### Whisper me Repeat (TODO)",
+		["whispertext"] = "### Whisper me Repost (TODO)",
 		["showwhispertext"] = false,
 		["targets"] = 
 		{
@@ -724,6 +728,9 @@ local function CHA_PreInitialization()
 		end;
 	end;
 
+	tinsert(CHA_WHISPER_COMMANDS, { ["command"] = CHA_WHISPER_ME, ["func"] = CHA_OnWhisperCommandMe });
+	tinsert(CHA_WHISPER_COMMANDS, { ["command"] = CHA_WHISPER_REPOST, ["func"] = CHA_OnWhisperCommandRepost });
+
 	CHA_InitializeClassMatrix();
 	CHA_InitializeUI();
 end;
@@ -1065,6 +1072,7 @@ function CHA_UpdateResourceFrames()
 					local fHealerButton = _G[fHealerButtonName];
 					if bit.band(healer["mask"], CHA_RESOURCE_PLAYERS) > 0 then
 						_G[fHealerButtonName.."Caption"]:SetText(CHA_FormatPlayerName(healer["text"]));
+
 						local unitid = A:getUnitidFromName(healer["name"]);
 						if not (unitid and UnitIsConnected(unitid)) then
 							alpha = CHA_ALPHA_DISABLED;
@@ -1674,14 +1682,8 @@ function CHA_WhisperCheckboxOnClick()
 	local template = CHA_GetActiveTemplate();
 	if template then
 		template["showwhispertext"] = CHATextFrameCBWhisper:GetChecked();
-
-		--	TODO: Implement!
-		if CHATextFrameCBWhisper:GetChecked() then
-			A:echo("Note! Whisper handling has not yet been implemented.");
-		end;
 	end;
 end;
-
 
 
 
@@ -2233,9 +2235,9 @@ function CHA_CreateTemplate(templateName)
 		CHA_Templates[templateCount] = {
 			["templatename"]	= templateName,
 			["headlinetext"]	= "__/\\___/\\__ HEALER Assignments :",
-			["contenttext"]		= " * {TARGET} -==- {ASSIGNMENTS}",
+			["contenttext"]		= " * {TARGET} == {ASSIGNMENTS}",
 			["bottomtext"]		= "All other healers: Heal the raid.",
-			["whispertext"]		= "Whisper me Repeat to re-send assignments.",
+			["whispertext"]		= string.format("Whisper \"%s\" for your assignment or \"%s\" for a full repost.", CHA_WHISPER_ME, CHA_WHISPER_REPOST),
 			["showwhispertext"] = false,
 			["targetmask"]		= CHA_MASK_TARGET_DEFAULT,
 			["healermask"]		= CHA_MASK_HEALER_DEFAULT,
@@ -2383,12 +2385,13 @@ function CHA_PublicAnnouncement()
 
 	local announcements = CHA_GenerateAnnouncements();
 	if not announcements then
-		A:echo("There are no announcements for this role available.");
+		A:echo("There are currently no assignments available.");
 		return;
 	end;
 
+	local announcementChannel = A:validateChannel(CHA_AnnouncementChannel);
 	for n = 1, table.getn(announcements), 1 do
-		A:channelEcho(CHA_AnnouncementChannel, announcements[n]);
+		A:channelEcho(announcementChannel, announcements[n]);
 	end;
 end;
 
@@ -2396,7 +2399,7 @@ end;
 function CHA_PrivateAnnouncement()
 	local announcements = CHA_GenerateAnnouncements();
 	if not announcements then
-		A:echo("There are no announcements for this role available.");
+		A:echo("There are currently no assignments available.");
 		return;
 	end;
 
@@ -2405,8 +2408,9 @@ function CHA_PrivateAnnouncement()
 	end;
 end;
 
---	Generate list of announcement lines
-function CHA_GenerateAnnouncements()
+--	Generate list of announcement lines.
+--	if isWhisperingBack is true, then headline + whisperline is skipped.
+function CHA_GenerateAnnouncements(isWhisperingBack)
 	local announcements = { };
 
 	local template = CHA_GetActiveTemplate();
@@ -2423,7 +2427,7 @@ function CHA_GenerateAnnouncements()
 	local whisper = CHATextFrameWhisperLine:GetText();
 	local showWhisper = CHATextFrameCBWhisper:GetChecked();
 
-	if headline ~= "" then
+	if headline ~= "" and not isWhisperingBack then
 		tinsert(announcements, headline);
 	end;
 
@@ -2465,7 +2469,7 @@ function CHA_GenerateAnnouncements()
 		tinsert(announcements, bottom);
 	end;
 
-	if showWhisper and whisper ~= "" then
+	if showWhisper and whisper ~= "" and not isWhisperingBack then
 		tinsert(announcements, whisper);
 	end;
 
@@ -2484,6 +2488,78 @@ end;
 
 function CHA_HandleRXVersion(message, sender)
 	A:echo(string.format("%s is using Classic Healing Assignments version %s", sender, message))
+end;
+
+--	A whisper was received: Parse it ...
+function CHA_OnChatWhisper(event, ...)	
+	local message, sender = ...;
+	if not message then return; end
+
+	--	Convert into name+realm:
+	local message = string.lower(message);
+
+	for _, command in next, CHA_WHISPER_COMMANDS do
+		if command["command"] == message then
+			local func = command["func"];
+			if func then
+				local playerName = A:getFullPlayerName(sender);
+				func(playerName);
+			end;
+			break;
+		end;
+	end;
+end;
+
+--	<sender> wants to know who his/her assignments:
+function CHA_OnWhisperCommandMe(sender)
+	if not CHATextFrameCBWhisper:GetChecked() then return; end;
+
+	local template = CHA_GetActiveTemplate();
+	if not template then return; end;
+
+	local unitid = A:getUnitidFromName(sender);
+	if not unitid then return; end;
+
+	--	Check if this player is listed in one of the targets as a Healer.
+	--	No, we don't care if the whisper is a tank.
+	for _, target in next, template["targets"] do
+		if target["healers"] then
+			for _, healer in next, target["healers"] do
+				if healer["name"] == sender then
+					local targetName = target["text"];
+					if bit.band(target["mask"], CHA_RESOURCE_RAIDICON) > 0 then
+						targetName = target["name"];
+					end;
+
+					A:sendWhisper(sender, string.format("You are assigned as Healer on [%s].", targetName));
+					return;
+				end;
+			end;
+		end;
+	end;
+
+	A:sendWhisper(sender, "You have no assigned target here.");
+end;
+
+--	Repost assignments (for the whispering player only)
+function CHA_OnWhisperCommandRepost(sender)
+	if not CHATextFrameCBWhisper:GetChecked() then return; end;
+
+	local template = CHA_GetActiveTemplate();
+	if not template then return; end;
+
+	local unitid = A:getUnitidFromName(sender);
+	if not unitid then return; end;
+
+	local announcements = CHA_GenerateAnnouncements(true);
+	if not announcements then
+		A:sendWhisper(sender, "There are currently no assignments available.");
+		return;
+	end;
+
+	for n = 1, table.getn(announcements), 1 do
+		A:sendWhisper(sender, announcements[n]);
+	end;
 end;
 
 
@@ -2522,6 +2598,9 @@ function CHA_OnEvent(self, event, ...)
 		elseif cmd == "RX_VERSION" then
 			CHA_HandleRXVersion(message, sender);
 		end;
+
+	elseif event == "CHAT_MSG_WHISPER" then
+		CHA_OnChatWhisper(event, ...);
 	end;
 end
 
@@ -2537,6 +2616,7 @@ function CHA_OnLoad()
 	CHAEventFrame:RegisterEvent("ADDON_LOADED");
 	CHAEventFrame:RegisterEvent("UNIT_CONNECTION");
     CHAEventFrame:RegisterEvent("CHAT_MSG_ADDON");
+    CHAEventFrame:RegisterEvent("CHAT_MSG_WHISPER");
 
 	C_ChatInfo.RegisterAddonMessagePrefix(A.addonPrefix);
 end;

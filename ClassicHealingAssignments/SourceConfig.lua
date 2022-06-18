@@ -1,3 +1,10 @@
+--[[
+--	ClassicHealingAssignments addon
+--	-------------------------------
+--	Author: Mimma
+--	File:   SourceConfig.lua
+--	Desc:	Handles assignment of resources (tanks/healers/symbols).
+--]]
 
 local CHA_SourceMask = 0x0000;
 local CHA_SourceOnOKClick = nil;
@@ -42,6 +49,7 @@ function CHA_SourceClassIconOnClick(sender)
 	end;
 end;
 
+--	Called when one of the four resource checkboxes are clicked.
 function CHA_SourceCheckboxOnClick(sender)
 	local checkboxName = sender:GetName();
 
@@ -65,7 +73,6 @@ function CHA_SourceCheckboxOnClick(sender)
 		CHA_SourceMask = bit.band(CHA_SourceMask, (-1) - mask);
 	end;	
 end;
-
 
 --	Initlialize the Class icons in the bottom of the role screen.
 function CHA_SourceCreateClassIcons()

@@ -116,6 +116,14 @@ This addon is a port of Vanilla Healing Assignments, originally made by Renew @ 
 
 
 
+Version 2.0.0-beta1
+-------------------
+* Added: Responses to "!me" and "!repost" are now working.
+* Added: Validation of output channel:
+  * /rw without promotion now converts to /r.
+  * /rw, /r in party now converts to /p. 
+
+
 Version 2.0.0-alpha3
 --------------------
 * Major refactoring:
