@@ -30,6 +30,12 @@
     <Content Include="HealingAssignments.xml">
       <SubType>Frame</SubType>
     </Content>
+    <Content Include="Locales\enUS.lua">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="Locales\frFR.lua">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="Media\Icon.tga" />
     <Content Include="Media\IconMouseOver.tga" />
     <Content Include="Media\logo-square.tga" />
@@ -43,6 +49,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Locales\" />
     <Folder Include="Media" />
   </ItemGroup>
   <Import Project="$(DevEnvDir)\Extensions\Tools\MSBuild\AddonStudio\Wow\3.0\WowAddonStudio.targets" />

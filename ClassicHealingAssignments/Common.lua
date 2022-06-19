@@ -18,4 +18,3 @@ CHA_RESOURCE_GROUP					= 0x040000;		--	Bitmask for groups (1-8)
 CHA_RESOURCE_CUSTOM					= 0x080000;		--	Bitmask for custom types (1-4)
 
 CHA_RESOURCE_UNASSIGNED				= 0x100000;		--	Bitmask for Unassigned field
-

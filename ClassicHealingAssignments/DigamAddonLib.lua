@@ -31,7 +31,26 @@ DIGAM_CHANNEL_PARTY							= { ["id"] = "p", ["mask"] = 0x0004, ["name"] = "Party
 DIGAM_CHANNEL_CUSTOM						= { ["id"] = "?", ["mask"] = 0x0008, ["name"] = "(Custom)", ["channel"] = "CUSTOM", };
 
 
+
 DigamAddonLib = CreateFrame("Frame"); 
+DigamAddonLib.Locales = { };
+
+function DigamAddonLib:createLocale(languageCode)
+	DigamAddonLib.Locales[languageCode] = { };
+	return DigamAddonLib.Locales[languageCode];
+end;
+
+function DigamAddonLib:XL(defaultText)
+	local locale = self.Locales[GetLocale()];
+	if locale then
+		local text = locale[defaultText];
+		if text and type(text) == "string" then
+			return text;
+		end;
+	end;
+
+	return defaultText;
+end;
 
 function DigamAddonLib:new(addonSettings)
 	local _addonName = addonSettings["ADDONNAME"] or "Unnamed";

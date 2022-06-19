@@ -239,7 +239,7 @@
 				</Scripts>
 				<Layers>
 					<Layer level="ARTWORK">
-						<FontString name="CHAMainFrameKickDisconnectsButtonCaption" inherits="GameFontNormal" text="Clean up">
+						<FontString name="$parentCaption" inherits="GameFontNormal" text="Clean up">
 							<Anchors>
 								<Anchor point="LEFT" relativeTo="CHAMainFrameKickDisconnectsButton">
 									<Offset>
@@ -272,7 +272,7 @@
 				</Scripts>
 				<Layers>
 					<Layer level="ARTWORK">
-						<FontString name="CHAMainFrameKickDisconnectsButtonCaption" inherits="GameFontNormal" text="Reset all">
+						<FontString name="$parentCaption" inherits="GameFontNormal" text="Reset all">
 							<Anchors>
 								<Anchor point="LEFT" relativeTo="CHAMainFrameResetAllButton">
 									<Offset>
@@ -508,7 +508,7 @@
 				</Scripts>
 			</Button>
 			<!-- "Texts" button -->
-			<Button name="$parentDecurseButton" inherits="UIPanelButtonTemplate" text="Texts" frameStrata="HIGH">
+			<Button name="$parentTextButton" inherits="UIPanelButtonTemplate" text="Texts" frameStrata="HIGH">
 				<Size>
 					<AbsDimension x="78" y="22" />
 				</Size>
@@ -638,7 +638,7 @@
 			</Button>
 
 			<!-- Close button -->
-			<Button name="CloseProfileButton" inherits="UIPanelButtonTemplate" text="Close">
+			<Button name="$parentCloseProfileButton" inherits="UIPanelButtonTemplate" text="Close">
 				<Size>
 					<AbsDimension x="100" y="23" />
 				</Size>
@@ -656,7 +656,7 @@
 		<Layers>
 			<Layer>
 				<!-- Top: Main title -->
-				<FontString inherits="GameFontNormal" text="Classic Healing Announcements" font="Fonts\FRIZQT__.TTF">
+				<FontString name="$parentMainTitle" inherits="GameFontNormal" text="Classic Healing Announcements" font="Fonts\FRIZQT__.TTF">
 					<Anchors>
 						<Anchor point="TOP" relativeTo="CHATextFrame">
 							<Offset x="0" y="-10"/>
@@ -666,7 +666,7 @@
 					<FontHeight val="20" />
 				</FontString>
 				<!-- Text 1: Headline -->
-				<FontString inherits="GameFontNormal" text="Headline">
+				<FontString name="$parentHeadlineCaption" inherits="GameFontNormal" text="Headline">
 					<Anchors>
 						<Anchor point="LEFT" relativeTo="CHATextFrameHeadline">
 							<Offset x="-100" y="0"/>
@@ -674,14 +674,14 @@
 					</Anchors>
 				</FontString>
 				<!-- Text 2: Assignment line + Explanation -->
-				<FontString inherits="GameFontNormal" text="Assignments">
+				<FontString name="$parentAssignmentsCaption" inherits="GameFontNormal" text="Assignments">
 					<Anchors>
 						<Anchor point="LEFT" relativeTo="CHATextFrameContentLine">
 							<Offset x="-100" y="0"/>
 						</Anchor>
 					</Anchors>
 				</FontString>
-				<FontString inherits="GameFontNormal" text="Use {TARGET} for the target / tank.">
+				<FontString name="$parentAssignUsage1" inherits="GameFontNormal" text="Use {TARGET} for the target / tank.">
 					<Anchors>
 						<Anchor point="LEFT" relativeTo="CHATextFrameContentLine">
 							<Offset x="0" y="-20"/>
@@ -689,7 +689,7 @@
 					</Anchors>
 					<Color r="0.9" g="0.9" b="0.9" />
 				</FontString>
-				<FontString inherits="GameFontNormal" text="Use {ASSIGNMENTS} for assigned players.">
+				<FontString name="$parentAssignUsage2" inherits="GameFontNormal" text="Use {ASSIGNMENTS} for assigned players.">
 					<Anchors>
 						<Anchor point="LEFT" relativeTo="CHATextFrameContentLine">
 							<Offset x="0" y="-40"/>
@@ -698,7 +698,7 @@
 					<Color r="0.9" g="0.9" b="0.9" />
 				</FontString>
 				<!-- Text 3: Bottom line -->
-				<FontString inherits="GameFontNormal" text="Bottom line">
+				<FontString name="$parentRaidLineCaption" inherits="GameFontNormal" text="Raid line">
 					<Anchors>
 						<Anchor point="LEFT" relativeTo="CHATextFrameBottomLine">
 							<Offset x="-100" y="0"/>

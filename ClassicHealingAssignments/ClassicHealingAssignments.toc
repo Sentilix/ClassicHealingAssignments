@@ -10,6 +10,10 @@
 ## SavedVariables: CHA_PersistedData
 
 DigamAddonLib.lua
+
+Locales/enUS.lua
+Locales/frFR.lua
+
 Common.lua
 SourceConfig.xml
 HealingAssignments.lua

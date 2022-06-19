@@ -64,7 +64,7 @@
 				</Anchors>
 				<Layers>
 					<Layer level="ARTWORK">
-						<FontString name="$parentClassesCaption" inherits="GameFontNormal" text="Class Filter:">
+						<FontString name="$parentCaption" inherits="GameFontNormal" text="Class Filter:">
 							<Anchors>
 								<Anchor point="TOPLEFT" relativeTo="$parent">
 									<Offset>
@@ -81,7 +81,7 @@
 			<CheckButton name="$parentCBRaidicons" inherits="OptionsCheckButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT">
-						<Offset x="96" y="-80"/>
+						<Offset x="116" y="-80"/>
 					</Anchor>
 				</Anchors>
 				<Scripts>
@@ -98,7 +98,7 @@
 			<CheckButton name="$parentCBDirections" inherits="OptionsCheckButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT">
-						<Offset x="96" y="-110"/>
+						<Offset x="116" y="-110"/>
 					</Anchor>
 				</Anchors>
 				<Scripts>
@@ -115,7 +115,7 @@
 			<CheckButton name="$parentCBGroups" inherits="OptionsCheckButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT">
-						<Offset x="96" y="-140"/>
+						<Offset x="116" y="-140"/>
 					</Anchor>
 				</Anchors>
 				<Scripts>
@@ -132,7 +132,7 @@
 			<CheckButton name="$parentCBCustom" inherits="OptionsCheckButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT">
-						<Offset x="96" y="-170"/>
+						<Offset x="116" y="-170"/>
 					</Anchor>
 				</Anchors>
 				<Scripts>
@@ -148,7 +148,7 @@
 
 
 			<!-- OK button -->
-			<Button name="CloseProfileButton" inherits="UIPanelButtonTemplate" text="OK">
+			<Button name="$parentOKButton" inherits="UIPanelButtonTemplate" text="OK">
 				<Size>
 					<AbsDimension x="100" y="23" />
 				</Size>
@@ -162,7 +162,7 @@
 				</Scripts>
 			</Button>
 			<!-- Cancel button -->
-			<Button name="CloseProfileButton" inherits="UIPanelButtonTemplate" text="Cancel">
+			<Button name="$parentCancelButton" inherits="UIPanelButtonTemplate" text="Cancel">
 				<Size>
 					<AbsDimension x="100" y="23" />
 				</Size>

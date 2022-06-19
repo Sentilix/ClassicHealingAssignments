@@ -436,35 +436,9 @@ UIDropDownMenu_SetWidth(CHA_TemplateOptionsMenu, 1);
 UIDropDownMenu_SetText(CHA_TemplateOptionsMenu, "");
 
 UIDropDownMenu_Initialize(CHA_TemplateOptionsMenu, function(self, level, menuList)
-	local info = UIDropDownMenu_CreateInfo()
-	info.text = "Move up";
-	info.func = CHA_TemplateOptionsMenu_MoveUp;
-	info.notCheckable = true;
-	UIDropDownMenu_AddButton(info)
-
-	info = UIDropDownMenu_CreateInfo()
-	info.text = "Move down";
-	info.func = CHA_TemplateOptionsMenu_MoveDown;
-	info.notCheckable = true;
-	UIDropDownMenu_AddButton(info)
-
-	info = UIDropDownMenu_CreateInfo()
-	info.text = "Copy template";
-	info.func = CHA_TemplateOptionsMenu_Clone;
-	info.notCheckable = true;
-	UIDropDownMenu_AddButton(info)
-
-	info = UIDropDownMenu_CreateInfo()
-	info.text = "Rename template";
-	info.func = CHA_TemplateOptionsMenu_Rename;
-	info.notCheckable = true;
-	UIDropDownMenu_AddButton(info)
-
-	info = UIDropDownMenu_CreateInfo()
-	info.text = "Delete template";
-	info.func = CHA_TemplateOptionsMenu_Delete;
-	info.notCheckable = true;
-	UIDropDownMenu_AddButton(info)
+	if CHA_TemplateOptionsMenu_Initialize then
+		CHA_TemplateOptionsMenu_Initialize(self, level, menuList);
+	end;
 end);
 
 --	Options for a Target (a tank):
@@ -475,35 +449,9 @@ UIDropDownMenu_SetWidth(CHA_TargetOptionsMenu, 1);
 UIDropDownMenu_SetText(CHA_TargetOptionsMenu, "");
 
 UIDropDownMenu_Initialize(CHA_TargetOptionsMenu, function(self, level, menuList)
-	local info = UIDropDownMenu_CreateInfo()
-	info.text = "Move up";
-	info.func = CHA_TargetOptionsMenu_MoveUp;
-	info.notCheckable = true;
-	UIDropDownMenu_AddButton(info)
-
-	info = UIDropDownMenu_CreateInfo()
-	info.text = "Move down";
-	info.func = CHA_TargetOptionsMenu_MoveDown;
-	info.notCheckable = true;
-	UIDropDownMenu_AddButton(info)
-
-	info = UIDropDownMenu_CreateInfo()
-	info.text = "Rename tank";
-	info.func = CHA_TargetOptionsMenu_Rename;
-	info.notCheckable = true;
-	UIDropDownMenu_AddButton(info)
-
-	info = UIDropDownMenu_CreateInfo()
-	info.text = "Unassign tank";
-	info.func = CHA_TargetOptionsMenu_Unassign;
-	info.notCheckable = true;
-	UIDropDownMenu_AddButton(info)
-
-	info = UIDropDownMenu_CreateInfo()
-	info.text = "Remove tank";
-	info.func = CHA_TargetOptionsMenu_Delete;
-	info.notCheckable = true;
-	UIDropDownMenu_AddButton(info)
+	if CHA_TargetOptionsMenu_Initialize then
+		CHA_TargetOptionsMenu_Initialize(self, level, menuList);
+	end;
 end);
 
 --	Options for Healer (assignee):
@@ -514,35 +462,9 @@ UIDropDownMenu_SetWidth(CHA_HealerOptionsMenu, 1);
 UIDropDownMenu_SetText(CHA_HealerOptionsMenu, "");
 
 UIDropDownMenu_Initialize(CHA_HealerOptionsMenu, function(self, level, menuList)
-	local info = UIDropDownMenu_CreateInfo()
-	info.text = "Move up";
-	info.func = CHA_HealerOptionsMenu_MoveUp;
-	info.notCheckable = true;
-	UIDropDownMenu_AddButton(info)
-
-	info = UIDropDownMenu_CreateInfo()
-	info.text = "Move down";
-	info.func = CHA_HealerOptionsMenu_MoveDown;
-	info.notCheckable = true;
-	UIDropDownMenu_AddButton(info)
-
-	info = UIDropDownMenu_CreateInfo()
-	info.text = "Rename healer";
-	info.func = CHA_HealerOptionsMenu_Rename;
-	info.notCheckable = true;
-	UIDropDownMenu_AddButton(info)
-
-	info = UIDropDownMenu_CreateInfo()
-	info.text = "Unassign healer";
-	info.func = CHA_HealerOptionsMenu_Unassign;
-	info.notCheckable = true;
-	UIDropDownMenu_AddButton(info)
-
-	info = UIDropDownMenu_CreateInfo()
-	info.text = "Remove healer";
-	info.func = CHA_HealerOptionsMenu_Delete;
-	info.notCheckable = true;
-	UIDropDownMenu_AddButton(info)
+	if CHA_HealerOptionsMenu_Initialize then
+		CHA_HealerOptionsMenu_Initialize(self, level, menuList);
+	end;
 end);
 
 --	Classes setup:
@@ -642,7 +564,7 @@ SlashCmdList["CHA_CHA"] = function(msg)
 	elseif option == "VERSION" then
 		SlashCmdList["CHA_VERSION"]();
 	else
-		A:echo(string.format("Unknown command: %s", option));
+		A:echo(string.format(A:XL("Unknown command: %s"), option));
 	end
 end
 
@@ -665,7 +587,7 @@ SlashCmdList["CHA_VERSION"] = function(msg)
 	if IsInRaid() or A:isInParty() then
 		A:sendAddonMessage("TX_VERSION##");
 	else
-		A:echo(string.format("%s is using ClassicHealingAssignments version %s", CHA_LocalPlayerName, A.addonVersion));
+		A:echo(string.format(A:XL("%s is using ClassicHealingAssignments version %s"), CHA_LocalPlayerName, A.addonVersion));
 	end
 end
 
@@ -676,13 +598,13 @@ end
 --
 SLASH_CHA_HELP1 = "/chahelp"
 SlashCmdList["CHA_HELP"] = function(msg)
-	A:echo(string.format("ClassicHealingAssignments version %s options:", A.addonVersion));
-	A:echo("Syntax:");
-	A:echo("    /cha [command]");
-	A:echo("Where commands can be:");
-	A:echo("    Config       (default) Open the configuration dialogue.");
-	A:echo("    Version      Request version info from all clients.");
-	A:echo("    Help         This help.");
+	A:echo(string.format(A:XL("ClassicHealingAssignments version %s options:"), A.addonVersion));
+	A:echo(A:XL("Syntax:"));
+	A:echo(A:XL("    /cha [command]"));
+	A:echo(A:XL("Where commands can be:"));
+	A:echo(A:XL("    Config       (default) Open the configuration dialogue."));
+	A:echo(A:XL("    Version      Request version info from all clients."));
+	A:echo(A:XL("    Help         This help."));
 end
 
 
@@ -700,8 +622,11 @@ local function CHA_CheckIsNewVersion(versionstring)
 		if incomingVersion > addonVersion then
 			if not CHA_UpdateMessageShown then
 				CHA_UpdateMessageShown = true;
-				A:echo(string.format("NOTE: A newer version of ".. COLOUR_INTRO .."ClassicHealingAssignments"..COLOUR_CHAT.."! is available (version %s)!", versionstring));
-				A:echo("You can download latest version from https://www.curseforge.com/ or https://github.com/Sentilix/ClassicHealingAssignments.");
+				local programName = COLOUR_INTRO .."ClassicHealingAssignments"..COLOUR_CHAT;
+				local curseForgeURL = "https://www.curseforge.com/"
+				local githubURL = "https://github.com/Sentilix/ClassicHealingAssignments"
+				A:echo(string.format(A:XL("NOTE: A newer version of %s! is available (version %s)!", programName, versionstring)));
+				A:echo(string.format(A:XL("You can download latest version from %s or %s.", curseForgeURL, githubURL)));
 			end
 		end	
 	end
@@ -731,6 +656,7 @@ local function CHA_PreInitialization()
 	tinsert(CHA_WHISPER_COMMANDS, { ["command"] = CHA_WHISPER_ME, ["func"] = CHA_OnWhisperCommandMe });
 	tinsert(CHA_WHISPER_COMMANDS, { ["command"] = CHA_WHISPER_REPOST, ["func"] = CHA_OnWhisperCommandRepost });
 
+	CHA_TranslateUI();
 	CHA_InitializeClassMatrix();
 	CHA_InitializeUI();
 end;
@@ -1278,7 +1204,7 @@ end;
 function CHA_TemplateOptionsMenu_Delete()
 	local template = CHA_GetTemplateById(CHA_CurrentTemplateIndex);
 
-	A:showConfirmation(string.format("Really delete the template '%s'?", template["templatename"]), CHA_TemplateOptionsMenu_Delete_OK);
+	A:showConfirmation(string.format(A:XL("Really delete the template [%s]?"), template["templatename"]), CHA_TemplateOptionsMenu_Delete_OK);
 end;
 
 --	Called when the OK button on the Template:Delete popup was clicked.
@@ -1543,7 +1469,7 @@ function CHA_TargetOptionsMenu_Unassign()
 	if template and template["targets"][CHA_CurrentTargetIndex] then
 		local target = template["targets"][CHA_CurrentTargetIndex];
 
-		A:showConfirmation(string.format("Really unassign the tank '%s'?", target["text"] or ""), CHA_TargetOptionsMenu_Unassign_OK);
+		A:showConfirmation(string.format(A:XL("Really unassign the tank [%s]?"), target["text"] or ""), CHA_TargetOptionsMenu_Unassign_OK);
 	end;
 end;
 
@@ -1578,7 +1504,7 @@ function CHA_TargetOptionsMenu_Delete()
 	if template and template["targets"][CHA_CurrentTargetIndex] then
 		local target = template["targets"][CHA_CurrentTargetIndex];
 
-		A:showConfirmation(string.format("Really remove the target '%s'?", target["text"] or ""), CHA_TargetOptionsMenu_Delete_OK);
+		A:showConfirmation(string.format(A:XL("Really remove the target [%s]?"), target["text"] or ""), CHA_TargetOptionsMenu_Delete_OK);
 	end;
 end;
 
@@ -1619,11 +1545,11 @@ end;
 
 --	Called when user clicks the CLEAN UP button:
 function CHA_KickDisconnectsOnClick()
-	A:showConfirmation("Do you want to kick all disconnected characters and characters not in the raid?", CHA_KickDisconnects_OK);
+	A:showConfirmation(A:XL("Do you want to kick all disconnected characters and characters not in the raid?"), CHA_KickDisconnects_OK);
 end;
 
 function CHA_ResetAllOnClick()
-	A:showConfirmation("Do you want to reset (delete) all targets and healers for this template?", CHA_ResetAll_OK);
+	A:showConfirmation(A:XL("Do you want to reset (delete) all targets and healers for this template?"), CHA_ResetAll_OK);
 end;
 
 --	Cleanup the assignments by removing all characters not in the raid or disconnected characters.
@@ -1705,7 +1631,7 @@ function CHA_AddTemplate_OK(templateName)
 	if not CHA_GetTemplateByName(templateName) then
 		CHA_CreateTemplate(templateName);
 	else
-		A:showError("A template with that name already exists.");
+		A:showError(A:XL("A template with that name already exists."));
 	end;
 
 	CHA_UpdateUI();
@@ -1716,12 +1642,12 @@ end;
 --	Clone: A new template with the new name is added below the old template.
 function CHA_RenameTemplate_OK(oldTemplateName, newTemplateName)
 	if CHA_GetTemplateByName(newTemplateName) then
-		A:showError("A template with that name already exists.");
+		A:showError(A:XL("A template with that name already exists."));
 		return;
 	end;
 
 	if not CHA_GetTemplateByName(oldTemplateName) then
-		A:showError(string.format("The template '%s' was not found.", oldTemplateName));
+		A:showError(string.format(A:XL("The template '%s' was not found."), oldTemplateName));
 		return;
 	end;
 
@@ -1785,6 +1711,57 @@ function CHA_CreateTarget(target)
 	CHA_UpdateResourceFrames();
 end;
 
+
+
+--[[
+	Localization functions
+--]]
+function CHA_TranslateUI()
+	--	CHAMainFrame: (assignment screen)
+	CHAMainFrameAddTargetButtonCaption:SetText(A:XL("Add target"));
+	CHAMainFrameKickDisconnectsButtonCaption:SetText(A:XL("Clean up"));
+	CHAMainFrameResetAllButtonCaption:SetText(A:XL("Reset all"));
+	CHAMainFrameTopleftHelp:SetText(A:XL("CTRL+Leftclick: announcement to Party/Raid")..' - '.. A:XL("CTRL+Rightclick: test announcement locally"));
+	CHAMainFrameTopleftTitle:SetText(A:XL("Classic Healing Assignments"));
+	CHAMainFrameAddTemplateButton:SetText(A:XL("Add template"));
+	CHAMainFrameTankButton:SetText(A:XL("Tanks"));
+	CHAMainFrameHealButton:SetText(A:XL("Healers"));
+	CHAMainFrameTextButton:SetText(A:XL("Texts"));
+	--	CHATextFrame: (text management)
+	CHATextFrameChannelDropDownCaption:SetText(A:XL("Announce in"));
+	CHATextFrameMainTitle:SetText(A:XL("Classic Healing Announcements"));
+	CHATextFrameHeadlineCaption:SetText(A:XL("Headline"));
+	CHATextFrameAssignmentsCaption:SetText(A:XL("Assignments"));
+	CHATextFrameAssignUsage1:SetText(A:XL("Use {TARGET} for the target / tank."));
+	CHATextFrameAssignUsage2:SetText(A:XL("Use {ASSIGNMENTS} for assigned players."));
+	CHATextFrameRaidLineCaption:SetText(A:XL("Raid line"));
+	CHATextFrameCloseProfileButton:SetText(A:XL("Close"));
+	--	CHASourceFrame
+	CHASourceFrameTitle:SetText(A:XL("Resource Configuration"));
+	CHASourceFrameClassesCaption:SetText(A:XL("Class Filter:"));
+	CHASourceFrameCBRaidiconsText:SetText(A:XL("Include Raid icons"));
+	CHASourceFrameCBDirectionsText:SetText(A:XL("Include Directions"));
+	CHASourceFrameCBGroupsText:SetText(A:XL("Include Groups"));
+	CHASourceFrameCBCustomText:SetText(A:XL("Include Custom labels"));
+	CHASourceFrameOKButton:SetText(A:XL("OK"));
+	CHASourceFrameCancelButton:SetText(A:XL("Cancel"));
+
+	--	Resource matrix:
+	for _, resource in next, CHA_ResourceMatrix do
+		resource["text"] = A:XL(resource["text"]);
+	end;
+
+	--	Popups:
+	local frame = StaticPopupDialogs["CHA_DIALOG_ADDTEMPLATE"];
+	frame.text = A:XL("Name of template:");
+	frame.button1 = A:XL("OK");
+	frame.button2 = A:XL("Cancel");
+	local frame = StaticPopupDialogs["CHA_DIALOG_RENAME_RESOURCE"];
+	frame.text = A:XL("Please enter new name:");
+	frame.button1 = A:XL("OK");
+	frame.button2 = A:XL("Cancel");
+
+end;
 
 
 --[[
@@ -1888,6 +1865,105 @@ function CHA_HealerDropdown_Initialize()
 	end
 end;
 
+--	Initialize the template options menu:
+function CHA_TemplateOptionsMenu_Initialize(self, level, menuList)
+	local info = UIDropDownMenu_CreateInfo()
+	info.text = A:XL("Move up");
+	info.func = CHA_TemplateOptionsMenu_MoveUp;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+
+	info = UIDropDownMenu_CreateInfo()
+	info.text = A:XL("Move down");
+	info.func = CHA_TemplateOptionsMenu_MoveDown;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+
+	info = UIDropDownMenu_CreateInfo()
+	info.text = A:XL("Copy template");
+	info.func = CHA_TemplateOptionsMenu_Clone;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+
+	info = UIDropDownMenu_CreateInfo()
+	info.text = A:XL("Rename template");
+	info.func = CHA_TemplateOptionsMenu_Rename;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+
+	info = UIDropDownMenu_CreateInfo()
+	info.text = A:XL("Delete template");
+	info.func = CHA_TemplateOptionsMenu_Delete;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+end;
+
+--	Initialize Target options menu:
+function CHA_TargetOptionsMenu_Initialize(self, level, menuList)
+	local info = UIDropDownMenu_CreateInfo()
+	info.text = A:XL("Move up");
+	info.func = CHA_TargetOptionsMenu_MoveUp;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+
+	info = UIDropDownMenu_CreateInfo()
+	info.text = A:XL("Move down");
+	info.func = CHA_TargetOptionsMenu_MoveDown;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+
+	info = UIDropDownMenu_CreateInfo()
+	info.text = A:XL("Rename tank");
+	info.func = CHA_TargetOptionsMenu_Rename;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+
+	info = UIDropDownMenu_CreateInfo()
+	info.text = A:XL("Unassign tank");
+	info.func = CHA_TargetOptionsMenu_Unassign;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+
+	info = UIDropDownMenu_CreateInfo()
+	info.text = A:XL("Remove tank");
+	info.func = CHA_TargetOptionsMenu_Delete;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+end;
+
+--	Initialize healers options menu:
+function CHA_HealerOptionsMenu_Initialize(self, level, menuList)
+	local info = UIDropDownMenu_CreateInfo()
+	info.text = A:XL("Move up");
+	info.func = CHA_HealerOptionsMenu_MoveUp;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+
+	info = UIDropDownMenu_CreateInfo()
+	info.text = A:XL("Move down");
+	info.func = CHA_HealerOptionsMenu_MoveDown;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+
+	info = UIDropDownMenu_CreateInfo()
+	info.text = A:XL("Rename healer");
+	info.func = CHA_HealerOptionsMenu_Rename;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+
+	info = UIDropDownMenu_CreateInfo()
+	info.text = A:XL("Unassign healer");
+	info.func = CHA_HealerOptionsMenu_Unassign;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+
+	info = UIDropDownMenu_CreateInfo()
+	info.text = A:XL("Remove healer");
+	info.func = CHA_HealerOptionsMenu_Delete;
+	info.notCheckable = true;
+	UIDropDownMenu_AddButton(info)
+end;
+
 --	Initalize the announcement channel dropdown box
 function CHA_ChannelDropDown_Initialize()
 	A:refreshChannelList(true);
@@ -1895,7 +1971,7 @@ function CHA_ChannelDropDown_Initialize()
 	for channelIndex = 1, table.getn(A.chatChannels), 1 do
 		local info = UIDropDownMenu_CreateInfo();
 		info.notCheckable = true;
-		info.text       = string.format("/%s - %s", A.chatChannels[channelIndex]["id"], A.chatChannels[channelIndex]["name"]);
+		info.text       = string.format("/%s - %s", A.chatChannels[channelIndex]["id"], A:XL(A.chatChannels[channelIndex]["name"]));
 		info.func       = function() CHA_ChannelDropDown_OnClick(this, A.chatChannels[channelIndex]) end;
 		UIDropDownMenu_AddButton(info);
 	end
@@ -1903,7 +1979,7 @@ end;
 
 --	Called when a chat channel is selected.
 function CHA_ChannelDropDown_OnClick(sender, channelInfo)
-	local caption = string.format("/%s - %s", channelInfo["id"], channelInfo["name"]);
+	local caption = string.format("/%s - %s", channelInfo["id"], A:XL(channelInfo["name"]));
 
 	CHA_AnnouncementChannel = channelInfo["name"];
 	CHA_UpdateChannelDropDownText();
@@ -1915,7 +1991,7 @@ end;
 function CHA_UpdateChannelDropDownText()
 	local channel = A:getChannelInfo(CHA_AnnouncementChannel);
 	if channel then
-		local caption = string.format("/%s - %s", channel["id"], channel["name"]);
+		local caption = string.format("/%s - %s", channel["id"], A:XL(channel["name"]));
 		UIDropDownMenu_SetText(CHATextFrameChannelDropDown, caption);
 	end;
 end;
@@ -2210,7 +2286,7 @@ function CHA_UpdateHealerCounter()
 		end;
 	end;
 
-	CHAHealerCountCaption:SetText(string.format("Healers: %s/%s", numAssigned, numPlayers));
+	CHAHealerCountCaption:SetText(string.format(A:XL("Healers: %s/%s"), numAssigned, numPlayers));
 end
 
 
@@ -2232,12 +2308,14 @@ function CHA_CreateTemplate(templateName)
 	if templateCount < CHA_TEMPLATES_MAX then
 		templateCount = templateCount + 1;
 
+		--	This is not translated. 
+		--	This is on purpose since this can be translated directly in the UI.
 		CHA_Templates[templateCount] = {
 			["templatename"]	= templateName,
-			["headlinetext"]	= "__/\\___/\\__ HEALER Assignments :",
+			["headlinetext"]	= "__/\\___/\\__ "..A:XL("HEALER Assignments :"),
 			["contenttext"]		= " * {TARGET} == {ASSIGNMENTS}",
-			["bottomtext"]		= "All other healers: Heal the raid.",
-			["whispertext"]		= string.format("Whisper \"%s\" for your assignment or \"%s\" for a full repost.", CHA_WHISPER_ME, CHA_WHISPER_REPOST),
+			["bottomtext"]		= A:XL("All other healers: Heal the raid."),
+			["whispertext"]		= string.format(A:XL("Whisper \"%s\" for your assignment or \"%s\" for a full repost."), CHA_WHISPER_ME, CHA_WHISPER_REPOST),
 			["showwhispertext"] = false,
 			["targetmask"]		= CHA_MASK_TARGET_DEFAULT,
 			["healermask"]		= CHA_MASK_HEALER_DEFAULT,
@@ -2385,7 +2463,7 @@ function CHA_PublicAnnouncement()
 
 	local announcements = CHA_GenerateAnnouncements();
 	if not announcements then
-		A:echo("There are currently no assignments available.");
+		A:echo(A:XL("There are currently no assignments defined."));
 		return;
 	end;
 
@@ -2399,7 +2477,7 @@ end;
 function CHA_PrivateAnnouncement()
 	local announcements = CHA_GenerateAnnouncements();
 	if not announcements then
-		A:echo("There are currently no assignments available.");
+		A:echo(A:XL("There are currently no assignments defined."));
 		return;
 	end;
 
@@ -2487,7 +2565,7 @@ function CHA_HandleTXVersion(message, sender)
 end;
 
 function CHA_HandleRXVersion(message, sender)
-	A:echo(string.format("%s is using Classic Healing Assignments version %s", sender, message))
+	A:echo(string.format(A:XL("%s is using ClassicHealingAssignments version %s"), sender, message))
 end;
 
 --	A whisper was received: Parse it ...
@@ -2531,14 +2609,14 @@ function CHA_OnWhisperCommandMe(sender)
 						targetName = target["name"];
 					end;
 
-					A:sendWhisper(sender, string.format("You are assigned as Healer on [%s].", targetName));
+					A:sendWhisper(sender, string.format(A:XL("You are assigned as Healer on [%s]."), targetName));
 					return;
 				end;
 			end;
 		end;
 	end;
 
-	A:sendWhisper(sender, "You have no assigned target here.");
+	A:sendWhisper(sender, A:XL("You have no assigned target here."));
 end;
 
 --	Repost assignments (for the whispering player only)
@@ -2553,7 +2631,7 @@ function CHA_OnWhisperCommandRepost(sender)
 
 	local announcements = CHA_GenerateAnnouncements(true);
 	if not announcements then
-		A:sendWhisper(sender, "There are currently no assignments available.");
+		A:sendWhisper(sender, A:XL("There are currently no assignments defined."));
 		return;
 	end;
 
@@ -2608,7 +2686,7 @@ end
 function CHA_OnLoad()
 	A:echo(string.format("Type %s/cha%s to configure the addon, or click the [+] button.", A.chatColorHot, A.chatColorNormal));
 
-	CHAHeadlineCaption:SetText(string.format("Classic Healing Assignments - version %s", A.addonVersion));
+	CHAHeadlineCaption:SetText(string.format("Classic Healing Assignments v%s", A.addonVersion));
 	CHABottomlineCaption:SetText(string.format("Classic Healing Assignments version %s by %s", A.addonVersion, A.addonAuthor));
 
 	CHA_PreInitialization();

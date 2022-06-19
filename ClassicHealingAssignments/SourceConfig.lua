@@ -76,7 +76,7 @@ end;
 
 --	Initlialize the Class icons in the bottom of the role screen.
 function CHA_SourceCreateClassIcons()
-	local offsetX = 80;
+	local offsetX = 100;
 	local offsetY = -2;
 	local width = 24;
 	local posX = offsetX;
