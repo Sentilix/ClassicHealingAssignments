@@ -25,7 +25,7 @@
 			<KeyValue key="backdropBorderColor" value="WHITE" type="global"/>
 		</KeyValues>
 		<Size>
-			<AbsDimension x="400" y="250" />
+			<AbsDimension x="420" y="250" />
 		</Size>
 		<Anchors>
 			<Anchor point="BOTTOMLEFT">

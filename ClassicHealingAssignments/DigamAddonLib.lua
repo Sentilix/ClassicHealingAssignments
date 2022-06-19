@@ -329,6 +329,7 @@ function DigamAddonLib:isInParty()
 	return false
 end
 
+--	Return the (english) name of the unit's class
 function DigamAddonLib:unitClass(unitid)
 	local _, classname = UnitClass(unitid);
 	return classname;
@@ -419,6 +420,7 @@ function DigamAddonLib:refreshChannelList(skipGroupTypeCheck)
 		tinsert(channels, DIGAM_CHANNEL_PARTY);
 	end;
 
+	local lfgChannelName = self:XL("LookingForGroup");
 	local publicChannels = { GetChatWindowChannels(DEFAULT_CHAT_FRAME:GetID()) };
 	for n = 1, table.getn(publicChannels), 2 do
 		--	0: Everywhere
@@ -426,8 +428,8 @@ function DigamAddonLib:refreshChannelList(skipGroupTypeCheck)
 		--	2: Major cities
 		--	22: LocalDefence (!)
 
-		--	So we want all zone 0 groups except LookingForGroup (is that translated?)
-		if publicChannels[n+1] == 0 and publicChannels[n] ~= "LookingForGroup" then
+		--	So we want all zone 0 groups except LookingForGroup (translated and untranslated to be sure)
+		if publicChannels[n+1] == 0 and publicChannels[n] ~= lfgChannelName and publicChannels[n] ~= "LookingForGroup" then
 			local channelID, channelName = GetChannelName(publicChannels[n]);
 			if channelID then
 				tinsert(channels, {

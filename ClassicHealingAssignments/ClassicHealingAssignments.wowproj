@@ -20,6 +20,9 @@
     <Content Include="Common.lua">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="ClassicHealingAssignments-TBC.toc">
+      <SubType>TableOfContents</SubType>
+    </Content>
     <Content Include="DigamAddonLib.lua">
       <SubType>Code</SubType>
     </Content>

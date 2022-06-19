@@ -1,25 +1,23 @@
 local L = DigamAddonLib:createLocale("frFR")
 
---	Frames:
+--	Main frame:
 L["Add target"] = "Ajouter cible"
-L["Add template"] = "Ajouter modèle"
-L["Classic Healing Assignments"] = "Contrôle de Guérison Classique"
-L["Clean up"] = "Nettoie"
-L["Reset all"] = "Effacer tout"
+L["Add template"] = "Ajouter Template"
+L["Classic Healing Assignments"] = "Contrôle de Heal Classique"
+L["Clean up"] = "Réinitialiser"
+L["Reset all"] = "Réinitialiser tout"
 L["CTRL+Leftclick: announcement to Party/Raid"] = "CTRL+Clic gauche : annonce à Party/Raid"
 L["CTRL+Rightclick: test announcement locally"] = "CTRL+Clic droit : tester l'annonce en local"
-L["Healers: %s/%s"] = "Guérisseurs: %s/%s"
-L["Tanks"] = "Chars"
-L["Healers"] = "Guérisseurs"
+L["Healers: %s/%s"] = "Healers: %s/%s"
 L["Texts"] = "Textes"
 L["Announce in"] = "Annoncer dans"
-L["Close"] = "Ferme"
-L["Classic Healing Announcements"] = "Annonces de guérison classiques"
+L["Classic Healing Announcements"] = "Annonces de Heal Classiques"
 L["Headline"] = "Gros titre"
-L["Assignments"] = "Contrôle"
-L["Use {TARGET} for the target / tank."] = "Utilisez {TARGET} pour la cible / le char."
+L["Assignments"] = "Attributions"
+L["Use {TARGET} for the target / tank."] = "Utilisez {TARGET} pour la cible / le tank."
 L["Use {ASSIGNMENTS} for assigned players."] = "Utilisez {ASSIGNMENTS} pour les joueurs assignés."
 L["Raid line"] = "Ligne de raid"
+
 --	Resource frame:
 L["Resource Configuration"] = "Configuration des Ressources"
 L["Class Filter:"] = "Des classes:"
@@ -27,6 +25,16 @@ L["Include Raid icons"] = "Icônes Raid"
 L["Include Directions"] = "Directions"
 L["Include Groups"] = "Groupes"
 L["Include Custom labels"] = "Étiquettes privées"
+
+--	Wow
+L["Tanks"] = "Tanks"
+L["Healers"] = "Healers"
+L["Raid"] = "Raid"
+L["Raid warning"] = "Avertissement raid"
+L["Party"] = "Groupe"
+L["(Custom)"] = "(Private)"
+L["LookingForGroup"] = "RechercheGroupe"
+
 --	Resources:
 L["(Unassigned)"] = "(Non attribué)"
 L["Skull"] = "Crâne"
@@ -38,7 +46,7 @@ L["Triangle"] = "Triangle"
 L["Moon"] = "Lune"
 L["Circle"] = "Cercle"
 L["<== Left"] = "<== Gauche"
-L["Right ==>"] = "Droit ==>"
+L["Right ==>"] = "Droite ==>"
 L["North"] = "Nord"
 L["East"] = "Est"
 L["South"] = "Sud"
@@ -55,49 +63,44 @@ L["Group 5"] = "Groupe 5"
 L["Group 6"] = "Groupe 6"
 L["Group 7"] = "Groupe 7"
 L["Group 8"] = "Groupe 8"
+
 --	Generel:
 L["OK"] = "OK"
 L["Cancel"] = "Annuler"
---	Popups
-L["Name of template:"] = "Nom du modèle"
+L["Close"] = "Fermer"
+
+--	Popups, warnings and messages:
+L["Name of template:"] = "Nom du Template"
 L["Please enter new name:"] = "Veuillez entrer un nouveau nom:"
-L["Really delete the template [%s]?"] = "Supprimer vraiment le modèle [%s] ?"
+L["Really delete the template [%s]?"] = "Supprimer vraiment le template [%s] ?"
 L["Really unassign the tank [%s]?"] = "Vraiment désaffecter le tank [%s] ?"
 L["Really remove the target [%s]?"] = "Supprimer vraiment la cible [%s] ?"
 L["Do you want to kick all disconnected characters and characters not in the raid?"] = "Voulez-vous kicker tous les personnages déconnectés et ceux qui ne sont pas dans le raid ?"
-L["Do you want to reset (delete) all targets and healers for this template?"] = "Voulez-vous réinitialiser (supprimer) toutes les cibles et soigneurs pour ce modèle ?"
-L["A template with that name already exists."] = "Un modèle portant ce nom existe déjà."
-L["The template '%s' was not found."] = "Le modèle '%s' est introuvable."
---	Options
+L["Do you want to reset (delete) all targets and healers for this template?"] = "Voulez-vous réinitialiser (supprimer) toutes les cibles et soigneurs pour ce Template ?"
+L["A template with that name already exists."] = "Un template portant ce nom existe déjà."
+L["The template '%s' was not found."] = "Le template '%s' est introuvable."
+
+--	Popup menus:
 L["Move up"] = "Déplacer vers le haut"
 L["Move down"] = "Déplacez-le vers le bas"
-L["Copy template"] = "Copier le modèle"
-L["Rename template"] = "Renommer le modèle"
-L["Delete template"] = "Supprimer le modèle"
-L["Rename tank"] = "Renommer le char"
-L["Unassign tank"] = "Désaffecter le char"
-L["Remove tank"] = "Retirer le char"
-L["Rename healer"] = "Renommer le guérisseur"
-L["Unassign healer"] = "Désassigner le guérisseur"
-L["Remove healer"] = "Supprimer le guérisseur"
---	Wow
-L["Raid"] = "Raid"
-L["Raid warning"] = "Avert de raid"
-L["Party"] = "Fête"
-L["(Custom)"] = "(Private)"
---	Misc:
-L["Type %s/cha%s to configure the addon, or click the [+] button."] = "Tapez %s/cha%s pour configurer l'addon, ou cliquez sur le bouton [+]."
-L["Unknown command: %s"] = "Commande inconnue: %s"
-L["%s is using ClassicHealingAssignments version %s"] = "%s utilise ClassicHealingAssignments version %s"
-L["NOTE: A newer version of %s! is available (version %s)!"] = "REMARQUE: une version plus récente de %s! est disponible (version %s) !"
-L["You can download latest version from %s or %s."] = "Vous pouvez télécharger la dernière version depuis %s ou %s."
+L["Copy template"] = "Copier le template"
+L["Rename template"] = "Renommer le template"
+L["Delete template"] = "Supprimer le template"
+L["Rename tank"] = "Renommer le tank"
+L["Unassign tank"] = "Désaffecter le tank"
+L["Remove tank"] = "Retirer le tank"
+L["Rename healer"] = "Renommer le heal"
+L["Unassign healer"] = "Désassigner le heal"
+L["Remove healer"] = "Supprimer le heal"
+
 --	Assignments:
-L["HEALER Assignments :"] = "Missions de Guérisseur :"
-L["All other healers: Heal the raid."] = "Tous les autres guérisseurs : soignez le raid."
-L["Whisper \"%s\" for your assignment or \"%s\" for a full repost."] = "Chuchotez \"%s\" pour votre devoir ou \"%s\" pour un repost complet."
+L["HEALER Assignments :"] = "Attributions de heal :"
+L["All other healers: Heal the raid."] = "Tous les autres heals : soignez le raid."
+L["Whisper \"%s\" for your assignment or \"%s\" for a full repost."] = "Chuchotez \"%s\" pour votre attribution ou \"%s\" pour un repost complet."
 L["There are currently no assignments defined."] = "Il n'y a actuellement aucune affectation définie."
-L["You are assigned as Healer on [%s]."] = "Vous êtes affecté en tant que Guérisseur sur [%s]."
+L["You are assigned as Healer on [%s]."] = "Vous êtes affecté en tant que Heal sur [%s]."
 L["You have no assigned target here."] = "Vous n'avez pas de cible assignée ici."
+
 --	Help:
 L["ClassicHealingAssignments version %s options:"] = "Options de la version %s du ClassicHealingAssignments:"
 L["Syntax:"] = "Syntaxe:"
@@ -107,5 +110,9 @@ L["    Config       (default) Open the configuration dialogue."] = "    Config  
 L["    Version      Request version info from all clients."] = "    Version      Demander des informations sur la version de tous les clients."
 L["    Help         This help."] = "    Help         Afficher cette aide."
 
-
-
+--	Misc:
+L["Type %s/cha%s to configure the addon, or click the [+] button."] = "Tapez %s/cha%s pour configurer l'addon, ou cliquez sur le bouton [+]."
+L["Unknown command: %s"] = "Commande inconnue: %s"
+L["%s is using ClassicHealingAssignments version %s"] = "%s utilise ClassicHealingAssignments version %s"
+L["NOTE: A newer version of %s! is available (version %s)!"] = "REMARQUE: une version plus récente de %s! est disponible (version %s) !"
+L["You can download latest version from %s or %s."] = "Vous pouvez télécharger la dernière version depuis %s ou %s."

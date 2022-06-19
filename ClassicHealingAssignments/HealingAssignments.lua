@@ -1,12 +1,12 @@
 --[[
 --	ClassicHealingAssignments addon
 --	-------------------------------
---	Author: Mimma
+--	Author: Mimma @ <EU-Pyrewood Village>
 --	File:   HealingAssignments.lua
 --	Desc:	Core functionality: addon framework, event handling etc.
 --
 --	Version 1.x by Renew, Mimma.
---	Version 2.x coded from scratch by Mimma
+--	Version 2.x coded from scratch.
 --]]
 
 local addonMetadata = {
@@ -41,8 +41,10 @@ local CHA_CLASS_SHAMAN						= 0x000040;
 local CHA_CLASS_WARLOCK						= 0x000080;
 local CHA_CLASS_WARRIOR						= 0x000100;
 local CHA_CLASS_DEATHKNIGHT					= 0x000200;
+local CHA_CLASS_MONK						= 0x000400;
+local CHA_CLASS_DEMONHUNTER					= 0x000800;
 
-local CHA_RESOURCE_PLAYERS					= 0x00ffff;		--	Bitmask for all player types (room for 16 classes, only 10 used so far)
+local CHA_RESOURCE_PLAYERS					= 0x00ffff;		--	Bitmask for all player types (room for 16 classes, only 12 used so far)
 local CHA_RESOURCE_SYMBOLS					= 0x0f0000;		--	Bitmask for all non-player types
 
 local CHA_ROLE_NONE							= 0x0000;
@@ -59,49 +61,49 @@ local CHA_ResourceMatrix =  {
 		["icon"] = "Interface\\PaperDoll\\UI-Backpack-EmptySlot",
 		["color"] = { 128, 128, 128 },
 	}, {
-		["name"] = "{Skull}",
+		["name"] = "{rt8}",		-- {skull} only works in english clients. {rt8} works in all clients.
 		["mask"] = CHA_RESOURCE_RAIDICON,
 		["text"] = "Skull",
 		["icon"] = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8",
 		["color"] = CHA_COLOR_RAIDICON,
 	}, {
-		["name"] = "{Cross}",
+		["name"] = "{rt7}",
 		["mask"] = CHA_RESOURCE_RAIDICON,
 		["text"] = "Cross",
 		["icon"] = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_7",
 		["color"] = CHA_COLOR_RAIDICON,
 	}, {
-		["name"] = "{Square}",
+		["name"] = "{rt6}",
 		["mask"] = CHA_RESOURCE_RAIDICON,
 		["text"] = "Square",
 		["icon"] = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_6",
 		["color"] = CHA_COLOR_RAIDICON,
 	}, {
-		["name"] = "{Moon}",
+		["name"] = "{rt5}",
 		["mask"] = CHA_RESOURCE_RAIDICON,
 		["text"] = "Moon",
 		["icon"] = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_5",
 		["color"] = CHA_COLOR_RAIDICON,
 	}, {
-		["name"] = "{Triangle}",
+		["name"] = "{rt4}",
 		["mask"] = CHA_RESOURCE_RAIDICON,
 		["text"] = "Triangle",
 		["icon"] = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_4",
 		["color"] = CHA_COLOR_RAIDICON,
 	}, {
-		["name"] = "{Diamond}",
+		["name"] = "{rt3}",
 		["mask"] = CHA_RESOURCE_RAIDICON,
 		["text"] = "Diamond",		
 		["icon"] = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_3",
 		["color"] = CHA_COLOR_RAIDICON,
 	}, {
-		["name"] = "{Circle}",
+		["name"] = "{rt2}",
 		["mask"] = CHA_RESOURCE_RAIDICON,
 		["text"] = "Circle",
 		["icon"] = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_2",
 		["color"] = CHA_COLOR_RAIDICON,
 	}, {
-		["name"] = "{Star}",
+		["name"] = "{rt1}",
 		["mask"] = CHA_RESOURCE_RAIDICON,
 		["text"] = "Star",
 		["icon"] = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_1",
@@ -277,7 +279,7 @@ local CHA_Templates							= { };
 		["targets"] = 
 		{
 			{
-				["name"] = "{Skull}",
+				["name"] = "{rt8}",
 				["mask"] = 65536,
 				["text"] = "Skull",
 				["icon"] = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8",
@@ -469,6 +471,22 @@ end);
 
 --	Classes setup:
 local CHA_CLASS_MATRIX_MASTER = {
+	["DEMONHUNTER"] = {
+		["mask"] = CHA_CLASS_DEMONHUNTER,
+		["icon"] = 1260827,
+		["alliance-expac"] = 7,
+		["horde-expac"] = 7,
+		["role"] = CHA_ROLE_TANK,
+		["color"] = { 163, 48, 201 },
+	},
+	["DEATHKNIGHT"] = {
+		["mask"] = CHA_CLASS_DEATHKNIGHT,
+		["icon"] = 135771,
+		["alliance-expac"] = 3,
+		["horde-expac"] = 3,
+		["role"] = CHA_ROLE_TANK,
+		["color"] = { 196, 30, 58 },
+	},
 	["DRUID"] = {
 		["mask"] = CHA_CLASS_DRUID,
 		["icon"] = 625999,
@@ -486,6 +504,14 @@ local CHA_CLASS_MATRIX_MASTER = {
 		["icon"] = 626001,
 		["role"] = CHA_ROLE_NONE,
 		["color"] = { 105, 204, 240 },
+	},
+	["MONK"] = {
+		["mask"] = CHA_CLASS_MONK,
+		["icon"] = 626002,
+		["alliance-expac"] = 5,
+		["horde-expac"] = 5,
+		["role"] = CHA_ROLE_TANK + CHA_ROLE_HEALER,
+		["color"] = { 0, 255, 150 },
 	},
 	["PALADIN"] = {
 		["mask"] = CHA_CLASS_PALADIN,
@@ -526,14 +552,6 @@ local CHA_CLASS_MATRIX_MASTER = {
 		["icon"] = 626008,
 		["role"] = CHA_ROLE_TANK,
 		["color"] = { 199, 156, 110 },
-	},
-	["DEATHKNIGHT"] = {
-		["mask"] = CHA_CLASS_DEATHKNIGHT,
-		["icon"] = 135771,
-		["alliance-expac"] = 3,
-		["horde-expac"] = 3,
-		["role"] = CHA_ROLE_TANK,
-		["color"] = { 196, 30, 58 },
 	},
 };
 
@@ -1966,6 +1984,8 @@ end;
 
 --	Initalize the announcement channel dropdown box
 function CHA_ChannelDropDown_Initialize()
+	UIDropDownMenu_SetWidth(CHATextFrameChannelDropDown, 200);
+
 	A:refreshChannelList(true);
 
 	for channelIndex = 1, table.getn(A.chatChannels), 1 do
@@ -2206,7 +2226,7 @@ function CHA_GetPlayersInRoster()
 end;
 
 --	Format player name so it is short but still unique by "compressing" the realm name.
---	TODO: We need some kind of configurable options here.
+--	TODO: We need some kind of configurable option for this!
 function CHA_FormatPlayerName(playerName)
 	--local _, _, name = string.find(playerName, "([%S]*-%S)%S*");
 	local _, _, name, realm = string.find(playerName or "", "([%S]*)-(%S)%S*");

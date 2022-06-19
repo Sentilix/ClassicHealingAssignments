@@ -122,6 +122,8 @@ Version 2.0.0-beta1
 * Added: Validation of output channel:
   * /rw without promotion now converts to /r.
   * /rw, /r in party now converts to /p. 
+* Added: French translations, thanks to Emboukkan <EU-Nethergarde Keep> for translating.
+* Added: Support for Retail (although 99.9% untested since I don't play there)
 
 
 Version 2.0.0-alpha3

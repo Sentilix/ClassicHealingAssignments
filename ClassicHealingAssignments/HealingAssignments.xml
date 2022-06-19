@@ -208,9 +208,9 @@
 					<Layer level="ARTWORK">
 						<FontString name="$parentCaption" inherits="GameFontNormal" text="Add Target">
 							<Anchors>
-								<Anchor point="RIGHT" relativeTo="$parent">
+								<Anchor point="LEFT" relativeTo="CHAMainFrameAddTargetButton">
 									<Offset>
-										<AbsDimension x="78" y="0"/>
+										<AbsDimension x="20" y="0"/>
 									</Offset>
 								</Anchor>
 							</Anchors>
@@ -228,7 +228,7 @@
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="CHAMainFrame">
 						<Offset>
-							<AbsDimension x="308" y="-105" />
+							<AbsDimension x="328" y="-105" />
 						</Offset>
 					</Anchor>
 				</Anchors>
@@ -243,7 +243,7 @@
 							<Anchors>
 								<Anchor point="LEFT" relativeTo="CHAMainFrameKickDisconnectsButton">
 									<Offset>
-										<AbsDimension x="30" y="0"/>
+										<AbsDimension x="20" y="0"/>
 									</Offset>
 								</Anchor>
 							</Anchors>
@@ -261,7 +261,7 @@
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="CHAMainFrame">
 						<Offset>
-							<AbsDimension x="424" y="-105" />
+							<AbsDimension x="464" y="-105" />
 						</Offset>
 					</Anchor>
 				</Anchors>
@@ -276,7 +276,7 @@
 							<Anchors>
 								<Anchor point="LEFT" relativeTo="CHAMainFrameResetAllButton">
 									<Offset>
-										<AbsDimension x="30" y="0"/>
+										<AbsDimension x="20" y="0"/>
 									</Offset>
 								</Anchor>
 							</Anchors>
@@ -468,11 +468,11 @@
 			<!-- "Add template" button -->
 			<Button name="$parentAddTemplateButton" inherits="UIPanelButtonTemplate" text="Add template" frameStrata="HIGH">
 				<Size>
-					<AbsDimension x="100" y="22" />
+					<AbsDimension x="130" y="24" />
 				</Size>
 				<Anchors>
 					<Anchor point="TOPLEFT">
-						<Offset x="37" y="-78" />
+						<Offset x="34" y="-77" />
 					</Anchor>
 				</Anchors>
 				<Scripts>
@@ -553,7 +553,7 @@
 			<KeyValue key="backdropBorderColor" value="WHITE" type="global"/>
 		</KeyValues>
 		<Size>
-			<AbsDimension x="500" y="300" />
+			<AbsDimension x="550" y="300" />
 		</Size>
 		<Anchors>
 			<Anchor point="TOP" relativeTo="CHAMainFrame">
@@ -565,7 +565,7 @@
 			<EditBox name="$parentHeadline" inherits="EditBoxTextTemplate" hidden="false">
 				<Anchors>
 					<Anchor point="TOPLEFT">
-						<Offset x="120" y="-50"/>
+						<Offset x="160" y="-50"/>
 					</Anchor>
 				</Anchors>
 			</EditBox>
@@ -573,7 +573,7 @@
 			<EditBox name="$parentContentLine" inherits="EditBoxTextTemplate" hidden="false">
 				<Anchors>
 					<Anchor point="TOPLEFT">
-						<Offset x="120" y="-84"/>
+						<Offset x="160" y="-84"/>
 					</Anchor>
 				</Anchors>
 			</EditBox>
@@ -581,7 +581,7 @@
 			<EditBox name="$parentBottomLine" inherits="EditBoxTextTemplate" hidden="false">
 				<Anchors>
 					<Anchor point="TOPLEFT">
-						<Offset x="120" y="-148"/>
+						<Offset x="160" y="-148"/>
 					</Anchor>
 				</Anchors>
 			</EditBox>
@@ -589,7 +589,7 @@
 			<EditBox name="$parentWhisperLine" inherits="EditBoxTextTemplate" hidden="false">
 				<Anchors>
 					<Anchor point="TOPLEFT">
-						<Offset x="120" y="-182"/>
+						<Offset x="160" y="-182"/>
 					</Anchor>
 				</Anchors>
 			</EditBox>
@@ -597,7 +597,7 @@
 			<CheckButton name="$parentCBWhisper" inherits="OptionsCheckButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT">
-						<Offset x="90" y="-180"/>
+						<Offset x="130" y="-180"/>
 					</Anchor>
 				</Anchors>
 				<Scripts>
@@ -614,7 +614,7 @@
 				</Size>
 				<Anchors>
 					<Anchor point="TOPLEFT">
-						<Offset x="100" y="-214"/>
+						<Offset x="140" y="-214"/>
 					</Anchor>
 				</Anchors>
 				<Scripts>
@@ -628,7 +628,7 @@
 							<Anchors>
 								<Anchor point="LEFT" relativeTo="$parent">
 									<Offset>
-										<AbsDimension x="-80" y="3"/>
+										<AbsDimension x="-110" y="3"/>
 									</Offset>
 								</Anchor>
 							</Anchors>
@@ -659,7 +659,7 @@
 				<FontString name="$parentMainTitle" inherits="GameFontNormal" text="Classic Healing Announcements" font="Fonts\FRIZQT__.TTF">
 					<Anchors>
 						<Anchor point="TOP" relativeTo="CHATextFrame">
-							<Offset x="0" y="-10"/>
+							<Offset x="-30" y="-10"/>
 						</Anchor>
 					</Anchors>
 					<Color r="0.9" g="0.9" b="0.9" />
@@ -669,7 +669,7 @@
 				<FontString name="$parentHeadlineCaption" inherits="GameFontNormal" text="Headline">
 					<Anchors>
 						<Anchor point="LEFT" relativeTo="CHATextFrameHeadline">
-							<Offset x="-100" y="0"/>
+							<Offset x="-130" y="0"/>
 						</Anchor>
 					</Anchors>
 				</FontString>
@@ -677,7 +677,7 @@
 				<FontString name="$parentAssignmentsCaption" inherits="GameFontNormal" text="Assignments">
 					<Anchors>
 						<Anchor point="LEFT" relativeTo="CHATextFrameContentLine">
-							<Offset x="-100" y="0"/>
+							<Offset x="-130" y="0"/>
 						</Anchor>
 					</Anchors>
 				</FontString>
@@ -701,7 +701,7 @@
 				<FontString name="$parentRaidLineCaption" inherits="GameFontNormal" text="Raid line">
 					<Anchors>
 						<Anchor point="LEFT" relativeTo="CHATextFrameBottomLine">
-							<Offset x="-100" y="0"/>
+							<Offset x="-130" y="0"/>
 						</Anchor>
 					</Anchors>
 				</FontString>
