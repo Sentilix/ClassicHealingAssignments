@@ -1,9 +1,9 @@
-## Interface: 20504
+## Interface: 30401
 ## Title: Classic Healing Assignments
 ## Author: Mimma @ <EU-Pyrewood Village>
 ## X-Translations: French translation by Emboukkan @ <EU-Nethergarde Keep>
 ## X-Originally By: Renew @ vanillagaming.org for the 1.12 client.
-## X-Expansion-Level: 2
+## X-Expansion-Level: 3
 ## Version: 2.0.1
 ## X-Curse-Project-ID: 349302
 ## X-WoWI-ID: 25438

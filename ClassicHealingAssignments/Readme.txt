@@ -115,6 +115,12 @@ Renew @ Vanillagaming.org
 3.3 Versions
 ------------
 
+Version 2.0.1
+-------------------
+* Added: Preliminary support for WotLK
+* Update: Fixed Wago ID in TOC.
+
+
 Version 2.0.0
 -------------------
 * Added: Options for different name formats.
