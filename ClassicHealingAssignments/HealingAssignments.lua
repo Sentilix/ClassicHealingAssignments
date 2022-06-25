@@ -239,6 +239,34 @@ local CHA_CurrentTargetIndex				= 0;
 local CHA_CurrentHealerIndex				= 0;
 local CHA_LocalPlayerName					= "";
 
+local CHA_PlayerNameFormats = {
+	{ 
+		["name"] = "Player", 
+		["pattern"] = "([%S]*)-%S*",
+		["output"] = "$1",
+	}, { 
+		["name"] = "Player-RealmName",
+		["pattern"] = "([%S]*)", 
+		["output"] = "$1",
+	}, { 
+		["name"] = "R:Player", 
+		["pattern"] = "([%S]*)-(%S)%S*",
+		["output"] = "$2:$1",
+	}, { 
+		["name"] = "Player-Rea",
+		["pattern"] = "([%S]*)-(...)%S*",
+		["output"] = "$1-$2",
+	}, { 
+		["name"] = "Player-RN", 
+		["pattern"] = "([%S]*)-(%S)[a-z]*(%S)%S*",
+		["output"] = "$1-$2$3",
+	},
+};
+
+	----local _, _, name = string.find(playerName, "([%S]*-%S)%S*");
+	--local _, _, name, realm = string.find(playerName or "", "([%S]*)-(%S)%S*");
+
+
 --	Persisted options:
 CHA_PersistedData							= { };
 
@@ -248,11 +276,13 @@ local CHA_KEY_AnnounceButtonPosY			= "AnnounceButton.Y";
 local CHA_KEY_AnnounceButtonSize			= "AnnounceButton.Size";
 local CHA_KEY_AnnounceButtonVisible			= "AnnounceButton.Visible";
 local CHA_KEY_AnnouncementChannel			= "Announcement.Channel";
+local CHA_KEY_NameFormatIndex				= "Announcement.NameFormatIndex";
 local CHA_KEY_Templates						= "Templates";
 
 local CHA_DEFAULT_ActiveTemplate			= nil;
 local CHA_DEFAULT_AnnounceButtonSize		= 32;
 local CHA_DEFAULT_AnnounceButtonVisible		= true;
+local CHA_DEFAULT_NameFormatIndex			= 1;
 
 local CHA_ActiveTemplate					= CHA_DEFAULT_ActiveTemplate;
 local CHA_AnnounceButtonSize				= CHA_DEFAULT_AnnounceButtonSize;
@@ -260,6 +290,7 @@ local CHA_AnnounceButtonVisible				= CHA_DEFAULT_AnnounceButtonVisible;
 local CHA_AnnouncementChannel				= "";
 local CHA_MinimapX							= 0;
 local CHA_MinimapY							= 0;
+local CHA_NameFormatIndex					= CHA_DEFAULT_NameFormatIndex;
 local CHA_Templates							= { };
 --[[
 	Templates:
@@ -709,6 +740,13 @@ function CHA_ReadConfigurationSettings()
 	--	Announcement channel:
 	CHA_ProcessConfiguredAnnouncementChannel(CHA_GetOption(CHA_KEY_AnnouncementChannel, 0));
 	CHA_SetOption(CHA_KEY_AnnouncementChannel, CHA_AnnouncementChannel);
+
+	--	Name format index:
+	CHA_NameFormatIndex = (CHA_GetOption(CHA_KEY_NameFormatIndex, CHA_DEFAULT_NameFormatIndex));
+	if CHA_NameFormatIndex > table.getn(CHA_PlayerNameFormats) then
+		CHA_NameFormatIndex = CHA_DEFAULT_NameFormatIndex;
+	end;
+	CHA_SetOption(CHA_KEY_NameFormatIndex, CHA_NameFormatIndex);
 end;
 
 --	Get a configuration option by KEY, returns defaultValue if not found.
@@ -864,6 +902,7 @@ end;
 function CHA_OpenTextConfigDialogue()
 	CHA_UpdateAnnouncementTexts();
 	CHA_ForceClosePopups();
+	CHASourceFrame:Hide();
 	CHATextFrame:Show();
 end;
 
@@ -997,11 +1036,7 @@ function CHA_UpdateResourceFrames()
 			--	TARGET frames:
 			fTargetIcon:SetNormalTexture(target["icon"]);
 			fTargetIcon:SetPushedTexture(target["icon"]);
-			if bit.band(target["mask"], CHA_RESOURCE_PLAYERS) > 0 then
-				fTargetCaption:SetText(CHA_FormatPlayerName(target["text"]));
-			else
-				fTargetCaption:SetText(target["text"]);
-			end;
+			fTargetCaption:SetText(target["text"]);
 
 			--	HEALER frames: 
 			--	Each frame can have up to CHA_FRAME_MAXPLAYERS healers assigned.
@@ -1015,7 +1050,7 @@ function CHA_UpdateResourceFrames()
 					local fHealerButtonName = string.format("healerbutton_%d_%d", index, healerIndex);
 					local fHealerButton = _G[fHealerButtonName];
 					if bit.band(healer["mask"], CHA_RESOURCE_PLAYERS) > 0 then
-						_G[fHealerButtonName.."Caption"]:SetText(CHA_FormatPlayerName(healer["text"]));
+						_G[fHealerButtonName.."Caption"]:SetText(healer["text"]);
 
 						local unitid = A:getUnitidFromName(healer["name"]);
 						if not (unitid and UnitIsConnected(unitid)) then
@@ -1116,6 +1151,8 @@ function CHA_UpdateAnnouncementTexts()
 	else
 		CHATextFrameCBWhisper:SetChecked();
 	end;
+
+	UIDropDownMenu_SetText(CHATextFrameNameFormatDropDown, CHA_FormatPlayerName(CHA_LocalPlayerName));
 end;
 
 
@@ -1671,7 +1708,7 @@ function CHA_RenameTemplate_OK(oldTemplateName, newTemplateName)
 
 	if CHA_CurrentTemplateOperation == "RENAME" then
 		--	Rename existing template:
-		CHA_Templates[index]["templatename"] = newTemplateName;
+		CHA_Templates[CHA_CurrentTemplateIndex]["templatename"] = newTemplateName;
 
 		if CHA_ActiveTemplate == oldTemplateName then
 			CHA_ActiveTemplate = newTemplateName;
@@ -1681,12 +1718,12 @@ function CHA_RenameTemplate_OK(oldTemplateName, newTemplateName)
 		--	Clone template to new (keep existing)
 		local newIndex = CHA_CreateTemplate(newTemplateName);
 
-		local template = A:cloneTable(CHA_Templates[index]);
+		local template = A:cloneTable(CHA_Templates[CHA_CurrentTemplateIndex]);
 		template["templatename"] = newTemplateName;
 		CHA_Templates[newIndex] = template;
 
 		--	Move copy up below original table:
-		for n = newIndex-1, index+1, -1 do
+		for n = newIndex-1, CHA_CurrentTemplateIndex+1, -1 do
 			CHA_SwapTemplates(n);
 		end;
 	end;
@@ -1747,6 +1784,7 @@ function CHA_TranslateUI()
 	CHAMainFrameTextButton:SetText(A:XL("Texts"));
 	--	CHATextFrame: (text management)
 	CHATextFrameChannelDropDownCaption:SetText(A:XL("Announce in"));
+	CHATextFrameNameFormatDropDownCaption:SetText(A:XL("Name format"));
 	CHATextFrameMainTitle:SetText(A:XL("Classic Healing Announcements"));
 	CHATextFrameHeadlineCaption:SetText(A:XL("Headline"));
 	CHATextFrameAssignmentsCaption:SetText(A:XL("Assignments"));
@@ -2016,6 +2054,35 @@ function CHA_UpdateChannelDropDownText()
 	end;
 end;
 
+--	Initalize the name format dropdown box
+function CHA_NameFormatDropDown_Initialize()
+	UIDropDownMenu_SetWidth(CHATextFrameNameFormatDropDown, 200);
+
+	for nameFormatIndex = 1, table.getn(CHA_PlayerNameFormats), 1 do
+		local info = UIDropDownMenu_CreateInfo();
+		info.notCheckable = true;
+		info.text       = CHA_FormatPlayerName(CHA_LocalPlayerName, nameFormatIndex);
+		info.func       = function() CHA_NameFormatDropDown_OnClick(this, nameFormatIndex) end;
+		UIDropDownMenu_AddButton(info);
+	end
+end;
+
+function CHA_NameFormatDropDown_OnClick(sender, nameFormatIndex)
+	local formatInfo = CHA_PlayerNameFormats[nameFormatIndex];
+
+	if formatInfo then
+		CHA_NameFormatIndex = nameFormatIndex;
+	else
+		CHA_NameFormatIndex = CHA_DEFAULT_NameFormatIndex;
+		formatInfo = CHA_PlayerNameFormats[CHA_NameFormatIndex];
+	end;
+
+	CHA_SetOption(CHA_KEY_NameFormatIndex, CHA_NameFormatIndex);
+
+	CHA_UpdateUI();
+end;
+
+
 --	Initalize UI config options with some value. It might be updated later once 
 --	configuration is read.
 function CHA_InitializeOptions()
@@ -2226,17 +2293,30 @@ function CHA_GetPlayersInRoster()
 end;
 
 --	Format player name so it is short but still unique by "compressing" the realm name.
---	TODO: We need some kind of configurable option for this!
-function CHA_FormatPlayerName(playerName)
-	--local _, _, name = string.find(playerName, "([%S]*-%S)%S*");
-	local _, _, name, realm = string.find(playerName or "", "([%S]*)-(%S)%S*");
-	if not name then
-		return playerName; 
+--	Leave formatIndex as nil if using the current configured one.
+function CHA_FormatPlayerName(playerName, formatIndex)
+	--	"cannot happen", just protecting for LUA errors ...
+	if not playerName then 
+		return ""; 
 	end;
 
-	name = string.format("%s:%s", realm, name);
+	if not formatIndex then
+		formatIndex = CHA_NameFormatIndex;
+	end;
 
-	return name;
+	--	Fetch current format info
+	local formatInfo = CHA_PlayerNameFormats[formatIndex];
+	if not formatInfo then
+		return playerName;
+	end;
+
+	local _, _, g1, g2, g3 = string.find(playerName, formatInfo["pattern"]);
+
+	local outputName = string.gsub(formatInfo["output"], "$1", g1 or "");
+	outputName = string.gsub(outputName, "$2", g2 or "");
+	outputName = string.gsub(outputName, "$3", g3 or "");
+
+	return outputName;
 end;
 
 --	Swap targets (Healers are swapped with them!)
@@ -2718,3 +2798,4 @@ function CHA_OnLoad()
 
 	C_ChatInfo.RegisterAddonMessagePrefix(A.addonPrefix);
 end;
+

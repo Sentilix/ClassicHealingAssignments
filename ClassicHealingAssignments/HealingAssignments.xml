@@ -553,7 +553,7 @@
 			<KeyValue key="backdropBorderColor" value="WHITE" type="global"/>
 		</KeyValues>
 		<Size>
-			<AbsDimension x="550" y="300" />
+			<AbsDimension x="550" y="340" />
 		</Size>
 		<Anchors>
 			<Anchor point="TOP" relativeTo="CHAMainFrame">
@@ -625,6 +625,35 @@
 				<Layers>
 					<Layer level="ARTWORK">
 						<FontString name="$parentCaption" inherits="GameFontNormal" text="Announce in">
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="-110" y="3"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Button>
+			<!-- Config: Announcement channel dropdown -->
+			<Button name="$parentNameFormatDropDown" inherits="UIDropDownMenuTemplate" frameStrata="HIGH">
+				<Size>
+					<AbsDimension x="200" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="140" y="-248"/>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						UIDropDownMenu_Initialize(self, CHA_NameFormatDropDown_Initialize);
+					</OnLoad>
+				</Scripts>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="$parentCaption" inherits="GameFontNormal" text="Name format">
 							<Anchors>
 								<Anchor point="LEFT" relativeTo="$parent">
 									<Offset>

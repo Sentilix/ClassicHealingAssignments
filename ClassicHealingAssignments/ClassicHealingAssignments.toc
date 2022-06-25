@@ -4,7 +4,10 @@
 ## X-Translations: French translation by Emboukkan @ <EU-Nethergarde Keep>
 ## X-Originally By: Renew @ vanillagaming.org for the 1.12 client.
 ## X-Expansion-Level: 9
-## Version: 2.0.0-beta1
+## Version: 2.0.0
+## X-Curse-Project-ID: 349302
+## X-WoWI-ID: 25438
+## X-Wago-ID: ld3Z8pQ9
 ## Notes: Addon for Healing Assignments
 ## DefaultState: Enabled
 ## LoadOnDemand: 0

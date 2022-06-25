@@ -11,6 +11,7 @@ L["CTRL+Rightclick: test announcement locally"] = "CTRL+Clic droit : tester l'an
 L["Healers: %s/%s"] = "Healers: %s/%s"
 L["Texts"] = "Textes"
 L["Announce in"] = "Annoncer dans"
+L["Name format"] = "Format du nom"
 L["Classic Healing Announcements"] = "Annonces de Heal Classiques"
 L["Headline"] = "Gros titre"
 L["Assignments"] = "Attributions"

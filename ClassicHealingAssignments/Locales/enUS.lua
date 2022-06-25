@@ -11,6 +11,7 @@ L["CTRL+Rightclick: test announcement locally"] = true
 L["Healers: %s/%s"] = true
 L["Texts"] = true
 L["Announce in"] = true
+L["Name format"] = true
 L["Classic Healing Announcements"] = true
 L["Headline"] = true
 L["Assignments"] = true

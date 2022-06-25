@@ -116,6 +116,16 @@ This addon is a port of Vanilla Healing Assignments, originally made by Renew @ 
 
 
 
+Version 2.0.0
+-------------------
+* Added: Options for different name formats.
+
+
+Version 2.0.0-beta2
+-------------------
+* Bugfix: Renaming of Templates did not work.
+
+
 Version 2.0.0-beta1
 -------------------
 * Added: Responses to "!me" and "!repost" are now working.
