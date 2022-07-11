@@ -23,6 +23,9 @@
     <Content Include="ClassicHealingAssignments-TBC.toc">
       <SubType>TableOfContents</SubType>
     </Content>
+    <Content Include="ClassicHealingAssignments-WotLK.toc">
+      <SubType>TableOfContents</SubType>
+    </Content>
     <Content Include="DigamAddonLib.lua">
       <SubType>Code</SubType>
     </Content>

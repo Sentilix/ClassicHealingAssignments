@@ -531,10 +531,10 @@
 				tinsert(UISpecialFrames, self:GetName());
 			</OnLoad>
 			<OnShow>
-				PlaySound(IG_MAINMENU_OPEN);
+				PlaySound(IG_MAINMENU_OPEN, "Master");
 			</OnShow>
 			<OnHide>
-				PlaySound(IG_MAINMENU_CLOSE);
+				PlaySound(IG_MAINMENU_CLOSE, "Master");
 			</OnHide>
 			<OnDragStart>
 				self:StartMoving()

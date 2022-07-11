@@ -2412,9 +2412,9 @@ function CHA_CreateTemplate(templateName)
 		--	This is on purpose since this can be translated directly in the UI.
 		CHA_Templates[templateCount] = {
 			["templatename"]	= templateName,
-			["headlinetext"]	= "__/\\___/\\__ "..A:XL("HEALER Assignments :"),
+			["headlinetext"]	= "-\\/-\\/- "..A:XL("HEALER Assignments :"),
 			["contenttext"]		= " * {TARGET} == {ASSIGNMENTS}",
-			["bottomtext"]		= A:XL("All other healers: Heal the raid."),
+			["bottomtext"]		= "-/\\-/\\- "..A:XL("All other healers: Heal the raid."),
 			["whispertext"]		= string.format(A:XL("Whisper \"%s\" for your assignment or \"%s\" for a full repost."), CHA_WHISPER_ME, CHA_WHISPER_REPOST),
 			["showwhispertext"] = false,
 			["targetmask"]		= CHA_MASK_TARGET_DEFAULT,
@@ -2621,26 +2621,30 @@ function CHA_GenerateAnnouncements(isWhisperingBack)
 
 		--	Each "tank" can have up to 8 healers:
 		local assigned = "";
-		for pIndex, healer in next, target["healers"] do
-			if bit.band(healer["mask"], CHA_RESOURCE_UNASSIGNED) == 0 then
-				if assigned ~= "" then
-					assigned = assigned ..", ";
-				end;
+		if target["healers"] then
+			for pIndex, healer in next, target["healers"] do
+				if bit.band(healer["mask"], CHA_RESOURCE_UNASSIGNED) == 0 then
+					if assigned ~= "" then
+						assigned = assigned ..", ";
+					end;
 
-				resourceName = healer["text"];
-				if bit.band(healer["mask"], CHA_RESOURCE_RAIDICON) > 0 then
-					resourceName = healer["name"];
-				end;
+					resourceName = healer["text"];
+					if bit.band(healer["mask"], CHA_RESOURCE_RAIDICON) > 0 then
+						resourceName = healer["name"];
+					end;
 
-				assigned = assigned .. resourceName;
+					assigned = assigned .. resourceName;
+				end;
 			end;
 		end;
 
-		local assignments = content;
-		assignments = string.gsub(assignments, "{TARGET}", targetName);
-		assignments = string.gsub(assignments, "{ASSIGNMENTS}", assigned);
+		if assigned ~= "" then
+			local assignments = content;
+			assignments = string.gsub(assignments, "{TARGET}", targetName);
+			assignments = string.gsub(assignments, "{ASSIGNMENTS}", assigned);
 
-		tinsert(announcements, assignments);
+			tinsert(announcements, assignments);
+		end;
 	end;
 
 	if bottom ~= "" then

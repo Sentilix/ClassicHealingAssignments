@@ -117,8 +117,10 @@ Renew @ Vanillagaming.org
 
 Version 2.0.1
 -------------------
-* Added: Preliminary support for WotLK
-* Update: Fixed Wago ID in TOC.
+* Added: Preliminary support for WotLK (untested, addons not enabled in PTR yet)
+* Update: Wago ID in TOC updated.
+* Bugfix: Empty tank targets gave LUA error when announced - fixed
+* Bugfix: Opening config screen sometimes gave a LUA error - fixed
 
 
 Version 2.0.0
