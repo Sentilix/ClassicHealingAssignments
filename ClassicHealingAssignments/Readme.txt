@@ -115,6 +115,12 @@ Renew @ Vanillagaming.org
 3.3 Versions
 ------------
 
+Version 2.0.2
+-------------------
+* Bumped Wrath client version to 3.4.2
+* Bumped Classic client version to 1.14.4
+
+
 Version 2.0.1
 -------------------
 * Added: Preliminary support for WotLK (untested, addons not enabled in PTR yet)
