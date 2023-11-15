@@ -115,6 +115,12 @@ Renew @ Vanillagaming.org
 3.3 Versions
 ------------
 
+Version 2.0.3
+-------------------
+* Bumped Wrath client version to 3.4.3
+* Bumped Classic client version to 1.15.0
+
+
 Version 2.0.2
 -------------------
 * Bumped Wrath client version to 3.4.2
