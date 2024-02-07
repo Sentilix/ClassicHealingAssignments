@@ -1,4 +1,4 @@
-## Interface: 11500
+## Interface: 11501
 ## Title: Classic Healing Assignments
 ## Author: Mimma @ <EU-Pyrewood Village>
 ## X-Translations: French translation by Emboukkan @ <EU-Nethergarde Keep>
