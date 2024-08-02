@@ -115,6 +115,10 @@ Renew @ Vanillagaming.org
 3.3 Versions
 ------------
 
+Version 3.0.0
+* Rewrote more or less everything: new UI, new Flow, new Templates ...
+
+
 Version 2.0.7
 * Bumped Classic client version to 1.15.3
 
