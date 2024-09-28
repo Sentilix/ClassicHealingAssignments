@@ -78,7 +78,7 @@
 				</Layers>
 			</Frame>
 			<!-- Include raid icons? -->
-			<CheckButton name="$parentCBRaidicons" inherits="OptionsCheckButtonTemplate">
+			<CheckButton name="$parentCBRaidicons" inherits="ChatConfigCheckButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset x="116" y="-80"/>
@@ -95,7 +95,7 @@
 				</Scripts>
 			</CheckButton>
 			<!-- Include Directions? -->
-			<CheckButton name="$parentCBDirections" inherits="OptionsCheckButtonTemplate">
+			<CheckButton name="$parentCBDirections" inherits="ChatConfigCheckButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset x="116" y="-110"/>
@@ -112,7 +112,7 @@
 				</Scripts>
 			</CheckButton>
 			<!-- Include Groups? -->
-			<CheckButton name="$parentCBGroups" inherits="OptionsCheckButtonTemplate">
+			<CheckButton name="$parentCBGroups" inherits="ChatConfigCheckButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset x="116" y="-140"/>
@@ -129,7 +129,7 @@
 				</Scripts>
 			</CheckButton>
 			<!-- Include Custom? -->
-			<CheckButton name="$parentCBCustom" inherits="OptionsCheckButtonTemplate">
+			<CheckButton name="$parentCBCustom" inherits="ChatConfigCheckButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset x="116" y="-170"/>
@@ -176,6 +176,6 @@
 				</Scripts>
 			</Button>
 		</Frames>
-		
+
 	</Frame>
 </Ui>

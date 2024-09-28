@@ -115,6 +115,10 @@ Renew @ Vanillagaming.org
 3.3 Versions
 ------------
 
+Version 2.0.9
+* Fixed broken checkboxes after updating to 1.15.4 API. Thanks Blizzard for changing API in a #nochanges game.
+
+
 Version 2.0.8
 * Bumped Classic client version to 1.15.4
 

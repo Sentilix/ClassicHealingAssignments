@@ -53,7 +53,7 @@
 			<Color r="0.0" g="0.0" b="0.5" a="0.5"/>
 		</NormalTexture>
 	</Button>
-	
+
 	<!-- Frame template for one target ("tank") button -->
 	<Button name="CHATargetButtonTemplate" inherits="ActionButtonTemplate" frameStrata="HIGH" hidden="false" virtual="true">
 		<Size>
@@ -154,7 +154,7 @@
 			</OnClick>
 		</Scripts>
 	</Button>
-	
+
 	<!-- Main config frame -->
 	<Frame name="CHAMainFrame" parent="UIParent" toplevel="true" inherits="BackdropTemplate" frameStrata="MEDIUM" hidden="true">
 		<Size>
@@ -560,7 +560,7 @@
 				<Offset x="0" y="-100" />
 			</Anchor>
 		</Anchors>
-		<Frames>			
+		<Frames>
 			<!-- Editbox 1: headline -->
 			<EditBox name="$parentHeadline" inherits="EditBoxTextTemplate" hidden="false">
 				<Anchors>
@@ -594,7 +594,7 @@
 				</Anchors>
 			</EditBox>
 			<!-- Include Whisper line? -->
-			<CheckButton name="$parentCBWhisper" inherits="OptionsCheckButtonTemplate">
+			<CheckButton name="$parentCBWhisper" inherits="ChatConfigCheckButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset x="130" y="-180"/>
