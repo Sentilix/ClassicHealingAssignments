@@ -4,7 +4,7 @@
 ## X-Translations: French translation by Emboukkan @ <EU-Nethergarde Keep>
 ## X-Originally By: Renew @ vanillagaming.org for the 1.12 client.
 ## X-Expansion-Level: 2
-## Version: 2.0.9
+## Version: 2.0.10
 ## X-Curse-Project-ID: 349302
 ## X-WoWI-ID: 25438
 ## X-Wago-ID: rkGra7Ky
