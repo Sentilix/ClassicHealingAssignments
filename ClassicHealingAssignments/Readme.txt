@@ -115,6 +115,10 @@ Renew @ Vanillagaming.org
 3.3 Versions
 ------------
 
+Version 2.0.11
+* Bumped Classic client version to 1.15.6
+
+
 Version 2.0.10
 * Bumped Classic client version to 1.15.5
 
