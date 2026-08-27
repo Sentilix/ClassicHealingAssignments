@@ -375,6 +375,7 @@ CHA_BACKDROP_EDITBOX = {
 	tileEdge = true,
 };
 
+-- v2.1.0: Fixed for 1.15.9:
 StaticPopupDialogs["CHA_DIALOG_ADDTEMPLATE"] = {
 	text = "Name of template:",
 	button1 = "OK",
@@ -385,27 +386,40 @@ StaticPopupDialogs["CHA_DIALOG_ADDTEMPLATE"] = {
 	preferredIndex = 3,
 	hasEditBox = true,
 	OnShow = function(self, data)
-		self.editBox:SetText(self.text.text_arg1 or ""); 
-		self.editBox:SetWidth(140); 
-		self.editBox:SetScript("OnEnterPressed", function(self)
-			self:GetParent().button1:Click();
+		-- FIXED: editBox -> EditBox (Uppercase E)
+		self.EditBox:SetText(data or ""); 
+		self.EditBox:SetWidth(140); 
+		self.EditBox:SetScript("OnEnterPressed", function(editBoxInstance)
+			local popupName = editBoxInstance:GetParent():GetName();
+			local okButton = _G[popupName .. "Button1"];
+			if okButton then
+				okButton:Click();
+			end;
 		end);
 	end,
 	OnAccept = function(self, data, data2)
-		if self.text.text_arg1 then
-			CHA_RenameTemplate_OK(self.text.text_arg1, self.editBox:GetText())
+		-- FIXED: Use your explicit operation variable to determine Rename vs Add
+		if CHA_CurrentTemplateOperation == "RENAME" then
+			-- FIXED: Instead of relying on 'data' (which gets wiped), fetch the old name directly from your data store
+			local template = CHA_GetTemplateById(CHA_CurrentTemplateIndex);
+			local oldName = template and template["templatename"] or "";
+			CHA_RenameTemplate_OK(oldName, self.EditBox:GetText()); 
 		else
-			CHA_AddTemplate_OK(self.editBox:GetText()); 
+			CHA_AddTemplate_OK(self.EditBox:GetText()); 
 		end;
 	end,
 	EditBoxOnTextChanged = function(self, data)
-		if self:GetText() == "" then
-			self:GetParent().button1:Disable()
-		else
-			self:GetParent().button1:Enable();
+		local popupName = self:GetParent():GetName();
+		local okButton = _G[popupName .. "Button1"];
+		if okButton then
+			if self:GetText() == "" then
+				okButton:Disable(); 
+			else
+				okButton:Enable();  
+			end;
 		end;
 	end,
-}
+};
 
 StaticPopupDialogs["CHA_DIALOG_RENAME_RESOURCE"] = {
 	text = "New name:",
@@ -885,18 +899,20 @@ end;
 
 --	Close all popups. Used to avoid open popups with data for
 --	a window which was later changed.
+--	v2.1.0: 1.15.9: Fixed dropdown closing
 function CHA_ForceClosePopups()
 	StaticPopup_Hide("CHA_DIALOG_ADDTEMPLATE");
 	StaticPopup_Hide("CHA_DIALOG_RENAME_RESOURCE");
 	StaticPopup_Hide("DIGAM_DIALOG_CONFIRMATION");
 	StaticPopup_Hide("DIGAM_DIALOG_ERROR");
 
-	HideDropDownMenu(1, nil, CHA_TargetDropdownMenu, "cursor", 3, -3);
-	HideDropDownMenu(1, nil, CHA_HealerDropdownMenu, "cursor", 3, -3);
-	HideDropDownMenu(1, nil, CHA_TemplateOptionsMenu, "cursor", 3, -3);
-	HideDropDownMenu(1, nil, CHA_TargetOptionsMenu, "cursor", 3, -3);
-	HideDropDownMenu(1, nil, CHA_HealerOptionsMenu, "cursor", 3, -3);
+	-- FIXED: HideDropDownMenu is deprecated/broken in 1.15.x.
+	-- We use Blizzards modern MenuUtil to safely close any open dropdown menus instantly.
+	if MenuUtil and MenuUtil.CloseAllMenus then
+		MenuUtil.CloseAllMenus();
+	end;
 end;
+
 
 --	Open the text configuation dialogue after making sure all popups are shut down first
 function CHA_OpenTextConfigDialogue()
@@ -1237,21 +1253,25 @@ end;
 --	Called when the Template:Clone is selected.
 --	A popup is shown, letting the user enter a name for the new template.
 --	CHA_CurrentTemplateOperation is set so we know what to do when popup close.
+--	v2.1.0: 1.15.9: Pass nil for text_arg1 and text_arg2 so the template name lands correctly in the 'data' parameter
 function CHA_TemplateOptionsMenu_Clone()
 	local template = CHA_GetTemplateById(CHA_CurrentTemplateIndex);
 	CHA_CurrentTemplateOperation = "CLONE";
 
-	StaticPopup_Show("CHA_DIALOG_ADDTEMPLATE", template["templatename"]);
+	-- FIXED: Pass nil for text_arg1 and text_arg2 so the template name lands correctly in the 'data' parameter for 1.15.x
+	StaticPopup_Show("CHA_DIALOG_ADDTEMPLATE", nil, nil, template["templatename"]);
 end;
+
 
 --	Called when the Template:Rename is selected.
 --	A popup is shown, letting the user enter a new name for the template.
 --	CHA_CurrentTemplateOperation is set so we know what to do when popup close.
+--	v2.1.0: 1.15.9: Pass nil for text_arg1 and text_arg2 so the template name lands correctly in the 'data' parameter
 function CHA_TemplateOptionsMenu_Rename()
 	local template = CHA_GetTemplateById(CHA_CurrentTemplateIndex);
 	CHA_CurrentTemplateOperation = "RENAME";
 
-	StaticPopup_Show("CHA_DIALOG_ADDTEMPLATE", template["templatename"]);
+	StaticPopup_Show("CHA_DIALOG_ADDTEMPLATE", nil, nil, template["templatename"]);
 end;
 
 --	Called when the Template:Delete is selected.
@@ -1280,8 +1300,9 @@ end;
 
 --	Called when "Add Template" is clicked.
 --	Popup is shown, asking for a name for the template.
+--	v2.1.0: 1.15.9: Pass nil for text_arg1 and text_arg2 so the template name lands correctly in the 'data' parameter
 function CHA_AddTemplateOnClick()
-	StaticPopup_Show("CHA_DIALOG_ADDTEMPLATE");
+	StaticPopup_Show("CHA_DIALOG_ADDTEMPLATE", nil, nil, "");
 end;
 
 --	Called when the main "announcement" button is clicked.
