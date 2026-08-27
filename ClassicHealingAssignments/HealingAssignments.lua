@@ -421,6 +421,7 @@ StaticPopupDialogs["CHA_DIALOG_ADDTEMPLATE"] = {
 	end,
 };
 
+-- v2.1.0: Fixed for 1.15.9:
 StaticPopupDialogs["CHA_DIALOG_RENAME_RESOURCE"] = {
 	text = "New name:",
 	button1 = "OK",
@@ -431,23 +432,31 @@ StaticPopupDialogs["CHA_DIALOG_RENAME_RESOURCE"] = {
 	preferredIndex = 3,
 	hasEditBox = true,
 	OnShow = function(self, data)
-		self.editBox:SetText(self.text.text_arg1 or ""); 
-		self.editBox:SetWidth(140); 
-		self.editBox:SetScript("OnEnterPressed", function(self)
-			self:GetParent().button1:Click();
+		self.EditBox:SetText(data or ""); 
+		self.EditBox:SetWidth(140); 
+		self.EditBox:SetScript("OnEnterPressed", function(editBoxInstance)
+			local popupName = editBoxInstance:GetParent():GetName();
+			local okButton = _G[popupName .. "Button1"];
+			if okButton then
+				okButton:Click();
+			end;
 		end);
 	end,
 	OnAccept = function(self, data, data2)
-		CHA_RenameResource_OK(self.text.text_arg1, self.editBox:GetText())
+		CHA_RenameResource_OK(CHA_CurrentResourceName, self.EditBox:GetText()); 
 	end,
 	EditBoxOnTextChanged = function(self, data)
-		if self:GetText() == "" then
-			self:GetParent().button1:Disable()
-		else
-			self:GetParent().button1:Enable();
+		local popupName = self:GetParent():GetName();
+		local okButton = _G[popupName .. "Button1"];
+		if okButton then
+			if self:GetText() == "" then
+				okButton:Disable();
+			else
+				okButton:Enable();
+			end;
 		end;
 	end,
-}
+};
 
 --	Dropdown menu for Target selection:
 CHA_TargetDropdownMenu = CreateFrame("FRAME", "CHA_TargetDropdownMenuFrame", UIParent, "UIDropDownMenuTemplate");
@@ -906,8 +915,6 @@ function CHA_ForceClosePopups()
 	StaticPopup_Hide("DIGAM_DIALOG_CONFIRMATION");
 	StaticPopup_Hide("DIGAM_DIALOG_ERROR");
 
-	-- FIXED: HideDropDownMenu is deprecated/broken in 1.15.x.
-	-- We use Blizzards modern MenuUtil to safely close any open dropdown menus instantly.
 	if MenuUtil and MenuUtil.CloseAllMenus then
 		MenuUtil.CloseAllMenus();
 	end;
@@ -1406,6 +1413,7 @@ function CHA_HealerOptionsMenu_MoveDown()
 end;
 
 --	Rename a healer (player/symbol)
+--	v2.1.0: fixed for 1.15.9
 local CHA_ResourceType = nil;
 function CHA_HealerOptionsMenu_Rename()
 	local template = CHA_GetActiveTemplate();
@@ -1418,8 +1426,10 @@ function CHA_HealerOptionsMenu_Rename()
 	if not healer then return; end;
 
 	CHA_ResourceType = CHA_ROLE_HEALER;
+	
+	CHA_CurrentResourceName = healer["text"];
 
-	StaticPopup_Show("CHA_DIALOG_RENAME_RESOURCE", healer["text"]);
+	StaticPopup_Show("CHA_DIALOG_RENAME_RESOURCE", nil, nil, healer["text"]);
 end;
 
 function CHA_RenameResource_OK(oldName, newName)
@@ -1514,15 +1524,19 @@ end;
 
 --	Called when Target:Rename dropdown option is seleted:
 --	Shop popup with name editbox.
+--	v2.1.0: foxed for 1.15.9
 function CHA_TargetOptionsMenu_Rename()
 	local template = CHA_GetActiveTemplate();
 	if template and template["targets"][CHA_CurrentTargetIndex] then
 		local target = template["targets"][CHA_CurrentTargetIndex];
 		CHA_ResourceType = CHA_ROLE_TANK;
+		
+		CHA_CurrentResourceName = target["text"];
 
-		StaticPopup_Show("CHA_DIALOG_RENAME_RESOURCE", target["text"]);
+		StaticPopup_Show("CHA_DIALOG_RENAME_RESOURCE", nil, nil, target["text"]);
 	end;
 end;
+
 
 --	Called when Target:Rename edit dialog closes successfully.
 --	Do the name change.
