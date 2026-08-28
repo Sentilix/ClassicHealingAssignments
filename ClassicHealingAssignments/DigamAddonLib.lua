@@ -41,6 +41,9 @@ function DigamAddonLib:createLocale(languageCode)
 end;
 
 function DigamAddonLib:XL(defaultText)
+	--	Use this to test specific locale:
+	--	local locale = self.Locales['frFR'];
+
 	local locale = self.Locales[GetLocale()];
 	if locale then
 		local text = locale[defaultText];

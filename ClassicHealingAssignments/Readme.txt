@@ -115,6 +115,15 @@ Renew @ Vanillagaming.org
 3.3 Versions
 ------------
 
+Version 2.1.0
+* Added German translations
+* Changed: Converted floating button to a Minimap button. Icon was changed to silver/gold coint (depending on status)
+* Bugfix: The floating button was supposed to change image depending on the template status. This works on the Minimap button now.
+* Bugfix: Lots of 1.15.9 client bugs was found and removed.
+* Bumped Classic client version to 1.15.9
+* Bumped Classic client version to 2.5.6 (this is untested as I don't play TBC)
+
+
 Version 2.0.13
 * Bumped Classic client version to 1.15.8
 

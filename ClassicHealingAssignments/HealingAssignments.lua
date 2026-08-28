@@ -219,8 +219,8 @@ local CHA_ResourceMatrix =  {
 	},
 };
 	
-local CHA_ICON_NONE							= "Interface\\AddOns\\ClassicHealingAssignments\\Media\\logo-square";
-local CHA_ICON_READY						= "Interface\\AddOns\\ClassicHealingAssignments\\Media\\logo-square";
+local CHA_ICON_NONE							= "Interface\\Icons\\inv_misc_coin_18";
+local CHA_ICON_READY						= "Interface\\Icons\\inv_misc_coin_17";
 
 local CHA_WHISPER_ME						= "!me";
 local CHA_WHISPER_REPOST					= "!repost";
@@ -280,13 +280,9 @@ local CHA_KEY_NameFormatIndex				= "Announcement.NameFormatIndex";
 local CHA_KEY_Templates						= "Templates";
 
 local CHA_DEFAULT_ActiveTemplate			= nil;
-local CHA_DEFAULT_AnnounceButtonSize		= 32;
-local CHA_DEFAULT_AnnounceButtonVisible		= true;
 local CHA_DEFAULT_NameFormatIndex			= 1;
 
 local CHA_ActiveTemplate					= CHA_DEFAULT_ActiveTemplate;
-local CHA_AnnounceButtonSize				= CHA_DEFAULT_AnnounceButtonSize;
-local CHA_AnnounceButtonVisible				= CHA_DEFAULT_AnnounceButtonVisible;
 local CHA_AnnouncementChannel				= "";
 local CHA_MinimapX							= 0;
 local CHA_MinimapY							= 0;
@@ -770,6 +766,14 @@ function CHA_ReadConfigurationSettings()
 		CHA_NameFormatIndex = CHA_DEFAULT_NameFormatIndex;
 	end;
 	CHA_SetOption(CHA_KEY_NameFormatIndex, CHA_NameFormatIndex);
+
+	-- Restore minimap button position from saved variables
+	if CHA_PersistedData and CHA_PersistedData.minimapAngle then
+		local angle = math.rad(CHA_PersistedData.minimapAngle);
+		local radius = 80;
+		CHAAnnounceButton:ClearAllPoints();
+		CHAAnnounceButton:SetPoint("CENTER", Minimap, "CENTER", radius * math.cos(angle), radius * math.sin(angle));
+	end;
 end;
 
 --	Get a configuration option by KEY, returns defaultValue if not found.
@@ -990,38 +994,21 @@ end;
 
 --	Update the announce button, main entry
 function CHA_UpdateAnnounceButton()
-	CHA_RepositionateButton();
-
 	local icon = CHA_ICON_NONE;
 	local alpha = CHA_ALPHA_DIMMED;
-	if CHA_AnnounceButtonVisible then
-		local template = CHA_GetActiveTemplate();
-		if template and table.getn(template["targets"]) > 0 then
-			icon = CHA_ICON_READY;
-			alpha = CHA_ALPHA_ENABLED;
-		end;
+
+	local template = CHA_GetActiveTemplate();
+	if template and table.getn(template["targets"]) > 0 then
+		icon = CHA_ICON_READY;
+		alpha = CHA_ALPHA_ENABLED;
 	end;
 
-	CHAAnnounceButton:SetNormalTexture(icon);
-	CHAAnnounceButton:SetPushedTexture(icon);
+	if CHAAnnounceButtonIcon then
+		CHAAnnounceButtonIcon:SetTexture(icon);
+	end;
 	CHAAnnounceButton:SetAlpha(alpha);
 
 end;
-
---	Called when button is repositionated, and persist the new set of coords.
-function CHA_RepositionateButton(self)
-	local x, y = CHAAnnounceButton:GetLeft(), CHAAnnounceButton:GetTop() - UIParent:GetHeight();
-
-	CHA_SetOption(CHA_KEY_AnnounceButtonPosX, x);
-	CHA_SetOption(CHA_KEY_AnnounceButtonPosY, y);
-	CHAAnnounceButton:SetSize(CHA_AnnounceButtonSize, CHA_AnnounceButtonSize);
-
-	if CHA_AnnounceButtonVisible then
-		CHAAnnounceButton:Show();
-	else
-		CHAAnnounceButton:Hide();
-	end;
-end
 
 --	Return the configured color for a resource.
 function CHA_GetResourceColor(resource)
@@ -1329,7 +1316,30 @@ function CHA_AnnouncementButtonOnClick(sender)
 	else
 		CHA_OpenConfigurationDialogue();
 	end;
+end;
 
+--	Called on update while dragging the minimap button to calculate the angle.
+--	v2.1.0: repositionate minimap button
+function CHA_MinimapButton_OnUpdate(self)
+	local mx, my = GetCursorPosition();
+	local scale = Minimap:GetEffectiveScale();
+	local px, py = Minimap:GetCenter();
+	
+	local angle = math.atan2((my / scale) - py, (mx / scale) - px);
+	
+	local angleDegrees = math.deg(angle);
+	if angleDegrees < 0 then
+		angleDegrees = angleDegrees + 360;
+	end;
+	
+	-- Position the button on the minimap circle radius (approx 80 pixels)
+	local radius = 80;
+	self:ClearAllPoints();
+	self:SetPoint("CENTER", Minimap, "CENTER", radius * math.cos(angle), radius * math.sin(angle));
+	
+	if CHA_PersistedData then
+		CHA_PersistedData.minimapAngle = angleDegrees;
+	end;
 end;
 
 --	Called when the Target button is clicked.
@@ -2791,6 +2801,33 @@ end;
 --[[
 	Event handlers
 --]]
+
+--	Called when the mouse enters the minimap button.
+--	v2.1.0: Displays a clean tooltip with the addon title and shortcut keys.
+function CHA_MinimapButton_OnEnter(self)
+	GameTooltip:SetOwner(self, "ANCHOR_LEFT"); -- Position tooltip to the left of the button
+	GameTooltip:ClearLines();
+	
+	-- Title of the addon in a nice golden Blizzard color
+	GameTooltip:AddLine("|cff40F8A0Classic Healing Assignments|r");
+	
+	-- Blank line for spacing
+	GameTooltip:AddLine(" ");
+	
+	-- Your awesome shortcuts explained clearly
+	GameTooltip:AddLine(string.format("|cffffffff%s:|r %s", A:XL("Left-Click"), A:XL("Toggle Window")));
+	GameTooltip:AddLine(string.format("|cffffffff%s:|r %s", A:XL("Ctrl + Left-Click"), A:XL("Post to Raid")));
+	GameTooltip:AddLine(string.format("|cffffffff%s:|r %s", A:XL("Ctrl + Right-Click"), A:XL("Post to Self (Test)")));
+	
+	GameTooltip:Show();
+end;
+
+--	Called when the mouse leaves the minimap button.
+--	v2.1.0: Safely hides the tooltip.
+function CHA_MinimapButton_OnLeave(self)
+	GameTooltip:Hide();
+end;
+
 function CHA_OnEvent(self, event, ...)
 	if event == "ADDON_LOADED" then
 		local addonname = ...;
@@ -2830,7 +2867,7 @@ end
 
 --	Called when program is starting up (doh!)
 function CHA_OnLoad()
-	A:echo(string.format("Type %s/cha%s to configure the addon, or click the [+] button.", A.chatColorHot, A.chatColorNormal));
+	A:echo(string.format("Type %s/cha%s to configure the addon, or click the minimap button.", A.chatColorHot, A.chatColorNormal));
 
 	CHAHeadlineCaption:SetText(string.format("Classic Healing Assignments v%s", A.addonVersion));
 	CHABottomlineCaption:SetText(string.format("Classic Healing Assignments version %s by %s", A.addonVersion, A.addonAuthor));
