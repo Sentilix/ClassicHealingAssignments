@@ -1904,13 +1904,20 @@ function CHA_CreateTargetFrames()
 		fTargetCaption:SetPoint("LEFT", 20, 0);
 		fTargetCaption:SetText("Target");
 
-		--	And an ability to ADD a new Tank for that specific target:
+		--	And an ability to ADD a new Healer for that specific target:
+		--	v2.1.0: Fixed for 1.15.9
 		local fTargetButtonName = string.format("addhealerbutton_%d", index);
-		local fTargetButton = CreateFrame("Button", fTargetButtonName, fTarget, "UIPanelButtonTemplate");
+		local fTargetButton = CreateFrame("Button", fTargetButtonName, fTarget);
 		fTargetButton:SetPoint("LEFT", 120, 0);
 		fTargetButton:SetHeight(12);
 		fTargetButton:SetWidth(12);
-		fTargetButton:SetText("+");
+		
+		local texture = fTargetButton:CreateTexture(nil, "BACKGROUND");
+		texture:SetAllPoints(fTargetButton);
+		texture:SetTexture("Interface\\Buttons\\UI-PlusButton-Up");
+		fTargetButton.texture = texture;
+
+		fTargetButton:SetHighlightTexture("Interface\\Buttons\\UI-PlusButton-Hilight", "ADD");
 		fTargetButton:SetScript("OnClick", CHA_AddHealerButtonOnClick);
 
 		fTarget:Show();

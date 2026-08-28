@@ -55,7 +55,7 @@
 	</Button>
 
 	<!-- Frame template for one target ("tank") button -->
-	<Button name="CHATargetButtonTemplate" inherits="ActionButtonTemplate" frameStrata="HIGH" hidden="false" virtual="true">
+	<Button name="CHATargetButtonTemplate" frameStrata="HIGH" hidden="false" virtual="true">
 		<Size>
 			<AbsDimension x="16" y="16" />
 		</Size>
@@ -187,7 +187,7 @@
 			</Frame>
 
 			<!-- "Add Target" button -->
-			<Button name="$parentAddTargetButton" inherits="ActionButtonTemplate" frameStrata="HIGH">
+			<Button name="$parentAddTargetButton" frameStrata="HIGH">
 				<Size>
 					<AbsDimension x="16" y="16" />
 				</Size>
@@ -220,7 +220,7 @@
 				</Layers>
 			</Button>
 			<!-- "Clean up" button (leaves Unassigned up)-->
-			<Button name="$parentKickDisconnectsButton" inherits="ActionButtonTemplate" frameStrata="HIGH">
+			<Button name="$parentKickDisconnectsButton" frameStrata="HIGH">
 				<Size>
 					<AbsDimension x="16" y="16" />
 				</Size>
@@ -253,7 +253,7 @@
 				</Layers>
 			</Button>
 			<!-- "Reset" button (resets everything) -->
-			<Button name="$parentResetAllButton" inherits="ActionButtonTemplate" frameStrata="HIGH">
+			<Button name="$parentResetAllButton" frameStrata="HIGH">
 				<Size>
 					<AbsDimension x="16" y="16" />
 				</Size>
@@ -311,7 +311,7 @@
 							</Anchors>
 							<Color r="0.9" g="0.9" b="0.9" />
 						</FontString>
-						<FontString name="CHABottomlineCaption" inherits="GameFontNormal" text="Classic Healing Assignments version x.y by z" justifyH="CENTER">
+						<FontString name="CHABottomlineCaption" inherits="GameFontNormalSmall" text="Classic Healing Assignments version x.y by z" justifyH="CENTER">
 							<Size x="600" y="18" />
 							<Anchors>
 								<Anchor point="BOTTOM" relativeTo="CHAMainFrame">
