@@ -55,7 +55,7 @@
 	</Button>
 
 	<!-- Frame template for one target ("tank") button -->
-	<Button name="CHATargetButtonTemplate" inherits="ActionButtonTemplate" frameStrata="HIGH" hidden="false" virtual="true">
+	<Button name="CHATargetButtonTemplate" frameStrata="HIGH" hidden="false" virtual="true">
 		<Size>
 			<AbsDimension x="16" y="16" />
 		</Size>
@@ -121,37 +121,63 @@
 		</FontString>
 	</EditBox>
 
-	<!-- Main button: Announcements and Config -->
-	<Button name="CHAAnnounceButton" inherits="SecureActionButtonTemplate" parent="UIParent" toplevel="true" hidden="false" frameStrata="LOW" movable="true">
+	<!-- Main button: Announcements and Config on the Minimap -->
+	<!-- v2.1.0: This is now a Minimap button -->
+	<Button name="CHAAnnounceButton" parent="Minimap" toplevel="true" hidden="false" movable="true" frameStrata="MEDIUM">
 		<Size>
-			<AbsDimension x="32" y="32" />
+			<AbsDimension x="31" y="31" />
 		</Size>
 		<Anchors>
-			<Anchor point="CENTER">
+			<!-- Initial position on the edge of the minimap -->
+			<Anchor point="CENTER" relativeTo="Minimap" relativePoint="CENTER">
 				<Offset>
-					<AbsDimension x="0" y="100" />
+					<AbsDimension x="-80" y="50" />
 				</Offset>
 			</Anchor>
 		</Anchors>
+		<Layers>
+			<!-- Native Blizzard Minimap circular button artwork -->
+			<Layer level="BACKGROUND">
+				<Texture name="$parentIcon" file="Interface\Icons\Spell_Holy_LayOnHands">
+					<Size x="21" y="21" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="5" y="-5" />
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture file="Interface\Minimap\MiniMap-TrackingBorder">
+					<Size x="53" y="53" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="0" y="0" />
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<HighlightTexture file="Interface\Minimap\UI-Minimap-ZoomButton-Highlight" alphaMode="ADD"/>
 		<Scripts>
 			<OnLoad>
 				self:EnableMouse(true);
-				self:EnableKeyboard(false);
-				self:RegisterForDrag("LeftButton", "RightButton");
 				self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
+				self:RegisterForDrag("LeftButton");
 			</OnLoad>
 			<OnDragStart>
-				if (button == "LeftButton" and IsShiftKeyDown()) then
 				self:StartMoving();
-				end
+				self:SetScript("OnUpdate", CHA_MinimapButton_OnUpdate);
 			</OnDragStart>
 			<OnDragStop>
 				self:StopMovingOrSizing();
-				CHA_RepositionateButton(self);
+				self:SetScript("OnUpdate", nil);
 			</OnDragStop>
 			<OnClick>
 				CHA_AnnouncementButtonOnClick(self);
 			</OnClick>
+			<OnEnter>
+				CHA_MinimapButton_OnEnter(self);
+			</OnEnter>
+			<OnLeave>
+				CHA_MinimapButton_OnLeave(self);
+			</OnLeave>
 		</Scripts>
 	</Button>
 
@@ -187,7 +213,7 @@
 			</Frame>
 
 			<!-- "Add Target" button -->
-			<Button name="$parentAddTargetButton" inherits="ActionButtonTemplate" frameStrata="HIGH">
+			<Button name="$parentAddTargetButton" frameStrata="HIGH">
 				<Size>
 					<AbsDimension x="16" y="16" />
 				</Size>
@@ -220,7 +246,7 @@
 				</Layers>
 			</Button>
 			<!-- "Clean up" button (leaves Unassigned up)-->
-			<Button name="$parentKickDisconnectsButton" inherits="ActionButtonTemplate" frameStrata="HIGH">
+			<Button name="$parentKickDisconnectsButton" frameStrata="HIGH">
 				<Size>
 					<AbsDimension x="16" y="16" />
 				</Size>
@@ -253,7 +279,7 @@
 				</Layers>
 			</Button>
 			<!-- "Reset" button (resets everything) -->
-			<Button name="$parentResetAllButton" inherits="ActionButtonTemplate" frameStrata="HIGH">
+			<Button name="$parentResetAllButton" frameStrata="HIGH">
 				<Size>
 					<AbsDimension x="16" y="16" />
 				</Size>
@@ -311,7 +337,7 @@
 							</Anchors>
 							<Color r="0.9" g="0.9" b="0.9" />
 						</FontString>
-						<FontString name="CHABottomlineCaption" inherits="GameFontNormal" text="Classic Healing Assignments version x.y by z" justifyH="CENTER">
+						<FontString name="CHABottomlineCaption" inherits="GameFontNormalSmall" text="Classic Healing Assignments version x.y by z" justifyH="CENTER">
 							<Size x="600" y="18" />
 							<Anchors>
 								<Anchor point="BOTTOM" relativeTo="CHAMainFrame">

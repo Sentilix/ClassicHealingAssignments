@@ -75,6 +75,7 @@ function CHA_SourceCheckboxOnClick(sender)
 end;
 
 --	Initlialize the Class icons in the bottom of the role screen.
+--	v2.1.0: Fixed 1.15.9
 function CHA_SourceCreateClassIcons()
 	local offsetX = 100;
 	local offsetY = -2;
@@ -88,8 +89,10 @@ function CHA_SourceCreateClassIcons()
 		local entry = CreateFrame("Button", buttonName, CHASourceFrameClasses, "CHAClassButtonTemplate");
 		entry:SetAlpha(CHA_ALPHA_DISABLED);
 		entry:SetPoint("TOPLEFT", posX, offsetY);
-		entry:SetNormalTexture(classInfo["icon"]);
-		entry:SetPushedTexture(classInfo["icon"]);
+		
+		if entry.Icon and classInfo["icon"] then
+			entry.Icon:SetTexture(classInfo["icon"]);
+		end;
 
 		posX = posX + width;
 	end;

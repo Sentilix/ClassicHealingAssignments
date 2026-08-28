@@ -5,6 +5,7 @@
 ## X-Originally By: Renew @ vanillagaming.org for the 1.12 client.
 ## X-Expansion-Level: 3
 ## Version: 2.0.13
+## IconTexture: Interface\AddOns\ClassicHealingAssignments\Media\logo-square
 ## X-Curse-Project-ID: 349302
 ## X-WoWI-ID: 25438
 ## X-Wago-ID: rkGra7Ky
@@ -16,6 +17,7 @@
 DigamAddonLib.lua
 Locales/enUS.lua
 Locales/frFR.lua
+Locales/deDE.lua
 Common.lua
 SourceConfig.xml
 HealingAssignments.xml

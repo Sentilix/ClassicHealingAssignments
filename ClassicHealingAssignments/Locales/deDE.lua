@@ -1,0 +1,128 @@
+local L = DigamAddonLib:createLocale("deDE")
+
+--	Main frame:
+L["Add target"] = "Ziel hinzufügen"
+L["Add template"] = "Vorlage hinzufügen"
+L["Classic Healing Assignments"] = "Klassische Heilerzuteilung"
+L["Clean up"] = "Aufräumen"
+L["Reset all"] = "Alles zurücksetzen"
+L["CTRL+Leftclick: announcement to Party/Raid"] = "STRG+Linksklick: Ankündigung in Gruppe/Raid"
+L["CTRL+Rightclick: test announcement locally"] = "STRG+Rechtsklick: Lokale Ankündigung"
+
+L["Healers: %s/%s"] = "Heiler: %s/%s"
+L["Texts"] = "Texte"
+L["Announce in"] = "Posten in"
+L["Name format"] = "Namensformat"
+L["Classic Healing Announcements"] = "Klassische Heilerankündigungen"
+L["Headline"] = "Überschrift"
+L["Assignments"] = "Zuteilungen"
+L["Use {TARGET} for the target / tank."] = "Nutze {TARGET} für das Ziel / den Tank."
+L["Use {ASSIGNMENTS} for assigned players."] = "Nutze {ASSIGNMENTS} für zugewiesene Spieler."
+L["Raid line"] = "Schlachtzugszeile"
+
+--	Resource frame:
+L["Resource Configuration"] = "Ressourcenkonfiguration"
+L["Class Filter:"] = "Klassenfilter:"
+L["Include Raid icons"] = "Schlachtzugssymbole einschließen"
+L["Include Directions"] = "Richtungen einschließen"
+L["Include Groups"] = "Gruppen einschließen"
+L["Include Custom labels"] = "Eigene Bezeichnungen einschließen"
+
+--	Wow
+L["Tanks"] = "Tanks"
+L["Healers"] = "Heiler"
+L["Raid"] = "Schlachtzug"
+L["Raid warning"] = "Schlachtzugsleitung"
+L["Party"] = "Gruppe"
+L["(Custom)"] = "(Benutzerdefiniert)"
+L["LookingForGroup"] = "SucheNachGruppe"
+
+--	Resources:
+L["(Unassigned)"] = "(Nicht zugewiesen)"
+L["Skull"] = "Totenkopf"
+L["Cross"] = "Kreuz"
+L["Star"] = "Stern"
+L["Square"] = "Quadrat"
+L["Diamond"] = "Diamant"
+L["Triangle"] = "Dreieck"
+L["Moon"] = "Mond"
+L["Circle"] = "Kreis"
+L["<== Left"] = "<== Links"
+L["Right ==>"] = "Rechts ==>"
+L["North"] = "Norden"
+L["East"] = "Osten"
+L["South"] = "Süden"
+L["West"] = "Westen"
+L["(Custom 1)"] = "(Eigen 1)"
+L["(Custom 2)"] = "(Eigen 2)"
+L["(Custom 3)"] = "(Eigen 3)"
+L["(Custom 4)"] = "(Eigen 4)"
+L["Group 1"] = "Gruppe 1"
+L["Group 2"] = "Gruppe 2"
+L["Group 3"] = "Gruppe 3"
+L["Group 4"] = "Gruppe 4"
+L["Group 5"] = "Gruppe 5"
+L["Group 6"] = "Gruppe 6"
+L["Group 7"] = "Gruppe 7"
+L["Group 8"] = "Gruppe 8"
+
+--	Generel:
+L["OK"] = "OK"
+L["Cancel"] = "Abbrechen"
+L["Close"] = "Schließen"
+
+--	Popups, warnings and messages:
+L["Name of template:"] = "Name der Vorlage:"
+L["Please enter new name:"] = "Bitte neuen Namen eingeben:"
+L["Really delete the template [%s]?"] = "Vorlage [%s] wirklich löschen?"
+L["Really unassign the tank [%s]?"] = "Zuweisung für Tank [%s] wirklich aufheben?"
+L["Really remove the target [%s]?"] = "Ziel [%s] wirklich entfernen?"
+L["Do you want to kick all disconnected characters and characters not in the raid?"] = "Möchten Sie alle getrennten Charaktere und Charaktere, die nicht im Schlachtzug sind, entfernen?"
+L["Do you want to reset (delete) all targets and healers for this template?"] = "Möchten Sie alle Ziele und Heiler für diese Vorlage zurücksetzen (löschen)?"
+L["A template with that name already exists."] = "Eine Vorlage mit diesem Namen existiert bereits."
+L["The template '%s' was not found."] = "Die Vorlage '%s' wurde nicht gefunden."
+
+--	Popup menus:
+L["Move up"] = "Nach oben verschieben"
+L["Move down"] = "Nach unten verschieben"
+L["Copy template"] = "Vorlage kopieren"
+L["Rename template"] = "Vorlage umbenennen"
+L["Delete template"] = "Vorlage löschen"
+L["Rename tank"] = "Tank umbenennen"
+L["Unassign tank"] = "Tank-Zuweisung aufheben"
+L["Remove tank"] = "Tank entfernen"
+L["Rename healer"] = "Heiler umbenennen"
+L["Unassign healer"] = "Heiler-Zuweisung aufheben"
+L["Remove healer"] = "Heiler entfernen"
+
+--	Assignments:
+L["HEALER Assignments :"] = "HEILER-Zuteilungen:"
+L["All other healers: Heal the raid."] = "Alle anderen Heiler: Schlachtzug heilen."
+L["Whisper \"%s\" for your assignment or \"%s\" for a full repost."] = "Flüstere \"%s\" für deine Zuteilung oder \"%s\" für eine komplette Wiederholung."
+L["There are currently no assignments defined."] = "Es sind derzeit keine Zuteilungen definiert."
+L["You are assigned as Healer on [%s]."] = "Du bist als Heiler für [%s] eingeteilt."
+L["You have no assigned target here."] = "Du hast hier kein zugewiesenes Ziel."
+
+--	Help:
+L["ClassicHealingAssignments version %s options:"] = "ClassicHealingAssignments Version %s Optionen:"
+L["Syntax:"] = "Syntax:"
+L["    /cha [command]"] = "    /cha [Befehl]"
+L["Where commands can be:"] = "Mögliche Befehle sind:"
+L["    Config       (default) Open the configuration dialogue."] = "    Config       (Standard) Öffnet den Konfigurationsdialog."
+L["    Version      Request version info from all clients."] = "    Version      Versionsinfo von allen Clients anfordern."
+L["    Help         This help."] = "    Help         Diese Hilfe anzeigen."
+
+--	Misc:
+L["Type %s/cha%s to configure the addon, or click the [+] button."] = "Gib %s/cha%s ein, um das Addon zu konfigurieren, oder klicke auf die [+]-Schaltfläche."
+L["Unknown command: %s"] = "Unbekannter Befehl: %s"
+L["%s is using ClassicHealingAssignments version %s"] = "%s verwendet ClassicHealingAssignments Version %s"
+L["NOTE: A newer version of %s! is available (version %s)!"] = "HINWEIS: Eine neuere Version von %s! ist verfügbar (Version %s)!"
+L["You can download latest version from %s or %s."] = "Sie können die neueste Version von %s oder %s herunterladen."
+
+-- Minimap button:
+L["Left-Click"] = "Links-Klick"
+L["Toggle Window"] = "Fenster anzeigen/verbergen"
+L["Ctrl + Left-Click"] = "STRG + Links-Klick"
+L["Post to Raid"] = "Im Schlachtzug posten"
+L["Ctrl + Right-Click"] = "STRG + Rechts-Klick"
+L["Post to Self (Test)"] = "An sich selbst senden (Test)"

@@ -219,8 +219,8 @@ local CHA_ResourceMatrix =  {
 	},
 };
 	
-local CHA_ICON_NONE							= "Interface\\AddOns\\ClassicHealingAssignments\\Media\\logo-square";
-local CHA_ICON_READY						= "Interface\\AddOns\\ClassicHealingAssignments\\Media\\logo-square";
+local CHA_ICON_NONE							= "Interface\\Icons\\inv_misc_coin_18";
+local CHA_ICON_READY						= "Interface\\Icons\\inv_misc_coin_17";
 
 local CHA_WHISPER_ME						= "!me";
 local CHA_WHISPER_REPOST					= "!repost";
@@ -280,13 +280,9 @@ local CHA_KEY_NameFormatIndex				= "Announcement.NameFormatIndex";
 local CHA_KEY_Templates						= "Templates";
 
 local CHA_DEFAULT_ActiveTemplate			= nil;
-local CHA_DEFAULT_AnnounceButtonSize		= 32;
-local CHA_DEFAULT_AnnounceButtonVisible		= true;
 local CHA_DEFAULT_NameFormatIndex			= 1;
 
 local CHA_ActiveTemplate					= CHA_DEFAULT_ActiveTemplate;
-local CHA_AnnounceButtonSize				= CHA_DEFAULT_AnnounceButtonSize;
-local CHA_AnnounceButtonVisible				= CHA_DEFAULT_AnnounceButtonVisible;
 local CHA_AnnouncementChannel				= "";
 local CHA_MinimapX							= 0;
 local CHA_MinimapY							= 0;
@@ -375,6 +371,7 @@ CHA_BACKDROP_EDITBOX = {
 	tileEdge = true,
 };
 
+-- v2.1.0: Fixed for 1.15.9:
 StaticPopupDialogs["CHA_DIALOG_ADDTEMPLATE"] = {
 	text = "Name of template:",
 	button1 = "OK",
@@ -385,28 +382,42 @@ StaticPopupDialogs["CHA_DIALOG_ADDTEMPLATE"] = {
 	preferredIndex = 3,
 	hasEditBox = true,
 	OnShow = function(self, data)
-		self.editBox:SetText(self.text.text_arg1 or ""); 
-		self.editBox:SetWidth(140); 
-		self.editBox:SetScript("OnEnterPressed", function(self)
-			self:GetParent().button1:Click();
+		-- FIXED: editBox -> EditBox (Uppercase E)
+		self.EditBox:SetText(data or ""); 
+		self.EditBox:SetWidth(140); 
+		self.EditBox:SetScript("OnEnterPressed", function(editBoxInstance)
+			local popupName = editBoxInstance:GetParent():GetName();
+			local okButton = _G[popupName .. "Button1"];
+			if okButton then
+				okButton:Click();
+			end;
 		end);
 	end,
 	OnAccept = function(self, data, data2)
-		if self.text.text_arg1 then
-			CHA_RenameTemplate_OK(self.text.text_arg1, self.editBox:GetText())
+		-- FIXED: Use your explicit operation variable to determine Rename vs Add
+		if CHA_CurrentTemplateOperation == "RENAME" then
+			-- FIXED: Instead of relying on 'data' (which gets wiped), fetch the old name directly from your data store
+			local template = CHA_GetTemplateById(CHA_CurrentTemplateIndex);
+			local oldName = template and template["templatename"] or "";
+			CHA_RenameTemplate_OK(oldName, self.EditBox:GetText()); 
 		else
-			CHA_AddTemplate_OK(self.editBox:GetText()); 
+			CHA_AddTemplate_OK(self.EditBox:GetText()); 
 		end;
 	end,
 	EditBoxOnTextChanged = function(self, data)
-		if self:GetText() == "" then
-			self:GetParent().button1:Disable()
-		else
-			self:GetParent().button1:Enable();
+		local popupName = self:GetParent():GetName();
+		local okButton = _G[popupName .. "Button1"];
+		if okButton then
+			if self:GetText() == "" then
+				okButton:Disable(); 
+			else
+				okButton:Enable();  
+			end;
 		end;
 	end,
-}
+};
 
+-- v2.1.0: Fixed for 1.15.9:
 StaticPopupDialogs["CHA_DIALOG_RENAME_RESOURCE"] = {
 	text = "New name:",
 	button1 = "OK",
@@ -417,23 +428,31 @@ StaticPopupDialogs["CHA_DIALOG_RENAME_RESOURCE"] = {
 	preferredIndex = 3,
 	hasEditBox = true,
 	OnShow = function(self, data)
-		self.editBox:SetText(self.text.text_arg1 or ""); 
-		self.editBox:SetWidth(140); 
-		self.editBox:SetScript("OnEnterPressed", function(self)
-			self:GetParent().button1:Click();
+		self.EditBox:SetText(data or ""); 
+		self.EditBox:SetWidth(140); 
+		self.EditBox:SetScript("OnEnterPressed", function(editBoxInstance)
+			local popupName = editBoxInstance:GetParent():GetName();
+			local okButton = _G[popupName .. "Button1"];
+			if okButton then
+				okButton:Click();
+			end;
 		end);
 	end,
 	OnAccept = function(self, data, data2)
-		CHA_RenameResource_OK(self.text.text_arg1, self.editBox:GetText())
+		CHA_RenameResource_OK(CHA_CurrentResourceName, self.EditBox:GetText()); 
 	end,
 	EditBoxOnTextChanged = function(self, data)
-		if self:GetText() == "" then
-			self:GetParent().button1:Disable()
-		else
-			self:GetParent().button1:Enable();
+		local popupName = self:GetParent():GetName();
+		local okButton = _G[popupName .. "Button1"];
+		if okButton then
+			if self:GetText() == "" then
+				okButton:Disable();
+			else
+				okButton:Enable();
+			end;
 		end;
 	end,
-}
+};
 
 --	Dropdown menu for Target selection:
 CHA_TargetDropdownMenu = CreateFrame("FRAME", "CHA_TargetDropdownMenuFrame", UIParent, "UIDropDownMenuTemplate");
@@ -747,6 +766,14 @@ function CHA_ReadConfigurationSettings()
 		CHA_NameFormatIndex = CHA_DEFAULT_NameFormatIndex;
 	end;
 	CHA_SetOption(CHA_KEY_NameFormatIndex, CHA_NameFormatIndex);
+
+	-- Restore minimap button position from saved variables
+	if CHA_PersistedData and CHA_PersistedData.minimapAngle then
+		local angle = math.rad(CHA_PersistedData.minimapAngle);
+		local radius = 80;
+		CHAAnnounceButton:ClearAllPoints();
+		CHAAnnounceButton:SetPoint("CENTER", Minimap, "CENTER", radius * math.cos(angle), radius * math.sin(angle));
+	end;
 end;
 
 --	Get a configuration option by KEY, returns defaultValue if not found.
@@ -885,18 +912,18 @@ end;
 
 --	Close all popups. Used to avoid open popups with data for
 --	a window which was later changed.
+--	v2.1.0: 1.15.9: Fixed dropdown closing
 function CHA_ForceClosePopups()
 	StaticPopup_Hide("CHA_DIALOG_ADDTEMPLATE");
 	StaticPopup_Hide("CHA_DIALOG_RENAME_RESOURCE");
 	StaticPopup_Hide("DIGAM_DIALOG_CONFIRMATION");
 	StaticPopup_Hide("DIGAM_DIALOG_ERROR");
 
-	HideDropDownMenu(1, nil, CHA_TargetDropdownMenu, "cursor", 3, -3);
-	HideDropDownMenu(1, nil, CHA_HealerDropdownMenu, "cursor", 3, -3);
-	HideDropDownMenu(1, nil, CHA_TemplateOptionsMenu, "cursor", 3, -3);
-	HideDropDownMenu(1, nil, CHA_TargetOptionsMenu, "cursor", 3, -3);
-	HideDropDownMenu(1, nil, CHA_HealerOptionsMenu, "cursor", 3, -3);
+	if MenuUtil and MenuUtil.CloseAllMenus then
+		MenuUtil.CloseAllMenus();
+	end;
 end;
+
 
 --	Open the text configuation dialogue after making sure all popups are shut down first
 function CHA_OpenTextConfigDialogue()
@@ -967,38 +994,21 @@ end;
 
 --	Update the announce button, main entry
 function CHA_UpdateAnnounceButton()
-	CHA_RepositionateButton();
-
 	local icon = CHA_ICON_NONE;
 	local alpha = CHA_ALPHA_DIMMED;
-	if CHA_AnnounceButtonVisible then
-		local template = CHA_GetActiveTemplate();
-		if template and table.getn(template["targets"]) > 0 then
-			icon = CHA_ICON_READY;
-			alpha = CHA_ALPHA_ENABLED;
-		end;
+
+	local template = CHA_GetActiveTemplate();
+	if template and table.getn(template["targets"]) > 0 then
+		icon = CHA_ICON_READY;
+		alpha = CHA_ALPHA_ENABLED;
 	end;
 
-	CHAAnnounceButton:SetNormalTexture(icon);
-	CHAAnnounceButton:SetPushedTexture(icon);
+	if CHAAnnounceButtonIcon then
+		CHAAnnounceButtonIcon:SetTexture(icon);
+	end;
 	CHAAnnounceButton:SetAlpha(alpha);
 
 end;
-
---	Called when button is repositionated, and persist the new set of coords.
-function CHA_RepositionateButton(self)
-	local x, y = CHAAnnounceButton:GetLeft(), CHAAnnounceButton:GetTop() - UIParent:GetHeight();
-
-	CHA_SetOption(CHA_KEY_AnnounceButtonPosX, x);
-	CHA_SetOption(CHA_KEY_AnnounceButtonPosY, y);
-	CHAAnnounceButton:SetSize(CHA_AnnounceButtonSize, CHA_AnnounceButtonSize);
-
-	if CHA_AnnounceButtonVisible then
-		CHAAnnounceButton:Show();
-	else
-		CHAAnnounceButton:Hide();
-	end;
-end
 
 --	Return the configured color for a resource.
 function CHA_GetResourceColor(resource)
@@ -1237,21 +1247,25 @@ end;
 --	Called when the Template:Clone is selected.
 --	A popup is shown, letting the user enter a name for the new template.
 --	CHA_CurrentTemplateOperation is set so we know what to do when popup close.
+--	v2.1.0: 1.15.9: Pass nil for text_arg1 and text_arg2 so the template name lands correctly in the 'data' parameter
 function CHA_TemplateOptionsMenu_Clone()
 	local template = CHA_GetTemplateById(CHA_CurrentTemplateIndex);
 	CHA_CurrentTemplateOperation = "CLONE";
 
-	StaticPopup_Show("CHA_DIALOG_ADDTEMPLATE", template["templatename"]);
+	-- FIXED: Pass nil for text_arg1 and text_arg2 so the template name lands correctly in the 'data' parameter for 1.15.x
+	StaticPopup_Show("CHA_DIALOG_ADDTEMPLATE", nil, nil, template["templatename"]);
 end;
+
 
 --	Called when the Template:Rename is selected.
 --	A popup is shown, letting the user enter a new name for the template.
 --	CHA_CurrentTemplateOperation is set so we know what to do when popup close.
+--	v2.1.0: 1.15.9: Pass nil for text_arg1 and text_arg2 so the template name lands correctly in the 'data' parameter
 function CHA_TemplateOptionsMenu_Rename()
 	local template = CHA_GetTemplateById(CHA_CurrentTemplateIndex);
 	CHA_CurrentTemplateOperation = "RENAME";
 
-	StaticPopup_Show("CHA_DIALOG_ADDTEMPLATE", template["templatename"]);
+	StaticPopup_Show("CHA_DIALOG_ADDTEMPLATE", nil, nil, template["templatename"]);
 end;
 
 --	Called when the Template:Delete is selected.
@@ -1280,8 +1294,9 @@ end;
 
 --	Called when "Add Template" is clicked.
 --	Popup is shown, asking for a name for the template.
+--	v2.1.0: 1.15.9: Pass nil for text_arg1 and text_arg2 so the template name lands correctly in the 'data' parameter
 function CHA_AddTemplateOnClick()
-	StaticPopup_Show("CHA_DIALOG_ADDTEMPLATE");
+	StaticPopup_Show("CHA_DIALOG_ADDTEMPLATE", nil, nil, "");
 end;
 
 --	Called when the main "announcement" button is clicked.
@@ -1301,7 +1316,30 @@ function CHA_AnnouncementButtonOnClick(sender)
 	else
 		CHA_OpenConfigurationDialogue();
 	end;
+end;
 
+--	Called on update while dragging the minimap button to calculate the angle.
+--	v2.1.0: repositionate minimap button
+function CHA_MinimapButton_OnUpdate(self)
+	local mx, my = GetCursorPosition();
+	local scale = Minimap:GetEffectiveScale();
+	local px, py = Minimap:GetCenter();
+	
+	local angle = math.atan2((my / scale) - py, (mx / scale) - px);
+	
+	local angleDegrees = math.deg(angle);
+	if angleDegrees < 0 then
+		angleDegrees = angleDegrees + 360;
+	end;
+	
+	-- Position the button on the minimap circle radius (approx 80 pixels)
+	local radius = 80;
+	self:ClearAllPoints();
+	self:SetPoint("CENTER", Minimap, "CENTER", radius * math.cos(angle), radius * math.sin(angle));
+	
+	if CHA_PersistedData then
+		CHA_PersistedData.minimapAngle = angleDegrees;
+	end;
 end;
 
 --	Called when the Target button is clicked.
@@ -1385,6 +1423,7 @@ function CHA_HealerOptionsMenu_MoveDown()
 end;
 
 --	Rename a healer (player/symbol)
+--	v2.1.0: fixed for 1.15.9
 local CHA_ResourceType = nil;
 function CHA_HealerOptionsMenu_Rename()
 	local template = CHA_GetActiveTemplate();
@@ -1397,8 +1436,10 @@ function CHA_HealerOptionsMenu_Rename()
 	if not healer then return; end;
 
 	CHA_ResourceType = CHA_ROLE_HEALER;
+	
+	CHA_CurrentResourceName = healer["text"];
 
-	StaticPopup_Show("CHA_DIALOG_RENAME_RESOURCE", healer["text"]);
+	StaticPopup_Show("CHA_DIALOG_RENAME_RESOURCE", nil, nil, healer["text"]);
 end;
 
 function CHA_RenameResource_OK(oldName, newName)
@@ -1493,15 +1534,19 @@ end;
 
 --	Called when Target:Rename dropdown option is seleted:
 --	Shop popup with name editbox.
+--	v2.1.0: foxed for 1.15.9
 function CHA_TargetOptionsMenu_Rename()
 	local template = CHA_GetActiveTemplate();
 	if template and template["targets"][CHA_CurrentTargetIndex] then
 		local target = template["targets"][CHA_CurrentTargetIndex];
 		CHA_ResourceType = CHA_ROLE_TANK;
+		
+		CHA_CurrentResourceName = target["text"];
 
-		StaticPopup_Show("CHA_DIALOG_RENAME_RESOURCE", target["text"]);
+		StaticPopup_Show("CHA_DIALOG_RENAME_RESOURCE", nil, nil, target["text"]);
 	end;
 end;
+
 
 --	Called when Target:Rename edit dialog closes successfully.
 --	Do the name change.
@@ -1869,13 +1914,20 @@ function CHA_CreateTargetFrames()
 		fTargetCaption:SetPoint("LEFT", 20, 0);
 		fTargetCaption:SetText("Target");
 
-		--	And an ability to ADD a new Tank for that specific target:
+		--	And an ability to ADD a new Healer for that specific target:
+		--	v2.1.0: Fixed for 1.15.9
 		local fTargetButtonName = string.format("addhealerbutton_%d", index);
-		local fTargetButton = CreateFrame("Button", fTargetButtonName, fTarget, "UIPanelButtonTemplate");
+		local fTargetButton = CreateFrame("Button", fTargetButtonName, fTarget);
 		fTargetButton:SetPoint("LEFT", 120, 0);
 		fTargetButton:SetHeight(12);
 		fTargetButton:SetWidth(12);
-		fTargetButton:SetText("+");
+		
+		local texture = fTargetButton:CreateTexture(nil, "BACKGROUND");
+		texture:SetAllPoints(fTargetButton);
+		texture:SetTexture("Interface\\Buttons\\UI-PlusButton-Up");
+		fTargetButton.texture = texture;
+
+		fTargetButton:SetHighlightTexture("Interface\\Buttons\\UI-PlusButton-Hilight", "ADD");
 		fTargetButton:SetScript("OnClick", CHA_AddHealerButtonOnClick);
 
 		fTarget:Show();
@@ -2749,6 +2801,33 @@ end;
 --[[
 	Event handlers
 --]]
+
+--	Called when the mouse enters the minimap button.
+--	v2.1.0: Displays a clean tooltip with the addon title and shortcut keys.
+function CHA_MinimapButton_OnEnter(self)
+	GameTooltip:SetOwner(self, "ANCHOR_LEFT"); -- Position tooltip to the left of the button
+	GameTooltip:ClearLines();
+	
+	-- Title of the addon in a nice golden Blizzard color
+	GameTooltip:AddLine("|cff40F8A0Classic Healing Assignments|r");
+	
+	-- Blank line for spacing
+	GameTooltip:AddLine(" ");
+	
+	-- Your awesome shortcuts explained clearly
+	GameTooltip:AddLine(string.format("|cffffffff%s:|r %s", A:XL("Left-Click"), A:XL("Toggle Window")));
+	GameTooltip:AddLine(string.format("|cffffffff%s:|r %s", A:XL("Ctrl + Left-Click"), A:XL("Post to Raid")));
+	GameTooltip:AddLine(string.format("|cffffffff%s:|r %s", A:XL("Ctrl + Right-Click"), A:XL("Post to Self (Test)")));
+	
+	GameTooltip:Show();
+end;
+
+--	Called when the mouse leaves the minimap button.
+--	v2.1.0: Safely hides the tooltip.
+function CHA_MinimapButton_OnLeave(self)
+	GameTooltip:Hide();
+end;
+
 function CHA_OnEvent(self, event, ...)
 	if event == "ADDON_LOADED" then
 		local addonname = ...;
@@ -2788,7 +2867,7 @@ end
 
 --	Called when program is starting up (doh!)
 function CHA_OnLoad()
-	A:echo(string.format("Type %s/cha%s to configure the addon, or click the [+] button.", A.chatColorHot, A.chatColorNormal));
+	A:echo(string.format("Type %s/cha%s to configure the addon, or click the minimap button.", A.chatColorHot, A.chatColorNormal));
 
 	CHAHeadlineCaption:SetText(string.format("Classic Healing Assignments v%s", A.addonVersion));
 	CHABottomlineCaption:SetText(string.format("Classic Healing Assignments version %s by %s", A.addonVersion, A.addonAuthor));

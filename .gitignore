@@ -4,3 +4,7 @@ ClassicHealingAssignments/.vs/ClassicHealingAssignments/v17/
 *.wowsln
 
 release.cmd
+
+deploy.cmd
+
+ClassicHealingAssignments/.vscode/
