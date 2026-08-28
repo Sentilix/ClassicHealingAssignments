@@ -117,3 +117,13 @@ L["Unknown command: %s"] = true
 L["%s is using ClassicHealingAssignments version %s"] = true
 L["NOTE: A newer version of %s! is available (version %s)!"] = true
 L["You can download latest version from %s or %s."] = true
+
+-- Minimap button:
+L["Left-Click"] = true
+L["Toggle Window"] = true
+L["Ctrl + Left-Click"] = true
+L["Post to Raid"] = true
+L["Ctrl + Right-Click"] = true
+L["Post to Self (Test)"] = true
+
+

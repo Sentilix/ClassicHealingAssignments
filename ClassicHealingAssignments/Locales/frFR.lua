@@ -117,3 +117,12 @@ L["Unknown command: %s"] = "Commande inconnue: %s"
 L["%s is using ClassicHealingAssignments version %s"] = "%s utilise ClassicHealingAssignments version %s"
 L["NOTE: A newer version of %s! is available (version %s)!"] = "REMARQUE: une version plus récente de %s! est disponible (version %s) !"
 L["You can download latest version from %s or %s."] = "Vous pouvez télécharger la dernière version depuis %s ou %s."
+
+-- Minimap button:
+L["Left-Click"] = "Clic-gauche"
+L["Toggle Window"] = "Afficher/Masquer la fenêtre"
+L["Ctrl + Left-Click"] = "Ctrl + Clic-gauche"
+L["Post to Raid"] = "Envoyer au raid"
+L["Ctrl + Right-Click"] = "Ctrl + Clic-droit"
+L["Post to Self (Test)"] = "Envoyer à soi-même (Test)"
+
