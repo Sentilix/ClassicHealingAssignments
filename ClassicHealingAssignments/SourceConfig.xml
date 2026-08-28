@@ -2,11 +2,22 @@
 	<Script file="SourceConfig.lua" />
 
 	<!-- Frame template for one class button -->
-	<Button name="CHAClassButtonTemplate" inherits="ActionButtonTemplate" frameStrata="HIGH" hidden="false" virtual="true">
+	<!-- FIXED: v2.1.0 / 1.15.9: Removed inherits="ActionButtonTemplate" to avoid heavy modern UI clutter -->
+	<Button name="CHAClassButtonTemplate" frameStrata="HIGH" hidden="false" virtual="true">
 		<Size>
 			<AbsDimension x="16" y="16" />
 		</Size>
-		<NormalTexture file="Interface\PaperDoll\UI-Backpack-EmptySlot"></NormalTexture>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<!-- ADDED: A clean texture layer for the class icon -->
+				<Texture name="$parentIcon" parentKey="Icon">
+					<Size x="16" y="16" />
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
 		<Scripts>
 			<OnLoad>
 				self:RegisterForClicks("LeftButtonDown", "RightButtonDown");
